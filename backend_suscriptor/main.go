@@ -16,39 +16,49 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// RetentionDays Constante de retención para el TTL
-const RetentionDays = 7
+// RetentionDays Constante de retención para la política TTL en Firestore
+const RetentionDays = 15
 
-// TelemetryPayload Payload recibido por MQTT
-type TelemetryPayload struct {
-	DeviceID string `json:"device_id"`
-	Seq      uint32 `json:"seq"`
-	Coords   struct {
-		Lat  float64 `json:"lat" firestore:"lat"`
-		Lon  float64 `json:"lon" firestore:"lon"`
-		AltM float64 `json:"alt_m" firestore:"alt_m"`
-	} `json:"coords" firestore:"coords"`
-	Status struct {
-		GpsFix     bool    `json:"gps_fix" firestore:"gps_fix"`
-		Sats       int     `json:"sats" firestore:"sats"`
-		BatteryV   float64 `json:"battery_v" firestore:"battery_v"`
-		BatteryPct int     `json:"battery_pct" firestore:"battery_pct"`
-	} `json:"status" firestore:"status"`
-	Radio struct {
-		RSSI          int     `json:"rssi" firestore:"rssi"`
-		SNR           float64 `json:"snr" firestore:"snr"`
-		DistanceHomeM float64 `json:"distance_home_m" firestore:"distance_home_m"`
-	} `json:"radio" firestore:"radio"`
+// CoordsData Coordenadas geográficas
+type CoordsData struct {
+	Lat  float64 `json:"lat" firestore:"lat"`
+	Lon  float64 `json:"lon" firestore:"lon"`
+	AltM float64 `json:"alt_m" firestore:"alt_m"`
 }
 
-// HistoryRecord Estructura del documento histórico
+// StatusData Estado de sensores y energía
+type StatusData struct {
+	GpsFix     bool    `json:"gps_fix" firestore:"gps_fix"`
+	Sats       int     `json:"sats" firestore:"sats"`
+	BatteryV   float64 `json:"battery_v" firestore:"battery_v"`
+	BatteryPct int     `json:"battery_pct" firestore:"battery_pct"`
+}
+
+// RadioData Métricas de radioenlace y distancia relativa
+type RadioData struct {
+	RSSI          int     `json:"rssi" firestore:"rssi"`
+	SNR           float64 `json:"snr" firestore:"snr"`
+	DistanceHomeM float64 `json:"distance_home_m" firestore:"distance_home_m"`
+}
+
+// TelemetryPayload Payload recibido vía MQTT
+type TelemetryPayload struct {
+	DeviceID string     `json:"device_id"`
+	PetName  string     `json:"pet_name,omitempty"` // Opcional: si la base lo envía por MQTT
+	Seq      uint32     `json:"seq"`
+	Coords   CoordsData `json:"coords"`
+	Status   StatusData `json:"status"`
+	Radio    RadioData  `json:"radio"`
+}
+
+// HistoryRecord Estructura tipada para cada punto de la sub colección 'history'
 type HistoryRecord struct {
-	Timestamp time.Time `firestore:"timestamp"`
-	ExpireAt  time.Time `firestore:"expire_at"` // Campo para la política TTL de Firestore
-	Seq       uint32    `firestore:"seq"`
-	Coords    any       `firestore:"coords"`
-	Status    any       `firestore:"status"`
-	Radio     any       `firestore:"radio"`
+	Timestamp time.Time  `firestore:"timestamp"`
+	ExpireAt  time.Time  `firestore:"expire_at"` // TTL automático
+	Seq       uint32     `firestore:"seq"`
+	Coords    CoordsData `firestore:"coords"`
+	Status    StatusData `firestore:"status"`
+	Radio     RadioData  `firestore:"radio"`
 }
 
 type IngestService struct {
@@ -64,11 +74,11 @@ func main() {
 		log.Println("[INFO] No se encontró archivo .env o no se pudo cargar; usando variables del sistema.")
 	}
 
-	// 1. Obtener variables de entorno
-	projectID := getEnv("GCP_PROJECT_ID", "michi-link")
-	hivemqBroker := getEnv("HIVEMQ_BROKER", "tls://4a3d7cdffc0943709189065b2b48eece.s1.eu.hivemq.cloud:8883")
-	hivemqUser := getEnv("HIVEMQ_USER", "usuario_mqtt")
-	hivemqPass := getEnv("HIVEMQ_PASS", "contrasena_mqtt")
+	// 1. Obtener variables
+	projectID := getEnv("GCP_PROJECT_ID", "")
+	hivemqBroker := getEnv("HIVEMQ_BROKER", "")
+	hivemqUser := getEnv("HIVEMQ_USER", "")
+	hivemqPass := getEnv("HIVEMQ_PASS", "")
 
 	// 2. Inicializar cliente Firestore
 	// Al correr en Compute Engine (e2-micro), utiliza automáticamente las credenciales
@@ -78,8 +88,7 @@ func main() {
 		log.Fatalf("Error inicializando Firestore client: %v", err)
 	}
 	defer func(fsClient *firestore.Client) {
-		err := fsClient.Close()
-		if err != nil {
+		if err := fsClient.Close(); err != nil {
 			log.Printf("Error cerrando Firestore client: %v", err)
 		}
 	}(fsClient)
@@ -129,7 +138,6 @@ func main() {
 	log.Println("Servicio detenido correctamente.")
 }
 
-// Callback al recibir un mensaje MQTT
 func (s *IngestService) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 	var payload TelemetryPayload
 	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
@@ -138,28 +146,19 @@ func (s *IngestService) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 	}
 
 	if payload.DeviceID == "" {
-		payload.DeviceID = "collar_01"
+		payload.DeviceID = "COLLAR_01"
 	}
 
 	now := time.Now().UTC()
-	expireAt := now.AddDate(0, 0, RetentionDays) // Fecha actual + 7 días
+	expireAt := now.AddDate(0, 0, RetentionDays)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// A. Referencia al documento principal del collar (Estado actual en vivo)
 	collarDocRef := s.firestoreClient.Collection("collars").Doc(payload.DeviceID)
-	latestData := map[string]any{
-		"device_id": payload.DeviceID,
-		"last_seen": now,
-		"seq":       payload.Seq,
-		"coords":    payload.Coords,
-		"status":    payload.Status,
-		"radio":     payload.Radio,
-	}
-
-	// B. Referencia para un nuevo registro dentro de la sub colección 'history'
 	historyDocRef := collarDocRef.Collection("history").NewDoc()
+
+	// Objeto tipado para el historial
 	historyRecord := HistoryRecord{
 		Timestamp: now,
 		ExpireAt:  expireAt,
@@ -169,15 +168,47 @@ func (s *IngestService) handleMessage(_ mqtt.Client, msg mqtt.Message) {
 		Radio:     payload.Radio,
 	}
 
-	// Ejecutar transacción atómica para ambas escrituras (reemplazo de Batch deprecated)
 	err := s.firestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// 1. Verificar si el documento del collar ya existe para conservar su nombre personalizado
+		docSnapshot, err := tx.Get(collarDocRef)
+		nameToKeep := ""
+
+		if err == nil && docSnapshot.Exists() {
+			// Si ya tiene un nombre configurado previamente en la base de datos, lo mantenemos
+			if existingName, err := docSnapshot.DataAt("name"); err == nil {
+				nameToKeep = fmt.Sprintf("%v", existingName)
+			}
+		}
+
+		// Si es la primera vez que se registra y no tiene nombre, asignamos uno por defecto
+		if nameToKeep == "" {
+			if payload.PetName != "" {
+				nameToKeep = payload.PetName
+			} else {
+				nameToKeep = "Mi Mascota"
+			}
+		}
+
+		// 2. Datos del estado en vivo del collar
+		latestData := map[string]any{
+			"device_id": payload.DeviceID,
+			"name":      nameToKeep,
+			"last_seen": now,
+			"seq":       payload.Seq,
+			"coords":    payload.Coords,
+			"status":    payload.Status,
+			"radio":     payload.Radio,
+		}
+
+		// 3. Escribir estado actual e histórico atómicamente
 		if err := tx.Set(collarDocRef, latestData, firestore.MergeAll); err != nil {
 			return err
 		}
 		return tx.Set(historyDocRef, historyRecord)
 	})
+
 	if err != nil {
-		log.Printf("[ERROR] Fallo al guardar en Firestore para %s: %v", payload.DeviceID, err)
+		log.Printf("[ERROR] Fallo al persistir en Firestore (%s): %v", payload.DeviceID, err)
 		return
 	}
 
