@@ -1,4 +1,3 @@
-cat << 'EOF' > deploy.sh
 #!/bin/bash
 set -e
 
@@ -7,21 +6,21 @@ SERVICE_NAME="michi-link"
 BINARY_NAME="backend_suscriptor"
 
 echo "=========================================="
-echo "🚀 Desplegando servicio: $SERVICE_NAME"
+echo "🚀 Iniciando despliegue de $SERVICE_NAME"
 echo "=========================================="
 
 # 1. Asegurar PATH de Go en el script
 export PATH=$PATH:/usr/local/go/bin
 
-# 2. Descargar últimos cambios de GitHub
-echo "📥 Descargando últimos cambios desde Git..."
+# 2. Descargar últimos cambios del repositorio
+echo "📥 Actualizando código desde Git..."
 git pull
 
-# 3. Compilar binario optimizado para Linux
+# 3. Compilar binario de Go optimizado
 echo "🔨 Compilando binario de Go..."
 go build -ldflags="-s -w" -o $BINARY_NAME .
 
-# 4. Detener el servicio previo si está corriendo
+# 4. Detener el servicio previo si está activo
 if systemctl is-active --quiet $SERVICE_NAME; then
     echo "⏸️  Deteniendo servicio en ejecución..."
     sudo systemctl stop $SERVICE_NAME
@@ -29,14 +28,15 @@ fi
 
 # 5. Mover binario a /opt/michi-link
 echo "📦 Instalando binario en $APP_DIR..."
+sudo mkdir -p $APP_DIR
 sudo cp $BINARY_NAME $APP_DIR/
 sudo chmod +x $APP_DIR/$BINARY_NAME
 
-# 6. Configurar el servicio Systemd (inyecta el .env automáticamente)
+# 6. Configurar el servicio Systemd
 echo "⚙️  Actualizando configuración de Systemd..."
 sudo bash -c "cat << SERVICE_EOF > /etc/systemd/system/${SERVICE_NAME}.service
 [Unit]
-Description=Michi Link MQTT Ingest Service
+Description=Michi Link MQTT to Firestore Ingestion Service
 After=network.target network-online.target
 Wants=network-online.target
 
@@ -72,6 +72,3 @@ else
     sudo journalctl -u $SERVICE_NAME -n 20 --no-pager
     exit 1
 fi
-EOF
-
-chmod +x deploy.sh
