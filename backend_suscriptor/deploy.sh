@@ -16,7 +16,10 @@ export PATH=$PATH:/usr/local/go/bin
 echo "📥 Actualizando código desde Git..."
 git pull
 
-# 3. Compilar binario de Go optimizado
+# 3. Descargar dependencias y compilar binario de Go
+echo "📦 Resolviendo dependencias..."
+go mod tidy
+
 echo "🔨 Compilando binario de Go..."
 go build -ldflags="-s -w" -o $BINARY_NAME .
 
