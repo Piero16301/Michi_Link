@@ -1,0 +1,5 @@
+.idea/
+.idea/.gitignore
+backend_suscriptor
+go.sum
+.env
