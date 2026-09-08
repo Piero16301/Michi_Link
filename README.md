@@ -216,3 +216,58 @@ flowchart TD
     M_BROKER -->|"Consumo continuo"| G_SUB
 ```
 
+## Tópicos a MQTT a Usar
+
+| Tópico | Dirección del Flujo | Frecuencia / Cuándo se usa | Función Principal |
+| :--- | :--- | :--- | :--- |
+| `mascotas/{pet_id}/telemetria` | Base (Casa) → Broker | Periódica (ej. cada 60s) | Telemetría habitual: Envía el JSON completo con coordenadas GPS, altitud, satélites, voltaje/porcentaje de batería, RSSI, SNR y distancia a casa. |
+| `mascotas/{pet_id}/alertas` | Base (Casa) → Broker | Inmediata (por evento) | Eventos críticos: Disparado al instante sin esperar el ciclo normal si ocurre algo urgente (salida de la zona segura/geovalla >150 m, batería crítica <15%, o activación de modo radiobaliza por pérdida de señal GPS). |
+| `mascotas/{pet_id}/status` | Base (Casa) → Broker | Al conectar / Al caerse | Presencia y disponibilidad (LWT - Last Will & Testament): Publica `online` cuando la base en casa se conecta y `offline` automáticamente si la base pierde conexión a internet o energía. |
+| `mascotas/{pet_id}/comandos` | App / Web → Base | Bajo demanda | (A futuro): Envío de instrucciones remotas hacia la base o collar (por ejemplo, activar un "Modo Búsqueda" para que la base ordene al collar transmitir cada 15 segundos en vez de cada 60). |
+
+## Flujo de Ejecución en el ESP32
+
+```mermaid
+flowchart TD
+    %% RECEPCIÓN
+    RX(["📦 Paquete LoRa de 17B Recibido\n(915 MHz)"])
+
+    %% ETAPA 1: DESEMPAQUETAR Y CALCULAR
+    subgraph E1 ["1. DESEMPAQUETAR Y CALCULAR"]
+        direction TB
+        CALC["Procesamiento de Métricas:\n• Distancia a casa (Haversine)\n• Estado y nivel de batería\n• Métricas RF (RSSI y SNR)"]
+    end
+
+    %% ETAPA 2: PUBLICAR TELEMETRÍA
+    subgraph E2 ["2. PUBLICAR TELEMETRÍA (SIEMPRE SE ENVÍA)"]
+        direction LR
+        PUB_TEL["Publicar Telemetría Habitual\n(Payload JSON completo)"]
+        TOP_TEL["☁️ Tópico:\nmascotas/collar_01/telemetria"]
+        PUB_TEL --> TOP_TEL
+    end
+
+    %% ETAPA 3: EVALUAR REGLAS
+    subgraph E3 ["3. EVALUAR REGLAS EN BASE"]
+        direction TB
+        CHECK{"¿Cumple Condición Crítica?\n• ¿Distancia > 150m?\n• ¿Batería < 15%?\n• ¿GPS perdió el fix?"}
+    end
+
+    %% ETAPA 4: PUBLICAR ALERTA
+    subgraph E4 ["4. DISPARO DE ALERTAS (POR EVENTO)"]
+        direction LR
+        PUB_ALT["Publicar Alerta Inmediata\n(Sin esperar ciclo habitual)"]
+        TOP_ALT["🚨 Tópico:\nmascotas/collar_01/alertas"]
+        PUB_ALT --> TOP_ALT
+    end
+
+    FIN(["Fin del Ciclo\n(Ignorar y esperar próximo paquete)"])
+
+    %% CONEXIONES DEL FLUJO
+    RX --> CALC
+    CALC --> PUB_TEL
+    PUB_TEL --> CHECK
+
+    CHECK -->|"SÍ (Evento crítico)"| PUB_ALT
+    CHECK -->|"NO (Valores normales)"| FIN
+    PUB_ALT --> FIN
+```
