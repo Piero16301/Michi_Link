@@ -68,14 +68,13 @@ type AlertPayload struct {
 // CONFIGURACIÓN DE ORIGEN Y SIMULACIÓN
 // ==========================================
 const (
-	DeviceID       = "COLLAR_01"
-	PetName        = "Michin"
-	GeofenceLimitM = 150.0  // Umbral para disparar alerta de geo valla
-	MaxRadiusM     = 1000.0 // Límite máximo de desplazamiento (1 km)
-	IntervalSec    = 60     // Envío cada 60 segundos
+	DeviceID    = "COLLAR_01"
+	PetName     = "Michin"
+	MaxRadiusM  = 1000.0
+	IntervalSec = 10
 )
 
-// Coordenadas base de tu hogar (puedes ajustar estos valores)
+// Coordenadas base de tu hogar
 var (
 	HomeLat = -8.066661
 	HomeLon = -79.062814
@@ -92,7 +91,7 @@ func main() {
 	hivemqUser := getEnv("HIVEMQ_USER", "")
 	hivemqPass := getEnv("HIVEMQ_PASS", "")
 
-	// 1. Configuración de cliente MQTT con LWT (Last Will & Testament)
+	// Configuración de cliente MQTT con LWT (Last Will & Testament)
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(hivemqBroker)
 	opts.SetClientID(fmt.Sprintf("simulador-base-%d", time.Now().Unix()))
@@ -101,7 +100,7 @@ func main() {
 	opts.SetTLSConfig(&tls.Config{InsecureSkipVerify: false})
 	opts.SetAutoReconnect(true)
 
-	// LWT: si el simulador se apaga abruptamente, HiveMQ publicará 'offline'
+	// LWT: si el simulador se detiene abruptamente, HiveMQ publica 'offline'
 	lwtPayload, _ := json.Marshal(StatusPayload{DeviceID: DeviceID, Status: "offline"})
 	opts.SetWill(fmt.Sprintf("mascotas/%s/status", DeviceID), string(lwtPayload), 1, true)
 
@@ -122,8 +121,6 @@ func main() {
 	batteryPct := 95
 	batteryV := 4.15
 	var seq uint32 = 1
-	geofenceActive := false
-	lowBatteryActive := false
 
 	ticker := time.NewTicker(time.Duration(IntervalSec) * time.Second)
 	defer ticker.Stop()
@@ -131,13 +128,13 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	// Ejecutar primer envío inmediatamente sin esperar los 60s iniciales
-	simularPaso(client, &seq, &currLat, &currLon, &batteryPct, &batteryV, &geofenceActive, &lowBatteryActive)
+	// Ejecutar primer ciclo inmediatamente
+	simularPaso(client, &seq, &currLat, &currLon, &batteryPct, &batteryV)
 
 	for {
 		select {
 		case <-ticker.C:
-			simularPaso(client, &seq, &currLat, &currLon, &batteryPct, &batteryV, &geofenceActive, &lowBatteryActive)
+			simularPaso(client, &seq, &currLat, &currLon, &batteryPct, &batteryV)
 
 		case <-sigChan:
 			log.Println("\n[SIMULADOR] Deteniendo simulador... Notificando status offline.")
@@ -155,14 +152,12 @@ func simularPaso(
 	currLon *float64,
 	batteryPct *int,
 	batteryV *float64,
-	geofenceActive *bool,
-	lowBatteryActive *bool,
 ) {
 	// A. Desplazamiento aleatorio: paso de 20 a 70 metros por minuto
 	stepM := 20.0 + rand.Float64()*50.0
 	angle := rand.Float64() * 2 * math.Pi
 
-	// Si está cerca del límite de 1 km, orientar el ángulo de regreso a casa
+	// Si está cerca del límite de 1 km, orientar hacia casa
 	distHome := haversineDistance(HomeLat, HomeLon, *currLat, *currLon)
 	if distHome > MaxRadiusM*0.9 {
 		angle = math.Atan2(HomeLon-*currLon, HomeLat-*currLat)
@@ -178,22 +173,22 @@ func simularPaso(
 	distHome = haversineDistance(HomeLat, HomeLon, *currLat, *currLon)
 
 	// B. Degradación ligera de batería
-	if *batteryPct > 5 && rand.Float64() < 0.3 {
+	if *batteryPct > 5 && rand.Float64() < 0.35 {
 		*batteryPct--
 		*batteryV = 3.3 + (float64(*batteryPct)/100.0)*0.9
 	}
 
-	// Pérdida temporal y aleatoria de fix GPS (5% de probabilidad)
-	hasGpsFix := rand.Float64() > 0.05
+	// Simulación de fix GPS
+	hasGpsFix := rand.Float64() > 0.08
 	sats := 8
 	if !hasGpsFix {
 		sats = 2
 	}
 
-	// RSSI atenúa con la distancia (aprox: -60 dBm en casa, hasta -115 dBm a 1km)
+	// RSSI atenuado con la distancia (-60 dBm en casa hasta -115 dBm a 1km)
 	rssi := int(-60.0 - (distHome/MaxRadiusM)*55.0 + (rand.Float64()*6 - 3))
 
-	// C. Empaquetar y publicar Telemetría
+	// C. Empaquetar y publicar Telemetría habitual
 	telemetry := TelemetryPayload{
 		DeviceID: DeviceID,
 		PetName:  PetName,
@@ -223,42 +218,69 @@ func simularPaso(
 	log.Printf("[Pkt #%03d] Dist: %6.1fm | Bat: %d%% | Fix: %-5t | RSSI: %d dBm",
 		*seq, distHome, *batteryPct, hasGpsFix, rssi)
 
-	// D. Lógica de Alertas Condicionales (Histeresis)
-	// 1. Geovalla
-	if distHome > GeofenceLimitM {
-		if !*geofenceActive {
-			dispararAlerta(client, "GEOFENCE_BREACH",
-				fmt.Sprintf("%s superó la distancia segura (Distancia: %.1fm)", PetName, distHome),
-				"critical", distHome)
-			*geofenceActive = true
-		}
-	} else if *geofenceActive {
-		dispararAlerta(client, "GEOFENCE_RESTORED",
-			fmt.Sprintf("%s regresó dentro de la zona segura", PetName),
-			"info", distHome)
-		*geofenceActive = false
-	}
-
-	// 2. Batería Baja
-	if *batteryPct <= 15 {
-		if !*lowBatteryActive {
-			dispararAlerta(client, "LOW_BATTERY",
-				fmt.Sprintf("Batería de %s en nivel crítico: %d%%", PetName, *batteryPct),
-				"warning", float64(*batteryPct))
-			*lowBatteryActive = true
-		}
-	} else {
-		*lowBatteryActive = false
-	}
-
-	// 3. Evento esporádico: pérdida de señal satelital
-	if !hasGpsFix {
-		dispararAlerta(client, "NO_GPS_FIX",
-			fmt.Sprintf("%s perdió enlace satelital. Activando modo radiobaliza LoRa.", PetName),
-			"warning", 0)
-	}
+	// D. Publicar OBLIGATORIAMENTE una alerta cada minuto (rotativa / aleatoria)
+	enviarAlertaPeriodica(client, distHome, *batteryPct, rssi)
 
 	*seq++
+}
+
+var alertIndex int
+
+// Catálogo de alertas posibles aceptadas por el backend
+func enviarAlertaPeriodica(client mqtt.Client, distHome float64, batPct int, rssi int) {
+	type AlertOption struct {
+		Type     string
+		Message  string
+		Severity string
+		Value    float64
+	}
+
+	distRedondeada := math.Round(distHome*10) / 10
+
+	catalogo := []AlertOption{
+		{
+			Type:     "GEOFENCE_BREACH",
+			Message:  fmt.Sprintf("%s salió del perímetro seguro. Distancia actual: %.1fm", PetName, distRedondeada),
+			Severity: "critical",
+			Value:    distRedondeada,
+		},
+		{
+			Type:     "GEOFENCE_RESTORED",
+			Message:  fmt.Sprintf("%s regresó a la zona segura (Distancia: %.1fm)", PetName, distRedondeada),
+			Severity: "info",
+			Value:    distRedondeada,
+		},
+		{
+			Type:     "LOW_BATTERY",
+			Message:  fmt.Sprintf("Batería de %s baja (%d%%). Conectar cargador próximamente.", PetName, batPct),
+			Severity: "warning",
+			Value:    float64(batPct),
+		},
+		{
+			Type:     "BATTERY_CRITICAL",
+			Message:  fmt.Sprintf("¡Batería crítica en collar de %s! Nivel: %d%%", PetName, int(math.Max(5, float64(batPct-10)))),
+			Severity: "critical",
+			Value:    float64(int(math.Max(5, float64(batPct-10)))),
+		},
+		{
+			Type:     "NO_GPS_FIX",
+			Message:  fmt.Sprintf("%s perdió enlace satelital GPS. Entrando en modo radiobaliza LoRa.", PetName),
+			Severity: "warning",
+			Value:    0,
+		},
+		{
+			Type:     "WEAK_SIGNAL",
+			Message:  fmt.Sprintf("Señal LoRa débil con la base central (%d dBm). Podría perder enlace.", rssi),
+			Severity: "warning",
+			Value:    float64(rssi),
+		},
+	}
+
+	// Seleccionar alerta de forma secuencial (cíclica)
+	seleccionada := catalogo[alertIndex]
+	alertIndex = (alertIndex + 1) % len(catalogo)
+
+	dispararAlerta(client, seleccionada.Type, seleccionada.Message, seleccionada.Severity, seleccionada.Value)
 }
 
 func dispararAlerta(client mqtt.Client, alertType, msg, severity string, val float64) {
@@ -273,7 +295,7 @@ func dispararAlerta(client mqtt.Client, alertType, msg, severity string, val flo
 	payloadBytes, _ := json.Marshal(alert)
 	topic := fmt.Sprintf("mascotas/%s/alertas", DeviceID)
 	client.Publish(topic, 1, false, payloadBytes)
-	log.Printf(" ⚠️ [ALERTA DISPARADA] [%s] %s", alertType, msg)
+	log.Printf(" ⚠️ [ALERTA ENVIADA] [%s] %s (Nivel: %s)", alertType, msg, severity)
 }
 
 func publishStatus(client mqtt.Client, devID, status string) {
@@ -284,7 +306,7 @@ func publishStatus(client mqtt.Client, devID, status string) {
 }
 
 func haversineDistance(lat1, lon1, lat2, lon2 float64) float64 {
-	const R = 6371000.0 // Radio medio de la Tierra en metros
+	const R = 6371000.0
 	phi1 := lat1 * math.Pi / 180.0
 	phi2 := lat2 * math.Pi / 180.0
 	deltaPhi := (lat2 - lat1) * math.Pi / 180.0
