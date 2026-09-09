@@ -21,7 +21,7 @@ echo "📦 Resolviendo dependencias..."
 go mod tidy
 
 echo "🔨 Compilando binario de Go..."
-go build -ldflags="-s -w" -o $BINARY_NAME .
+go build -ldflags="-s -w" -o $BINARY_NAME ./cmd/ingester
 
 # 4. Detener el servicio previo si está activo
 if systemctl is-active --quiet $SERVICE_NAME; then

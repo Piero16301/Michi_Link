@@ -1,8 +1,7 @@
-//go:build ignore
-
 package main
 
 import (
+	"backend_suscriptor/internal/models"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -17,52 +16,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/joho/godotenv"
 )
-
-// ==========================================
-// ESTRUCTURAS DE PAYLOAD SIMULADAS
-// ==========================================
-
-type CoordsData struct {
-	Lat  float64 `json:"lat"`
-	Lon  float64 `json:"lon"`
-	AltM float64 `json:"alt_m"`
-}
-
-type StatusData struct {
-	GpsFix     bool    `json:"gps_fix"`
-	Sats       int     `json:"sats"`
-	BatteryV   float64 `json:"battery_v"`
-	BatteryPct int     `json:"battery_pct"`
-}
-
-type RadioData struct {
-	RSSI          int     `json:"rssi"`
-	SNR           float64 `json:"snr"`
-	DistanceHomeM float64 `json:"distance_home_m"`
-}
-
-type TelemetryPayload struct {
-	DeviceID string     `json:"device_id"`
-	PetName  string     `json:"pet_name,omitempty"`
-	Seq      uint32     `json:"seq"`
-	Coords   CoordsData `json:"coords"`
-	Status   StatusData `json:"status"`
-	Radio    RadioData  `json:"radio"`
-}
-
-type StatusPayload struct {
-	DeviceID string `json:"device_id"`
-	Status   string `json:"status"`
-}
-
-type AlertPayload struct {
-	DeviceID  string    `json:"device_id"`
-	Type      string    `json:"type"`
-	Message   string    `json:"message"`
-	Severity  string    `json:"severity"`
-	Value     float64   `json:"value,omitempty"`
-	Timestamp time.Time `json:"timestamp"`
-}
 
 // ==========================================
 // CONFIGURACIÓN DE ORIGEN Y SIMULACIÓN
@@ -101,7 +54,7 @@ func main() {
 	opts.SetAutoReconnect(true)
 
 	// LWT: si el simulador se detiene abruptamente, HiveMQ publica 'offline'
-	lwtPayload, _ := json.Marshal(StatusPayload{DeviceID: DeviceID, Status: "offline"})
+	lwtPayload, _ := json.Marshal(models.StatusPayload{DeviceID: DeviceID, Status: "offline"})
 	opts.SetWill(fmt.Sprintf("mascotas/%s/status", DeviceID), string(lwtPayload), 1, true)
 
 	client := mqtt.NewClient(opts)
@@ -189,22 +142,22 @@ func simularPaso(
 	rssi := int(-60.0 - (distHome/MaxRadiusM)*55.0 + (rand.Float64()*6 - 3))
 
 	// C. Empaquetar y publicar Telemetría habitual
-	telemetry := TelemetryPayload{
+	telemetry := models.TelemetryPayload{
 		DeviceID: DeviceID,
 		PetName:  PetName,
 		Seq:      *seq,
-		Coords: CoordsData{
+		Coords: models.CoordsData{
 			Lat:  math.Round(*currLat*1e6) / 1e6,
 			Lon:  math.Round(*currLon*1e6) / 1e6,
 			AltM: 25.0 + (rand.Float64()*4 - 2),
 		},
-		Status: StatusData{
+		Status: models.StatusData{
 			GpsFix:     hasGpsFix,
 			Sats:       sats,
 			BatteryV:   math.Round(*batteryV*100) / 100,
 			BatteryPct: *batteryPct,
 		},
-		Radio: RadioData{
+		Radio: models.RadioData{
 			RSSI:          rssi,
 			SNR:           math.Round((9.5-(distHome/MaxRadiusM)*12.0)*10) / 10,
 			DistanceHomeM: math.Round(distHome*10) / 10,
@@ -284,7 +237,7 @@ func enviarAlertaPeriodica(client mqtt.Client, distHome float64, batPct int, rss
 }
 
 func dispararAlerta(client mqtt.Client, alertType, msg, severity string, val float64) {
-	alert := AlertPayload{
+	alert := models.AlertPayload{
 		DeviceID:  DeviceID,
 		Type:      alertType,
 		Message:   msg,
@@ -299,7 +252,7 @@ func dispararAlerta(client mqtt.Client, alertType, msg, severity string, val flo
 }
 
 func publishStatus(client mqtt.Client, devID, status string) {
-	payloadBytes, _ := json.Marshal(StatusPayload{DeviceID: devID, Status: status})
+	payloadBytes, _ := json.Marshal(models.StatusPayload{DeviceID: devID, Status: status})
 	topic := fmt.Sprintf("mascotas/%s/status", devID)
 	client.Publish(topic, 1, true, payloadBytes)
 	log.Printf(" 📡 [STATUS ACTUALIZADO] %s -> %s", devID, status)
