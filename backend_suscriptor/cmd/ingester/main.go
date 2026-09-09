@@ -35,7 +35,7 @@ func main() {
 
 	// 0. Cargar variables de entorno locales si existen
 	if err := godotenv.Load(); err != nil {
-		log.Println("[INFO] Usando variables de entorno del sistema.")
+		log.Println("ℹ️ [INFO] Usando variables de entorno del sistema.")
 	}
 
 	// 1. Obtener variables de configuración
@@ -47,22 +47,22 @@ func main() {
 	// 2. Inicializar cliente Firestore mediante Application Default Credentials (ADC)
 	fsClient, err := firestore.NewClient(ctx, projectID)
 	if err != nil {
-		log.Fatalf("Error inicializando Firestore client: %v", err)
+		log.Fatalf("🔥 [FATAL] Error inicializando Firestore client: %v", err)
 	}
 	defer func(fsClient *firestore.Client) {
 		if err := fsClient.Close(); err != nil {
-			log.Printf("Error cerrando Firestore client: %v", err)
+			log.Printf("⚠️ [WARN] Error cerrando Firestore client: %v", err)
 		}
 	}(fsClient)
 
 	// 3. Inicializar cliente Firebase Cloud Messaging (FCM)
 	fbApp, err := firebase.NewApp(ctx, &firebase.Config{ProjectID: projectID})
 	if err != nil {
-		log.Fatalf("Error inicializando Firebase App: %v", err)
+		log.Fatalf("🔥 [FATAL] Error inicializando Firebase App: %v", err)
 	}
 	fcmClient, err := fbApp.Messaging(ctx)
 	if err != nil {
-		log.Fatalf("Error inicializando FCM Client: %v", err)
+		log.Fatalf("🔥 [FATAL] Error inicializando FCM Client: %v", err)
 	}
 
 	svc := &IngestService{
@@ -83,28 +83,28 @@ func main() {
 	opts.SetKeepAlive(60 * time.Second)
 
 	opts.SetOnConnectHandler(func(c mqtt.Client) {
-		log.Println("[MQTT] Conectado exitosamente a HiveMQ Cloud.")
+		log.Println("📡 [MQTT] Conectado exitosamente a HiveMQ Cloud.")
 
 		if token := c.Subscribe("mascotas/+/telemetria", 1, svc.handleTelemetry); token.Wait() && token.Error() != nil {
-			log.Printf("[MQTT] Error al suscribirse a telemetria: %v", token.Error())
+			log.Printf("❌ [MQTT ERROR] Error al suscribirse a telemetria: %v", token.Error())
 		}
 		if token := c.Subscribe("mascotas/+/status", 1, svc.handleStatus); token.Wait() && token.Error() != nil {
-			log.Printf("[MQTT] Error al suscribirse a status: %v", token.Error())
+			log.Printf("❌ [MQTT ERROR] Error al suscribirse a status: %v", token.Error())
 		}
 		if token := c.Subscribe("mascotas/+/alertas", 1, svc.handleAlerts); token.Wait() && token.Error() != nil {
-			log.Printf("[MQTT] Error al suscribirse a alertas: %v", token.Error())
+			log.Printf("❌ [MQTT ERROR] Error al suscribirse a alertas: %v", token.Error())
 		}
 
-		log.Println("[MQTT] Escuchando tópicos de telemetria, status y alertas.")
+		log.Println("🎧 [MQTT] Escuchando tópicos de telemetria, status y alertas.")
 	})
 
 	opts.SetConnectionLostHandler(func(c mqtt.Client, err error) {
-		log.Printf("[MQTT] Conexión perdida: %v. Reintentando...", err)
+		log.Printf("⚠️ [MQTT] Conexión perdida: %v. Reintentando...", err)
 	})
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalf("Error conectando a HiveMQ: %v", token.Error())
+		log.Fatalf("🔥 [FATAL] Error conectando a HiveMQ: %v", token.Error())
 	}
 
 	// 5. Iniciar listener de cambios de configuración en Firestore
@@ -115,9 +115,9 @@ func main() {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan
 
-	log.Println("Cerrando servicio de ingesta...")
+	log.Println("🛑 Cerrando servicio de ingesta...")
 	client.Disconnect(250)
-	log.Println("Servicio detenido correctamente.")
+	log.Println("👋 Servicio detenido correctamente.")
 }
 
 // ----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ func main() {
 func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.TelemetryPayload
 	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-		log.Printf("[ERROR] Telemetría JSON inválida: %v", err)
+		log.Printf("❌ [ERROR] Telemetría JSON inválida: %v", err)
 		return
 	}
 
@@ -189,11 +189,11 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	})
 
 	if err != nil {
-		log.Printf("[ERROR] Fallo al persistir telemetría para %s: %v", payload.DeviceID, err)
+		log.Printf("❌ [ERROR] Fallo al persistir telemetría para %s: %v", payload.DeviceID, err)
 		return
 	}
 
-	log.Printf("[TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Bat: %.2fV",
+	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Bat: %.2fV",
 		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Status.BatteryV)
 }
 
@@ -203,7 +203,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.StatusPayload
 	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-		log.Printf("[ERROR] Status JSON inválido: %v", err)
+		log.Printf("❌ [ERROR] Status JSON inválido: %v", err)
 		return
 	}
 
@@ -224,11 +224,11 @@ func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 	}, firestore.MergeAll)
 
 	if err != nil {
-		log.Printf("[ERROR] Fallo al actualizar status de %s: %v", payload.DeviceID, err)
+		log.Printf("❌ [ERROR] Fallo al actualizar status de %s: %v", payload.DeviceID, err)
 		return
 	}
 
-	log.Printf("[STATUS] %s pasó a: %s", payload.DeviceID, payload.Status)
+	log.Printf("📶 [STATUS] %s pasó a: %s", payload.DeviceID, payload.Status)
 }
 
 // isRecoveryAlert identifica si el evento resuelve una incidencia previa
@@ -244,7 +244,7 @@ func isRecoveryAlert(alertType string) bool {
 func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.AlertPayload
 	if err := json.Unmarshal(msg.Payload(), &payload); err != nil {
-		log.Printf("[ERROR] Alerta JSON inválida: %v", err)
+		log.Printf("❌ [ERROR] Alerta JSON inválida: %v", err)
 		return
 	}
 
@@ -322,11 +322,11 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 	})
 
 	if err != nil {
-		log.Printf("[ERROR] Fallo al registrar alerta para %s: %v", payload.DeviceID, err)
+		log.Printf("❌ [ERROR] Fallo al registrar alerta para %s: %v", payload.DeviceID, err)
 		return
 	}
 
-	log.Printf("[ALERTA] %s -> [%s] (Activa: %t)", payload.DeviceID, payload.Type, !isRecoveryAlert(payload.Type))
+	log.Printf("🚨 [ALERTA] %s -> [%s] (Activa: %t)", payload.DeviceID, payload.Type, !isRecoveryAlert(payload.Type))
 
 	// Enviar push notification (tanto incidencias como avisos de regreso)
 	s.sendPushNotification(context.Background(), payload, petName)
@@ -393,17 +393,17 @@ func (s *IngestService) sendPushNotification(ctx context.Context, alert models.A
 
 	response, err := s.fcmClient.Send(ctx, fcmMessage)
 	if err != nil {
-		log.Printf("[FCM ERROR] Fallo enviando notificación al tópico %s: %v", topic, err)
+		log.Printf("❌ [FCM ERROR] Fallo enviando notificación al tópico %s: %v", topic, err)
 		return
 	}
-	log.Printf("[FCM OK] Push enviado con llaves de traducción (ID: %s)", response)
+	log.Printf("📲 [FCM OK] Push enviado con llaves de traducción (ID: %s)", response)
 }
 
 // ----------------------------------------------------------------------------
 // HANDLER 4: CONFIGURACIÓN DINÁMICA
 // ----------------------------------------------------------------------------
 func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.Client) {
-	log.Println("[CONFIG] Iniciando listener en tiempo real de configuraciones...")
+	log.Println("⚙️ [CONFIG] Iniciando listener en tiempo real de configuraciones...")
 
 	cachedConfigs := make(map[string]models.CollarConfig)
 	snapshots := s.firestoreClient.Collection("collars").Snapshots(ctx)
@@ -414,7 +414,7 @@ func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.
 			if ctx.Err() != nil {
 				return
 			}
-			log.Printf("[CONFIG ERROR] Error en listener de Firestore: %v", err)
+			log.Printf("❌ [CONFIG ERROR] Error en listener de Firestore: %v", err)
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -439,7 +439,7 @@ func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.
 
 					payloadBytes, err := json.Marshal(newCfg)
 					if err != nil {
-						log.Printf("[CONFIG ERROR] Error serializando config: %v", err)
+						log.Printf("❌ [CONFIG ERROR] Error serializando config: %v", err)
 						continue
 					}
 
@@ -448,9 +448,9 @@ func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.
 					token.Wait()
 
 					if token.Error() != nil {
-						log.Printf("[CONFIG ERROR] Fallo al publicar config en %s: %v", topic, token.Error())
+						log.Printf("❌ [CONFIG ERROR] Fallo al publicar config en %s: %v", topic, token.Error())
 					} else {
-						log.Printf("[CONFIG OK] Nueva config enviada a %s (Retained): %s", topic, string(payloadBytes))
+						log.Printf("✅ [CONFIG OK] Nueva config enviada a %s (Retained): %s", topic, string(payloadBytes))
 					}
 				}
 			}
