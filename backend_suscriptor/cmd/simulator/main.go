@@ -24,10 +24,10 @@ const (
 	DeviceID    = "COLLAR_01"
 	PetName     = "Michin"
 	MaxRadiusM  = 1000.0
-	IntervalSec = 10
+	IntervalSec = 10 // Intervalo de prueba (ajustable a 60 en producción)
 )
 
-// Coordenadas base de tu hogar
+// Coordenadas base del hogar
 var (
 	HomeLat = -8.066661
 	HomeLon = -79.062814
@@ -106,7 +106,7 @@ func simularPaso(
 	batteryPct *int,
 	batteryV *float64,
 ) {
-	// A. Desplazamiento aleatorio: paso de 20 a 70 metros por minuto
+	// A. Desplazamiento aleatorio: paso de 20 a 70 metros por ciclo
 	stepM := 20.0 + rand.Float64()*50.0
 	angle := rand.Float64() * 2 * math.Pi
 
@@ -116,13 +116,11 @@ func simularPaso(
 		angle = math.Atan2(HomeLon-*currLon, HomeLat-*currLat)
 	}
 
-	// Conversión de metros a grados aproximados
 	deltaLat := (stepM * math.Cos(angle)) / 111320.0
 	deltaLon := (stepM * math.Sin(angle)) / (111320.0 * math.Cos(*currLat*(math.Pi/180.0)))
 	*currLat += deltaLat
 	*currLon += deltaLon
 
-	// Recalcular distancia exacta a casa
 	distHome = haversineDistance(HomeLat, HomeLon, *currLat, *currLon)
 
 	// B. Degradación ligera de batería
@@ -138,7 +136,7 @@ func simularPaso(
 		sats = 2
 	}
 
-	// RSSI atenuado con la distancia (-60 dBm en casa hasta -115 dBm a 1km)
+	// RSSI atenuado con la distancia (-60 dBm cerca de casa hasta -115 dBm a 1km)
 	rssi := int(-60.0 - (distHome/MaxRadiusM)*55.0 + (rand.Float64()*6 - 3))
 
 	// C. Empaquetar y publicar Telemetría habitual
@@ -171,7 +169,7 @@ func simularPaso(
 	log.Printf("[Pkt #%03d] Dist: %6.1fm | Bat: %d%% | Fix: %-5t | RSSI: %d dBm",
 		*seq, distHome, *batteryPct, hasGpsFix, rssi)
 
-	// D. Publicar OBLIGATORIAMENTE una alerta cada minuto (rotativa / aleatoria)
+	// D. Publicar alerta rotativa con hardware real
 	enviarAlertaPeriodica(client, distHome, *batteryPct, rssi)
 
 	*seq++
@@ -179,68 +177,92 @@ func simularPaso(
 
 var alertIndex int
 
-// Catálogo de alertas posibles aceptadas por el backend
+// Catálogo de alertas soportadas por el hardware disponible
 func enviarAlertaPeriodica(client mqtt.Client, distHome float64, batPct int, rssi int) {
 	type AlertOption struct {
-		Type     string
-		Message  string
-		Severity string
-		Value    float64
+		Type        string
+		Severity    string
+		Value       float64
+		Description string
 	}
 
 	distRedondeada := math.Round(distHome*10) / 10
 
 	catalogo := []AlertOption{
+		// --- 1. GEOVALLA ---
 		{
-			Type:     "GEOFENCE_BREACH",
-			Message:  fmt.Sprintf("%s salió del perímetro seguro. Distancia actual: %.1fm", PetName, distRedondeada),
-			Severity: "critical",
-			Value:    distRedondeada,
+			Type:        "GEOFENCE_BREACH",
+			Severity:    models.SeverityCritical,
+			Value:       distRedondeada,
+			Description: "Michin cruzó el perímetro de seguridad",
 		},
 		{
-			Type:     "GEOFENCE_RESTORED",
-			Message:  fmt.Sprintf("%s regresó a la zona segura (Distancia: %.1fm)", PetName, distRedondeada),
-			Severity: "info",
-			Value:    distRedondeada,
+			Type:        "GEOFENCE_RESTORED",
+			Severity:    models.SeverityInfo,
+			Value:       distRedondeada,
+			Description: "Michin regresó a la zona segura",
+		},
+
+		// --- 2. BATERÍA ---
+		{
+			Type:        "LOW_BATTERY",
+			Severity:    models.SeverityWarning,
+			Value:       float64(batPct),
+			Description: "Batería por debajo del umbral preventivo",
 		},
 		{
-			Type:     "LOW_BATTERY",
-			Message:  fmt.Sprintf("Batería de %s baja (%d%%). Conectar cargador próximamente.", PetName, batPct),
-			Severity: "warning",
-			Value:    float64(batPct),
+			Type:        "BATTERY_CRITICAL",
+			Severity:    models.SeverityCritical,
+			Value:       float64(int(math.Max(5, float64(batPct-15)))),
+			Description: "Batería en estado crítico inminente a apagado",
 		},
 		{
-			Type:     "BATTERY_CRITICAL",
-			Message:  fmt.Sprintf("¡Batería crítica en collar de %s! Nivel: %d%%", PetName, int(math.Max(5, float64(batPct-10)))),
-			Severity: "critical",
-			Value:    float64(int(math.Max(5, float64(batPct-10)))),
+			Type:        "BATTERY_NORMAL",
+			Severity:    models.SeverityInfo,
+			Value:       90.0,
+			Description: "Collar cargado o conectado a energía",
+		},
+
+		// --- 3. SATÉLITES (GPS) ---
+		{
+			Type:        "NO_GPS_FIX",
+			Severity:    models.SeverityWarning,
+			Value:       0,
+			Description: "Pérdida de señal satelital / Modo radiobaliza",
 		},
 		{
-			Type:     "NO_GPS_FIX",
-			Message:  fmt.Sprintf("%s perdió enlace satelital GPS. Entrando en modo radiobaliza LoRa.", PetName),
-			Severity: "warning",
-			Value:    0,
+			Type:        "GPS_FIX_RESTORED",
+			Severity:    models.SeverityInfo,
+			Value:       8,
+			Description: "Enlace satelital GPS restablecido con satélites",
+		},
+
+		// --- 4. RADIOENLACE LORA ---
+		{
+			Type:        "WEAK_SIGNAL",
+			Severity:    models.SeverityWarning,
+			Value:       float64(rssi),
+			Description: "Atenuación severa de enlace LoRa con la base",
 		},
 		{
-			Type:     "WEAK_SIGNAL",
-			Message:  fmt.Sprintf("Señal LoRa débil con la base central (%d dBm). Podría perder enlace.", rssi),
-			Severity: "warning",
-			Value:    float64(rssi),
+			Type:        "SIGNAL_NORMAL",
+			Severity:    models.SeverityInfo,
+			Value:       -65.0,
+			Description: "Señal LoRa restablecida a niveles óptimos",
 		},
 	}
 
-	// Seleccionar alerta de forma secuencial (cíclica)
+	// Rotación secuencial
 	seleccionada := catalogo[alertIndex]
 	alertIndex = (alertIndex + 1) % len(catalogo)
 
-	dispararAlerta(client, seleccionada.Type, seleccionada.Message, seleccionada.Severity, seleccionada.Value)
+	dispararAlerta(client, seleccionada.Type, seleccionada.Severity, seleccionada.Value, seleccionada.Description)
 }
 
-func dispararAlerta(client mqtt.Client, alertType, msg, severity string, val float64) {
+func dispararAlerta(client mqtt.Client, alertType, severity string, val float64, desc string) {
 	alert := models.AlertPayload{
 		DeviceID:  DeviceID,
 		Type:      alertType,
-		Message:   msg,
 		Severity:  severity,
 		Value:     val,
 		Timestamp: time.Now().UTC(),
@@ -248,7 +270,7 @@ func dispararAlerta(client mqtt.Client, alertType, msg, severity string, val flo
 	payloadBytes, _ := json.Marshal(alert)
 	topic := fmt.Sprintf("mascotas/%s/alertas", DeviceID)
 	client.Publish(topic, 1, false, payloadBytes)
-	log.Printf(" ⚠️ [ALERTA ENVIADA] [%s] %s (Nivel: %s)", alertType, msg, severity)
+	log.Printf(" ⚠️ [ALERTA ENVIADA] [%s] Sev: %-8s | Val: %.1f | (%s)", alertType, severity, val, desc)
 }
 
 func publishStatus(client mqtt.Client, devID, status string) {

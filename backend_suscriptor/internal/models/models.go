@@ -2,6 +2,13 @@ package models
 
 import "time"
 
+// Constantes de Severidad estandarizadas en mayúsculas
+const (
+	SeverityCritical = "CRITICAL"
+	SeverityWarning  = "WARNING"
+	SeverityInfo     = "INFO"
+)
+
 type CoordsData struct {
 	Lat  float64 `json:"lat" firestore:"lat"`
 	Lon  float64 `json:"lon" firestore:"lon"`
@@ -35,15 +42,6 @@ type StatusPayload struct {
 	Status   string `json:"status"`
 }
 
-type AlertPayload struct {
-	DeviceID  string    `json:"device_id"`
-	Type      string    `json:"type"`
-	Message   string    `json:"message"`
-	Severity  string    `json:"severity"`
-	Value     float64   `json:"value,omitempty"`
-	Timestamp time.Time `json:"timestamp"`
-}
-
 type HistoryRecord struct {
 	Timestamp time.Time  `firestore:"timestamp"`
 	ExpireAt  time.Time  `firestore:"expire_at"`
@@ -53,10 +51,18 @@ type HistoryRecord struct {
 	Radio     RadioData  `firestore:"radio"`
 }
 
+type AlertPayload struct {
+	DeviceID  string    `json:"device_id"`
+	Type      string    `json:"type"`
+	Severity  string    `json:"severity"` // models.SeverityInfo, models.SeverityWarning, models.SeverityCritical
+	Value     float64   `json:"value,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
 type LastAlertInfo struct {
 	Type      string    `firestore:"type"`
-	Message   string    `firestore:"message"`
 	Severity  string    `firestore:"severity"`
+	Value     float64   `firestore:"value,omitempty"`
 	Timestamp time.Time `firestore:"timestamp"`
 }
 
@@ -64,7 +70,6 @@ type AlertRecord struct {
 	Timestamp time.Time `firestore:"timestamp"`
 	ExpireAt  time.Time `firestore:"expire_at"`
 	Type      string    `firestore:"type"`
-	Message   string    `firestore:"message"`
 	Severity  string    `firestore:"severity"`
 	Value     float64   `firestore:"value,omitempty"`
 }

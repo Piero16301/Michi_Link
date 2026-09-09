@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -230,6 +231,13 @@ func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 	log.Printf("[STATUS] %s pasó a: %s", payload.DeviceID, payload.Status)
 }
 
+// isRecoveryAlert identifica si el evento resuelve una incidencia previa
+func isRecoveryAlert(alertType string) bool {
+	return strings.HasSuffix(alertType, "_RESTORED") ||
+		strings.HasSuffix(alertType, "_NORMAL") ||
+		alertType == "ALERT_CLEARED"
+}
+
 // ----------------------------------------------------------------------------
 // HANDLER 3: ALERTAS CRÍTICAS + PUSH NOTIFICATIONS
 // ----------------------------------------------------------------------------
@@ -243,6 +251,10 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 	if payload.DeviceID == "" {
 		return
 	}
+
+	// 1. Normalizar a mayúsculas para tolerar cualquier payload externo
+	payload.Severity = strings.ToUpper(strings.TrimSpace(payload.Severity))
+	payload.Type = strings.ToUpper(strings.TrimSpace(payload.Type))
 
 	now := time.Now().UTC()
 	if payload.Timestamp.IsZero() {
@@ -260,35 +272,50 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 		Timestamp: payload.Timestamp,
 		ExpireAt:  expireAt,
 		Type:      payload.Type,
-		Message:   payload.Message,
 		Severity:  payload.Severity,
 		Value:     payload.Value,
 	}
 
 	lastAlert := models.LastAlertInfo{
 		Type:      payload.Type,
-		Message:   payload.Message,
 		Severity:  payload.Severity,
+		Value:     payload.Value,
 		Timestamp: payload.Timestamp,
 	}
 
 	petName := "Mascota"
 
 	err := s.firestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		// Obtener el nombre de la mascota configurado para la notificación
-		if docSnapshot, err := tx.Get(collarDocRef); err == nil && docSnapshot.Exists() {
+		docSnapshot, err := tx.Get(collarDocRef)
+		currentHasActiveAlert := false
+
+		if err == nil && docSnapshot.Exists() {
 			if existingName, err := docSnapshot.DataAt("name"); err == nil {
 				petName = fmt.Sprintf("%v", existingName)
 			}
+			if activeAlertVal, err := docSnapshot.DataAt("has_active_alert"); err == nil {
+				if b, ok := activeAlertVal.(bool); ok {
+					currentHasActiveAlert = b
+				}
+			}
 		}
 
+		// 2. Uso de constantes para evaluar la severidad
+		newHasActiveAlert := currentHasActiveAlert
+		if isRecoveryAlert(payload.Type) {
+			newHasActiveAlert = false
+		} else if payload.Severity == models.SeverityCritical || payload.Severity == models.SeverityWarning {
+			newHasActiveAlert = true
+		}
+
+		// 1. Persistir en el histórico con TTL de 15 días
 		if err := tx.Set(alertDocRef, alertRecord); err != nil {
 			return err
 		}
 
-		// B. Levantar indicador en el documento principal
+		// 2. Actualizar documento raíz preservando last_alert
 		return tx.Set(collarDocRef, map[string]any{
-			"has_active_alert": true,
+			"has_active_alert": newHasActiveAlert,
 			"last_alert":       lastAlert,
 			"last_seen":        now,
 		}, firestore.MergeAll)
@@ -299,9 +326,9 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	log.Printf("[ALERTA] %s disparó [%s]: %s", payload.DeviceID, payload.Type, payload.Message)
+	log.Printf("[ALERTA] %s -> [%s] (Activa: %t)", payload.DeviceID, payload.Type, !isRecoveryAlert(payload.Type))
 
-	// Disparar la Notificación Push vía Firebase Cloud Messaging
+	// Enviar push notification (tanto incidencias como avisos de regreso)
 	s.sendPushNotification(context.Background(), payload, petName)
 }
 
@@ -309,43 +336,56 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 func (s *IngestService) sendPushNotification(ctx context.Context, alert models.AlertPayload, petName string) {
 	topic := fmt.Sprintf("collar_%s", alert.DeviceID)
 
-	var iconEmoji string
-	switch alert.Severity {
-	case "critical":
-		iconEmoji = "🚨"
-	case "warning":
-		iconEmoji = "⚠️"
-	default:
-		iconEmoji = "ℹ️"
-	}
+	// La llave que buscará el frontend (ej.: "alert_geofence_breach_body")
+	titleLocKey := fmt.Sprintf("alert_%s_title", strings.ToLower(alert.Severity))
+	bodyLocKey := fmt.Sprintf("alert_%s_body", strings.ToLower(alert.Type))
 
-	title := fmt.Sprintf("%s Alerta de %s", iconEmoji, petName)
+	// Argumentos que sustituyen los placeholders (%1$s, %2$s) en la app
+	valStr := fmt.Sprintf("%.1f", alert.Value)
+	locArgs := []string{petName, valStr}
+
+	// Canal para notificaciones dependiendo de la severidad
+	channelID := "michi_info_channel"
+	if alert.Severity == models.SeverityCritical {
+		channelID = "michi_critical_channel"
+	}
 
 	fcmMessage := &messaging.Message{
 		Topic: topic,
 		Notification: &messaging.Notification{
-			Title: title,
-			Body:  alert.Message,
+			// Opcional: Title/Body de respaldo en caso de que una plataforma antigua no soporte loc-keys
+			Title: "Michi Link",
 		},
 		Data: map[string]string{
 			"device_id": alert.DeviceID,
+			"pet_name":  petName,
 			"type":      alert.Type,
 			"severity":  alert.Severity,
-			"value":     fmt.Sprintf("%.2f", alert.Value),
+			"value":     valStr,
 			"timestamp": alert.Timestamp.Format(time.RFC3339),
 		},
 		Android: &messaging.AndroidConfig{
 			Priority: "high",
 			Notification: &messaging.AndroidNotification{
-				Sound:       "default",
-				ChannelID:   "michi_alerts_channel",
-				ClickAction: "FLUTTER_NOTIFICATION_CLICK",
+				Sound:        "default",
+				ChannelID:    channelID,
+				Tag:          fmt.Sprintf("collar_%s", alert.DeviceID),
+				TitleLocKey:  titleLocKey,
+				TitleLocArgs: []string{petName},
+				BodyLocKey:   bodyLocKey,
+				BodyLocArgs:  locArgs,
 			},
 		},
 		APNS: &messaging.APNSConfig{
 			Payload: &messaging.APNSPayload{
 				Aps: &messaging.Aps{
 					Sound: "default",
+					Alert: &messaging.ApsAlert{
+						TitleLocKey:  titleLocKey,
+						TitleLocArgs: []string{petName},
+						LocKey:       bodyLocKey,
+						LocArgs:      locArgs,
+					},
 				},
 			},
 		},
@@ -353,11 +393,10 @@ func (s *IngestService) sendPushNotification(ctx context.Context, alert models.A
 
 	response, err := s.fcmClient.Send(ctx, fcmMessage)
 	if err != nil {
-		log.Printf("[FCM ERROR] Fallo enviando push al tópico %s: %v", topic, err)
+		log.Printf("[FCM ERROR] Fallo enviando notificación al tópico %s: %v", topic, err)
 		return
 	}
-
-	log.Printf("[FCM OK] Notificación enviada al tópico %s (ID: %s)", topic, response)
+	log.Printf("[FCM OK] Push enviado con llaves de traducción (ID: %s)", response)
 }
 
 // ----------------------------------------------------------------------------
