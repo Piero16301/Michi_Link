@@ -352,10 +352,6 @@ func (s *IngestService) sendPushNotification(ctx context.Context, alert models.A
 
 	fcmMessage := &messaging.Message{
 		Topic: topic,
-		Notification: &messaging.Notification{
-			// Opcional: Title/Body de respaldo en caso de que una plataforma antigua no soporte loc-keys
-			Title: "Michi Link",
-		},
 		Data: map[string]string{
 			"device_id": alert.DeviceID,
 			"pet_name":  petName,

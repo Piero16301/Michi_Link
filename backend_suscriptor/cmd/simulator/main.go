@@ -136,7 +136,7 @@ func simularPaso(
 		sats = 2
 	}
 
-	// RSSI atenuado con la distancia (-60 dBm cerca de casa hasta -115 dBm a 1km)
+	// RSSI atenuado con la distancia (-60 dBm cerca de casa hasta -115 dBm a 1 Km)
 	rssi := int(-60.0 - (distHome/MaxRadiusM)*55.0 + (rand.Float64()*6 - 3))
 
 	// C. Empaquetar y publicar Telemetría habitual
