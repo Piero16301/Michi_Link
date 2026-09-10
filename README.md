@@ -71,14 +71,14 @@ flowchart TB
 
 ```cpp
 // Estructura binaria compacta: 17 BYTES EN TOTAL
-struct __attribute__((packed)) CollarPacket {
-    uint16_t collar_id;   // 2 bytes: Ej. 0xCA70 (Identificador de tu gato)
-    uint16_t seq;         // 2 bytes: Contador de paquetes (0 a 65535)
-    int32_t  lat;         // 4 bytes: Latitud * 10,000,000 (ej: -12.046374 -> -120463740)
-    int32_t  lon;         // 4 bytes: Longitud * 10,000,000 (ej: -77.042793 -> -770427930)
-    int16_t  alt_m;       // 2 bytes: Altura sobre nivel del mar en metros
-    uint16_t vbat_mv;     // 2 bytes: Batería en milivoltios (ej: 3980 mV = 3.98V)
-    uint8_t  flags;       // 1 byte : Bitfield (Bit 0: GPS Fix | Bits 1-5: Num Satélites | Bit 6-7: Reservado)
+struct __attribute__((packed)) MinimalCollarPacket {
+    uint16_t collar_id;   // 2 B: ID estático aleatorio
+    uint16_t seq;         // 2 B: Secuencia incremental (0 a 65535)
+    int32_t  lat_scaled;  // 4 B: Latitud * 10,000,000 (~1 cm precisión)
+    int32_t  lon_scaled;  // 4 B: Longitud * 10,000,000
+    int16_t  alt_m;       // 2 B: Altitud entera en metros (-32,768m a +32,767m)
+    uint16_t battery_mv;  // 2 B: Voltaje en milivoltios (ej. 4150 mV)
+    uint8_t  gps_flags;   // 1 B: Bit 7 = GPS Fix (1/0), Bits 0..6 = Satélites
 };
 ```
 
