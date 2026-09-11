@@ -115,7 +115,7 @@ void loop() {
   int transmitState =
       radio.transmit((uint8_t *)&packet, sizeof(MinimalCollarPacket));
   if (transmitState == RADIOLIB_ERR_NONE) {
-    Serial.println("[LoRa] -> Trama de 17 bytes enviada con éxito.");
+    Serial.println("[LoRa] -> Trama de 23 bytes enviada con éxito.");
   } else {
     Serial.printf("[LoRa] -> Error en transmisión: %d\n", transmitState);
   }

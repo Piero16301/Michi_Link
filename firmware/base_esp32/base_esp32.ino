@@ -216,7 +216,7 @@ void updateOLED(const char *status, const MinimalCollarPacket *pkt = nullptr,
     uint8_t sats = (pkt->gps_flags & GPS_FLAG_SATS_MASK);
 
     display.setCursor(0, 13);
-    display.printf("ID:0x%04X #%u", pkt->collar_id, pkt->seq);
+    display.printf("ID:...%03llX #%u", (pkt->collar_id & 0xFFFULL), pkt->seq);
     if (gap > 0) {
       display.printf(" (-%u)", gap);
     }
@@ -385,8 +385,8 @@ void loop() {
       float rssi = radio.getRSSI();
       float snr = radio.getSNR();
 
-      char devIdStr[20];
-      snprintf(devIdStr, sizeof(devIdStr), "COLLAR_%04X", packet.collar_id);
+      char devIdStr[32];
+      snprintf(devIdStr, sizeof(devIdStr), "COLLAR_%016llX", packet.collar_id);
       String currentDevID = String(devIdStr);
 
       uint16_t lostInThisGap = 0;

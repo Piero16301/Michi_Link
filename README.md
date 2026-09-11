@@ -70,15 +70,15 @@ flowchart TB
 ## Formato en el Aire: Estructura Binaria en C++ (Collar)
 
 ```cpp
-// Estructura binaria compacta: 17 BYTES EN TOTAL
+// Estructura binaria compacta (23 bytes totales)
 struct __attribute__((packed)) MinimalCollarPacket {
-    uint16_t collar_id;   // 2 B: ID estático aleatorio
-    uint16_t seq;         // 2 B: Secuencia incremental (0 a 65535)
-    int32_t  lat_scaled;  // 4 B: Latitud * 10,000,000 (~1 cm precisión)
-    int32_t  lon_scaled;  // 4 B: Longitud * 10,000,000
-    int16_t  alt_m;       // 2 B: Altitud entera en metros (-32,768m a +32,767m)
-    uint16_t battery_mv;  // 2 B: Voltaje en milivoltios (ej. 4150 mV)
-    uint8_t  gps_flags;   // 1 B: Bit 7 = GPS Fix (1/0), Bits 0..6 = Satélites
+  uint64_t collar_id;  // 8 bytes: Identificador de 16 caracteres hex
+  uint16_t seq;        // 2 bytes: Contador secuencial
+  int32_t lat_scaled;  // 4 bytes: Latitud * 10,000,000
+  int32_t lon_scaled;  // 4 bytes: Longitud * 10,000,000
+  int16_t alt_m;       // 2 bytes: Altitud en metros
+  uint16_t battery_mv; // 2 bytes: Batería en milivoltios
+  uint8_t gps_flags;   // 1 byte:  Bit 7 Fix | Bits 0..6 Satélites
 };
 ```
 
@@ -170,7 +170,7 @@ flowchart TD
     end
 
     %% ETAPA 2: PAQUETE BINARIO
-    subgraph E2 ["2. EMPAQUETADO BINARIO LORA (17 Bytes en el aire - 915 MHz)"]
+    subgraph E2 ["2. EMPAQUETADO BINARIO LORA (23 Bytes en el aire - 915 MHz)"]
         direction LR
         P_ID["Identificación y Secuencia\n• collar_id: 2B\n• seq: 2B"]
         P_GEO["Posicionamiento Global\n• lat: 4B\n• lon: 4B\n• alt_m: 2B"]
@@ -230,7 +230,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     %% RECEPCIÓN
-    RX(["📦 Paquete LoRa de 17B Recibido\n(915 MHz)"])
+    RX(["📦 Paquete LoRa de 23B Recibido\n(915 MHz)"])
 
     %% ETAPA 1: DESEMPAQUETAR Y CALCULAR
     subgraph E1 ["1. DESEMPAQUETAR Y CALCULAR"]
