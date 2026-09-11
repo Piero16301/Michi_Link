@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -20,14 +21,18 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// RetentionDays Constante de retención para la política TTL en Firestore (15 días)
-const RetentionDays = 15
+// Constantes globales de configuración
+const (
+	RetentionDays            = 15 // TTL para histórico y alertas en Firestore (días)
+	DefaultCollarIntervalSec = 10 // Intervalo de transmisión predeterminado (segundos)
+)
 
 // IngestService Estructura de manejo de clientes y lógica para el servicio de ingesta
 type IngestService struct {
-	firestoreClient *firestore.Client
-	fcmClient       *messaging.Client
-	projectID       string
+	firestoreClient   *firestore.Client
+	fcmClient         *messaging.Client
+	projectID         string
+	collarIntervalSec int
 }
 
 func main() {
@@ -43,6 +48,7 @@ func main() {
 	hivemqBroker := getEnv("HIVEMQ_BROKER", "")
 	hivemqUser := getEnv("HIVEMQ_USER", "")
 	hivemqPass := getEnv("HIVEMQ_PASS", "")
+	collarIntervalSec := getEnvAsInt("COLLAR_INTERVAL_SEC", DefaultCollarIntervalSec)
 
 	// 2. Inicializar cliente Firestore mediante Application Default Credentials (ADC)
 	fsClient, err := firestore.NewClient(ctx, projectID)
@@ -66,9 +72,10 @@ func main() {
 	}
 
 	svc := &IngestService{
-		firestoreClient: fsClient,
-		fcmClient:       fcmClient,
-		projectID:       projectID,
+		firestoreClient:   fsClient,
+		fcmClient:         fcmClient,
+		projectID:         projectID,
+		collarIntervalSec: collarIntervalSec,
 	}
 
 	// 4. Configuración del cliente MQTT Paho
@@ -107,8 +114,9 @@ func main() {
 		log.Fatalf("🔥 [FATAL] Error conectando a HiveMQ: %v", token.Error())
 	}
 
-	// 5. Iniciar listener de cambios de configuración en Firestore
+	// 5. Iniciar listeners y supervisores en segundo plano
 	go svc.watchConfigChanges(ctx, client)
+	go svc.startOfflineWatchdog(ctx)
 
 	// 6. Manejo de terminación elegante (Graceful Shutdown)
 	sigChan := make(chan os.Signal, 1)
@@ -121,7 +129,7 @@ func main() {
 }
 
 // ----------------------------------------------------------------------------
-// HANDLER 1: TELEMETRÍA PERIÓDICA
+// HANDLER 1: TELEMETRÍA PERIÓDICA CON AUDITORÍA DE PÉRDIDAS
 // ----------------------------------------------------------------------------
 func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.TelemetryPayload
@@ -143,23 +151,31 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	collarDocRef := s.firestoreClient.Collection("collars").Doc(payload.DeviceID)
 	historyDocRef := collarDocRef.Collection("history").NewDoc()
 
-	historyRecord := models.HistoryRecord{
-		Timestamp: now,
-		ExpireAt:  expireAt,
-		Seq:       payload.Seq,
-		Coords:    payload.Coords,
-		Status:    payload.Status,
-		Radio:     payload.Radio,
-	}
-
 	err := s.firestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		// Preservar el nombre asignado al collar si ya existe en la base de datos
 		docSnapshot, err := tx.Get(collarDocRef)
 		nameToKeep := ""
+		var prevSeq uint32 = 0
+		var totalReceived int64 = 0
+		var totalLost int64 = 0
 
 		if err == nil && docSnapshot.Exists() {
 			if existingName, err := docSnapshot.DataAt("name"); err == nil {
 				nameToKeep = fmt.Sprintf("%v", existingName)
+			}
+			if seqVal, err := docSnapshot.DataAt("seq"); err == nil {
+				if v, ok := seqVal.(int64); ok {
+					prevSeq = uint32(v)
+				}
+			}
+			if rxVal, err := docSnapshot.DataAt("packets_received"); err == nil {
+				if v, ok := rxVal.(int64); ok {
+					totalReceived = v
+				}
+			}
+			if lostVal, err := docSnapshot.DataAt("packets_lost"); err == nil {
+				if v, ok := lostVal.(int64); ok {
+					totalLost = v
+				}
 			}
 		}
 
@@ -171,15 +187,49 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			}
 		}
 
+		// Cálculo de paquetes perdidos en el salto
+		var lostInGap int64 = 0
+		if prevSeq > 0 {
+			if payload.Seq > prevSeq {
+				lostInGap = int64(payload.Seq - prevSeq - 1)
+			} else if prevSeq > 65000 && payload.Seq < 500 {
+				lostInGap = int64((65535 - prevSeq) + payload.Seq)
+			} else {
+				lostInGap = 0
+			}
+		}
+
+		totalReceived++
+		totalLost += lostInGap
+
+		var lossPct = 0.0
+		if totalExpected := totalReceived + totalLost; totalExpected > 0 {
+			lossPct = (float64(totalLost) / float64(totalExpected)) * 100.0
+		}
+
+		payload.Radio.PacketsLostGap = int(lostInGap)
+
+		historyRecord := models.HistoryRecord{
+			Timestamp: now,
+			ExpireAt:  expireAt,
+			Seq:       payload.Seq,
+			Coords:    payload.Coords,
+			Status:    payload.Status,
+			Radio:     payload.Radio,
+		}
+
 		latestData := map[string]any{
-			"device_id": payload.DeviceID,
-			"name":      nameToKeep,
-			"last_seen": now,
-			"is_online": true,
-			"seq":       payload.Seq,
-			"coords":    payload.Coords,
-			"status":    payload.Status,
-			"radio":     payload.Radio,
+			"device_id":        payload.DeviceID,
+			"name":             nameToKeep,
+			"last_seen":        now,
+			"is_online":        true,
+			"seq":              payload.Seq,
+			"coords":           payload.Coords,
+			"status":           payload.Status,
+			"radio":            payload.Radio,
+			"packets_received": totalReceived,
+			"packets_lost":     totalLost,
+			"packet_loss_pct":  fmt.Sprintf("%.2f%%", lossPct),
 		}
 
 		if err := tx.Set(collarDocRef, latestData, firestore.MergeAll); err != nil {
@@ -193,8 +243,8 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Bat: %.2fV",
-		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Status.BatteryV)
+	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Pérdida salto: %d",
+		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Radio.PacketsLostGap)
 }
 
 // ----------------------------------------------------------------------------
@@ -218,9 +268,8 @@ func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 	now := time.Now().UTC()
 
 	_, err := collarDocRef.Set(ctx, map[string]any{
-		"is_online":   payload.Status == "online",
-		"status_text": payload.Status,
-		"last_seen":   now,
+		"is_online": payload.Status == "online",
+		"last_seen": now,
 	}, firestore.MergeAll)
 
 	if err != nil {
@@ -228,7 +277,7 @@ func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	log.Printf("📶 [STATUS] %s pasó a: %s", payload.DeviceID, payload.Status)
+	log.Printf("📶 [STATUS] %s pasó a: %s (is_online: %t)", payload.DeviceID, payload.Status, payload.Status == "online")
 }
 
 // isRecoveryAlert identifica si el evento resuelve una incidencia previa
@@ -252,7 +301,6 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	// 1. Normalizar a mayúsculas para tolerar cualquier payload externo
 	payload.Severity = strings.ToUpper(strings.TrimSpace(payload.Severity))
 	payload.Type = strings.ToUpper(strings.TrimSpace(payload.Type))
 
@@ -300,7 +348,6 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 			}
 		}
 
-		// 2. Uso de constantes para evaluar la severidad
 		newHasActiveAlert := currentHasActiveAlert
 		if isRecoveryAlert(payload.Type) {
 			newHasActiveAlert = false
@@ -308,12 +355,10 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 			newHasActiveAlert = true
 		}
 
-		// 1. Persistir en el histórico con TTL de 15 días
 		if err := tx.Set(alertDocRef, alertRecord); err != nil {
 			return err
 		}
 
-		// 2. Actualizar documento raíz preservando last_alert
 		return tx.Set(collarDocRef, map[string]any{
 			"has_active_alert": newHasActiveAlert,
 			"last_alert":       lastAlert,
@@ -328,23 +373,18 @@ func (s *IngestService) handleAlerts(_ mqtt.Client, msg mqtt.Message) {
 
 	log.Printf("🚨 [ALERTA] %s -> [%s] (Activa: %t)", payload.DeviceID, payload.Type, !isRecoveryAlert(payload.Type))
 
-	// Enviar push notification (tanto incidencias como avisos de regreso)
 	s.sendPushNotification(context.Background(), payload, petName)
 }
 
-// sendPushNotification Envía la notificación al tópico asociado al collar
 func (s *IngestService) sendPushNotification(ctx context.Context, alert models.AlertPayload, petName string) {
 	topic := fmt.Sprintf("collar_%s", alert.DeviceID)
 
-	// La llave que buscará el frontend (ej.: "alert_geofence_breach_body")
 	titleLocKey := fmt.Sprintf("alert_%s_title", strings.ToLower(alert.Severity))
 	bodyLocKey := fmt.Sprintf("alert_%s_body", strings.ToLower(alert.Type))
 
-	// Argumentos que sustituyen los placeholders (%1$s, %2$s) en la app
 	valStr := fmt.Sprintf("%.1f", alert.Value)
 	locArgs := []string{petName, valStr}
 
-	// Canal para notificaciones dependiendo de la severidad
 	channelID := "michi_info_channel"
 	if alert.Severity == models.SeverityCritical {
 		channelID = "michi_critical_channel"
@@ -454,9 +494,74 @@ func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.
 	}
 }
 
+// ----------------------------------------------------------------------------
+// HANDLER 5: SUPERVISOR DE INACTIVIDAD DINÁMICO (HEARTBEAT WATCHDOG)
+// ----------------------------------------------------------------------------
+func (s *IngestService) startOfflineWatchdog(ctx context.Context) {
+	log.Printf("⏱️ [WATCHDOG] Iniciando supervisor de presencia (Intervalo base: %ds)...", s.collarIntervalSec)
+
+	// La frecuencia de evaluación se ajusta proporcionalmente al intervalo del collar
+	checkDuration := max(time.Duration(s.collarIntervalSec)*time.Second, 5*time.Second)
+	ticker := time.NewTicker(checkDuration)
+	defer ticker.Stop()
+
+	// Umbral de inactividad: 3.5 veces el intervalo configurado
+	// (Ej.: 10 s -> 35 s | 60 s -> 210 s)
+	offlineThreshold := time.Duration(float64(s.collarIntervalSec)*3.5) * time.Second
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			docs, err := s.firestoreClient.Collection("collars").
+				Where("is_online", "==", true).
+				Documents(ctx).
+				GetAll()
+
+			if err != nil {
+				log.Printf("⚠️ [WATCHDOG ERROR] Error consultando collares online: %v", err)
+				continue
+			}
+
+			now := time.Now().UTC()
+			for _, doc := range docs {
+				lastSeenVal, err := doc.DataAt("last_seen")
+				if err != nil {
+					continue
+				}
+
+				if lastSeen, ok := lastSeenVal.(time.Time); ok {
+					if now.Sub(lastSeen) > offlineThreshold {
+						deviceID := doc.Ref.ID
+						log.Printf("🔌 [WATCHDOG] Collar %s inactivo por %v (> %v umbral). Marcando offline...",
+							deviceID, now.Sub(lastSeen).Round(time.Second), offlineThreshold)
+
+						_, err := doc.Ref.Update(ctx, []firestore.Update{
+							{Path: "is_online", Value: false},
+						})
+						if err != nil {
+							log.Printf("❌ [WATCHDOG ERROR] Fallo al marcar offline a %s: %v", deviceID, err)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 func getEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
+	}
+	return fallback
+}
+
+func getEnvAsInt(key string, fallback int) int {
+	if valueStr, exists := os.LookupEnv(key); exists {
+		if val, err := strconv.Atoi(valueStr); err == nil && val > 0 {
+			return val
+		}
 	}
 	return fallback
 }

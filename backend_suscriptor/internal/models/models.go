@@ -23,9 +23,10 @@ type StatusData struct {
 }
 
 type RadioData struct {
-	RSSI          int     `json:"rssi" firestore:"rssi"`
-	SNR           float64 `json:"snr" firestore:"snr"`
-	DistanceHomeM float64 `json:"distance_home_m" firestore:"distance_home_m"`
+	RSSI           int     `json:"rssi" firestore:"rssi"`
+	SNR            float64 `json:"snr" firestore:"snr"`
+	DistanceHomeM  float64 `json:"distance_home_m" firestore:"distance_home_m"`
+	PacketsLostGap int     `json:"packets_lost_gap" firestore:"packets_lost_gap"`
 }
 
 type TelemetryPayload struct {
