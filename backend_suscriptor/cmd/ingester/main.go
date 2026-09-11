@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -23,8 +22,8 @@ import (
 
 // Constantes globales de configuración
 const (
-	RetentionDays            = 15 // TTL para histórico y alertas en Firestore (días)
-	DefaultCollarIntervalSec = 10 // Intervalo de transmisión predeterminado (segundos)
+	RetentionDays     = 15 // TTL para histórico y alertas en Firestore (días)
+	CollarIntervalSec = 10 // Intervalo de transmisión predeterminado (segundos)
 )
 
 // IngestService Estructura de manejo de clientes y lógica para el servicio de ingesta
@@ -48,7 +47,6 @@ func main() {
 	hivemqBroker := getEnv("HIVEMQ_BROKER", "")
 	hivemqUser := getEnv("HIVEMQ_USER", "")
 	hivemqPass := getEnv("HIVEMQ_PASS", "")
-	collarIntervalSec := getEnvAsInt("COLLAR_INTERVAL_SEC", DefaultCollarIntervalSec)
 
 	// 2. Inicializar cliente Firestore mediante Application Default Credentials (ADC)
 	fsClient, err := firestore.NewClient(ctx, projectID)
@@ -75,7 +73,7 @@ func main() {
 		firestoreClient:   fsClient,
 		fcmClient:         fcmClient,
 		projectID:         projectID,
-		collarIntervalSec: collarIntervalSec,
+		collarIntervalSec: CollarIntervalSec,
 	}
 
 	// 4. Configuración del cliente MQTT Paho
@@ -553,15 +551,6 @@ func (s *IngestService) startOfflineWatchdog(ctx context.Context) {
 func getEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
-	}
-	return fallback
-}
-
-func getEnvAsInt(key string, fallback int) int {
-	if valueStr, exists := os.LookupEnv(key); exists {
-		if val, err := strconv.Atoi(valueStr); err == nil && val > 0 {
-			return val
-		}
 	}
 	return fallback
 }
