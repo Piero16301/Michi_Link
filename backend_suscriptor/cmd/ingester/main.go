@@ -127,7 +127,7 @@ func main() {
 }
 
 // ----------------------------------------------------------------------------
-// HANDLER 1: TELEMETRÍA PERIÓDICA CON AUDITORÍA DE PÉRDIDAS
+// HANDLER 1: TELEMETRÍA PERIÓDICA CON AUDITORÍA DE PÉRDIDAS Y CONFIG POR DEFECTO
 // ----------------------------------------------------------------------------
 func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.TelemetryPayload
@@ -155,6 +155,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		var prevSeq uint32 = 0
 		var totalReceived int64 = 0
 		var totalLost int64 = 0
+		hasConfig := false
 
 		if err == nil && docSnapshot.Exists() {
 			if existingName, err := docSnapshot.DataAt("name"); err == nil {
@@ -174,6 +175,10 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 				if v, ok := lostVal.(int64); ok {
 					totalLost = v
 				}
+			}
+			// Comprobar si ya existe el mapa de configuración
+			if _, err := docSnapshot.DataAt("config"); err == nil {
+				hasConfig = true
 			}
 		}
 
@@ -228,6 +233,17 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"packets_received": totalReceived,
 			"packets_lost":     totalLost,
 			"packet_loss_pct":  fmt.Sprintf("%.2f%%", lossPct),
+		}
+
+		// Si es un collar nuevo o no tiene configuración, inicializar valores por defecto
+		if !hasConfig {
+			defaultConfig := models.CollarConfig{
+				MaxDistanceM:  500.0,
+				MinBatteryPct: 20,
+				RequireGpsFix: true,
+			}
+			latestData["config"] = defaultConfig
+			log.Printf("⚙️ [CONFIG INIT] Creando configuración por defecto en Firestore para %s", payload.DeviceID)
 		}
 
 		if err := tx.Set(collarDocRef, latestData, firestore.MergeAll); err != nil {
