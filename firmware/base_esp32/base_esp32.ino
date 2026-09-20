@@ -99,11 +99,10 @@ double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
 }
 
 int batteryMvToPct(uint16_t mv) {
-  if (mv >= 4200)
-    return 100;
-  if (mv <= 3300)
-    return 0;
-  return (int)((mv - 3300) * 100 / (4200 - 3300));
+  // Con el GPS y MCU consumiendo, 4.05V representa la batería llena
+  if (mv >= 4050) return 100;
+  if (mv <= 3300) return 0;
+  return (int)((mv - 3300) * 100 / (4050 - 3300));
 }
 
 // Emisión normalizada de alertas hacia MQTT
