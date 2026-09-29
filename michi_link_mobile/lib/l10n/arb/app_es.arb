@@ -1,7 +1,11 @@
 {
     "@@locale": "es",
-    "counterAppBarTitle": "Contador",
-    "@counterAppBarTitle": {
-        "description": "Texto mostrado en la AppBar de la página del contador"
-    }
+    "selectLanguage": "Seleccionar idioma",
+    "@selectLanguage": {},
+    "selectTheme": "Seleccionar tema",
+    "@selectTheme": {},
+    "errorLoadingElements": "Se produjo un error al cargar los elementos",
+    "@errorLoadingElements": {},
+    "elementsNoData": "No se han registrado elementos",
+    "@elementsNoData": {}
 }

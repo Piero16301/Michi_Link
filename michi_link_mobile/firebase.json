@@ -1,0 +1,30 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "appId": "1:1070535347865:android:beefb17a0cb0757b61b208",
+                    "fileOutput": "android/app/google-services.json",
+                    "projectId": "michi-link"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "configurations": {
+                        "android": "1:1070535347865:android:beefb17a0cb0757b61b208",
+                        "ios": "1:1070535347865:ios:cc946e95b17eca6261b208"
+                    },
+                    "projectId": "michi-link"
+                }
+            },
+            "ios": {
+                "default": {
+                    "appId": "1:1070535347865:ios:cc946e95b17eca6261b208",
+                    "fileOutput": "ios/Runner/GoogleService-Info.plist",
+                    "projectId": "michi-link",
+                    "uploadDebugSymbols": true
+                }
+            }
+        }
+    }
+}

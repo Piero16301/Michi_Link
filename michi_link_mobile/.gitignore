@@ -116,3 +116,5 @@ lib/l10n/gen/
 
 # Flutter
 pubspec.lock
+.metadata
+.env
