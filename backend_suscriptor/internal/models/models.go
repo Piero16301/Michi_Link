@@ -29,13 +29,19 @@ type RadioData struct {
 	PacketsLostGap int     `json:"packets_lost_gap" firestore:"packets_lost_gap"`
 }
 
+type BaseCoords struct {
+	Lat float64 `json:"lat" firestore:"lat"`
+	Lon float64 `json:"lon" firestore:"lon"`
+}
+
 type TelemetryPayload struct {
-	DeviceID string     `json:"device_id"`
-	PetName  string     `json:"pet_name,omitempty"`
-	Seq      uint32     `json:"seq"`
-	Coords   CoordsData `json:"coords"`
-	Status   StatusData `json:"status"`
-	Radio    RadioData  `json:"radio"`
+	DeviceID   string     `json:"device_id"`
+	PetName    string     `json:"pet_name,omitempty"`
+	Seq        uint32     `json:"seq"`
+	Coords     CoordsData `json:"coords"`
+	BaseCoords BaseCoords `json:"base_coords"`
+	Status     StatusData `json:"status"`
+	Radio      RadioData  `json:"radio"`
 }
 
 type StatusPayload struct {

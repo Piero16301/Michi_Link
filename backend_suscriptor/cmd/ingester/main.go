@@ -228,6 +228,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"is_online":        true,
 			"seq":              payload.Seq,
 			"coords":           payload.Coords,
+			"base_coords":      payload.BaseCoords,
 			"status":           payload.Status,
 			"radio":            payload.Radio,
 			"packets_received": totalReceived,

@@ -429,6 +429,10 @@ void loop() {
       coords["lon"] = lon;
       coords["alt_m"] = packet.alt_m;
 
+      JsonObject baseCoords = doc.createNestedObject("base_coords");
+      baseCoords["lat"] = HOME_LAT;
+      baseCoords["lon"] = HOME_LON;
+
       JsonObject status = doc.createNestedObject("status");
       status["gps_fix"] = hasFix;
       status["sats"] = sats;
