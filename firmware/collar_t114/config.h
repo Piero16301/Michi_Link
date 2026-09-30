@@ -8,7 +8,7 @@
 // ==========================================
 constexpr uint64_t COLLAR_ID =
     0x9E2B4A1F8C3D2E5AULL;              // 16 caracteres hexadecimales
-constexpr uint32_t INTERVAL_MS = 10000; // Intervalo entre transmisiones (ms)
+constexpr uint32_t INTERVAL_MS = 60000; // Intervalo entre transmisiones (ms)
 
 // ==========================================
 // PARÁMETROS DE RADIOENLACE LORA SX1262
