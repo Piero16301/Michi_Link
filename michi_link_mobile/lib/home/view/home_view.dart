@@ -20,19 +20,22 @@ class HomeView extends StatelessWidget {
           height: 40,
         ),
         notificationPredicate: (_) => false,
+        leading: IconButton(
+          onPressed: () => unawaited(context.pushNamed(AppRoute.settings.name)),
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedSettings02,
+            strokeWidth: 2,
+          ),
+        ),
         actions: [
           IconButton(
-            padding: EdgeInsets.zero,
+            onPressed: () =>
+                unawaited(context.pushNamed(AppRoute.settings.name)),
             icon: const HugeIcon(
               icon: HugeIcons.strokeRoundedSettings02,
               strokeWidth: 2,
             ),
-            onPressed: () {
-              getIt<AnalyticsService>().logEvent(name: 'open_settings_action');
-              unawaited(context.pushNamed(AppRoute.settings.name));
-            },
           ),
-          const SizedBox(width: 6),
         ],
       ),
       body: const Padding(padding: EdgeInsets.all(16), child: SizedBox()),
