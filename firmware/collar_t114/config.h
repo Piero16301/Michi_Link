@@ -45,8 +45,9 @@ constexpr uint32_t GPS_BAUDRATE = 9600;
 #define PIN_BAT_ADC_CTL 6
 #endif
 
-#ifndef BAT_AMPLIFY
-#define BAT_AMPLIFY 5.13f
+#ifdef BAT_AMPLIFY
+#undef BAT_AMPLIFY
 #endif
+#define BAT_AMPLIFY 5.10f
 
 #endif // CONFIG_H
