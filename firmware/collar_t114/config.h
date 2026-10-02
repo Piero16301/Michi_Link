@@ -46,7 +46,7 @@ constexpr uint32_t GPS_BAUDRATE = 9600;
 #endif
 
 #ifndef BAT_AMPLIFY
-#define BAT_AMPLIFY 4.9f
+#define BAT_AMPLIFY 5.13f
 #endif
 
 #endif // CONFIG_H

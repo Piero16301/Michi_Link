@@ -99,15 +99,15 @@ double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
 }
 
 int batteryMvToPct(uint16_t mv) {
-  if (mv >= 4150) return 100;
-  if (mv >= 4000) return 85 + (mv - 4000) * 15 / 150;
-  if (mv >= 3850) return 70 + (mv - 3850) * 15 / 150;
-  if (mv >= 3780) return 50 + (mv - 3780) * 20 / 70;
-  if (mv >= 3700) return 30 + (mv - 3700) * 20 / 80;
-  if (mv >= 3600) return 15 + (mv - 3600) * 15 / 100;
-  if (mv >= 3400) return 5  + (mv - 3400) * 10 / 200;
-  if (mv >= 3000) return 1  + (mv - 3000) * 4  / 400; // Reserva crítica (3.4V a 3.0V)
-  return 0; // Solo marca 0% al acercarse al corte del hardware BMS (< 3.0V)
+  if (mv >= 4160) return 100;
+  if (mv >= 4050) return 90 + (mv - 4050) * 10 / 110;  // 4050 a 4160 mV -> 90% a 100%
+  if (mv >= 3920) return 75 + (mv - 3920) * 15 / 130;  // 3920 a 4050 mV -> 75% a 90%
+  if (mv >= 3800) return 50 + (mv - 3800) * 25 / 120;  // 3800 a 3920 mV -> 50% a 75%
+  if (mv >= 3700) return 25 + (mv - 3700) * 25 / 100;  // 3700 a 3800 mV -> 25% a 50%
+  if (mv >= 3550) return 10 + (mv - 3550) * 15 / 150;  // 3550 a 3700 mV -> 10% a 25%
+  if (mv >= 3350) return 3  + (mv - 3350) * 7  / 200;  // 3350 a 3550 mV -> 3% a 10%
+  if (mv >= 3000) return 1;                            // Reserva crítica antes de corte
+  return 0;                                            // Corte (< 3.0V)
 }
 
 // Emisión normalizada de alertas hacia MQTT
