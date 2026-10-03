@@ -24,30 +24,17 @@ uint16_t packetSeq = 1;
 // Comando Standby nativo para Quectel L76K / AT6558R (~7 uA en RAM)
 const char *GPS_STANDBY_CMD = "$PCAS12,1*1F\r\n";
 
-// ========================================================
-// CONTROL DE ENERGÍA Y BUS UART PARA QUECTEL L76K
-// ========================================================
-
 void wakeGps() {
-  // 1. Reabrir el periférico UART del nRF52840
-  Serial2.begin(GPS_BAUDRATE);
-  delay(10);
-
-  // 2. Enviar cualquier byte para sacar al L76K del modo Standby inmediatamente
+  // Enviar cualquier byte saca al L76K del modo Standby inmediatamente
   Serial2.write(0xFF);
   delay(15);
 }
 
 void sleepGps() {
-  // 1. Enviar comando CASIC de Standby y vaciar el buffer hacia el módulo GNSS
+  // Enviar SOLO el comando CASIC y vaciar el buffer
   Serial2.print(GPS_STANDBY_CMD);
   Serial2.flush();
-  delay(20);
-
-  // 2. Suspender explícitamente el periférico UART
-  // Esto libera el oscilador HFCLK (64 MHz) y permite al nRF52840
-  // entrar en ultra bajo consumo (System ON WFI) durante el delay() del ciclo
-  Serial2.end();
+  delay(10);
 }
 
 uint16_t readBatteryMilliVolts() {
