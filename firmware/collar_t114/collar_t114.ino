@@ -16,36 +16,30 @@
   #define DBG_PRINTF(...)
 #endif
 
-// Calibración para que 4.20V reales en batería no se lean como 4.04V
-#undef BAT_AMPLIFY
-#define BAT_AMPLIFY 5.10f
-
 SX1262 radio =
     new Module(PIN_LORA_NSS, PIN_LORA_DIO1, PIN_LORA_RESET, PIN_LORA_BUSY);
 TinyGPSPlus gps;
 uint16_t packetSeq = 1;
 
-// Encender el GPS por hardware
-void powerOnGps() {
-  pinMode(GPS_POWER_PIN, OUTPUT);
-  digitalWrite(GPS_POWER_PIN, HIGH);
-  pinMode(GPS_RESET_PIN, OUTPUT);
-  digitalWrite(GPS_RESET_PIN, HIGH);
-  delay(35); // Tiempo de arranque del regulador
-  Serial2.begin(GPS_BAUDRATE);
+// Comando Standby nativo para Quectel L76K / AT6558R (~7 uA en RAM)
+const char *GPS_STANDBY_CMD = "$PCAS12,1*1F\r\n";
+
+void wakeGps() {
+  // Enviar cualquier byte saca al L76K del modo Standby inmediatamente
+  Serial2.write(0xFF);
+  delay(15);
 }
 
-// Apagar el GPS por hardware y liberar pines para evitar fugas parásitas
-void powerOffGps() {
-  Serial2.end(); // Apaga EasyDMA y permite el reposo profundo de la CPU
-  pinMode(GPS_RESET_PIN, INPUT);
-  digitalWrite(GPS_POWER_PIN, LOW); // Corte físico total (0.0 mA)
+void sleepGps() {
+  // Enviar SOLO el comando CASIC y vaciar el buffer
+  Serial2.print(GPS_STANDBY_CMD);
+  Serial2.flush();
+  delay(10);
 }
 
-// Lectura de batería con sobremuestreo
 uint16_t readBatteryMilliVolts() {
   pinMode(PIN_BAT_ADC_CTL, OUTPUT);
-  digitalWrite(PIN_BAT_ADC_CTL, LOW); // Activa divisor resistivo
+  digitalWrite(PIN_BAT_ADC_CTL, LOW);
   delay(5);
 
   analogReadResolution(12);
@@ -60,7 +54,7 @@ uint16_t readBatteryMilliVolts() {
     delayMicroseconds(100);
   }
 
-  digitalWrite(PIN_BAT_ADC_CTL, HIGH); // Apaga divisor para evitar fugas
+  digitalWrite(PIN_BAT_ADC_CTL, HIGH);
 
   float rawAvg = (float)sum / (float)SAMPLES;
   float voltage = (rawAvg * 3.6f / 4096.0f) * BAT_AMPLIFY;
@@ -71,10 +65,10 @@ void setup() {
 #if ENABLE_SERIAL_DEBUG
   Serial.begin(115200);
   delay(1000);
-  DBG_PRINTLN("\n=== MICHIN LINK - HARDWARE POWER CUT ===");
+  DBG_PRINTLN("\n=== MICHIN LINK - CALIBRADO ===");
 #endif
 
-  // 1. Inicialización inicial del GPS
+  // 1. Energizar GPS
   pinMode(GPS_POWER_PIN, OUTPUT);
   digitalWrite(GPS_POWER_PIN, HIGH);
   pinMode(GPS_RESET_PIN, OUTPUT);
@@ -83,7 +77,9 @@ void setup() {
   digitalWrite(GPS_RESET_PIN, HIGH);
   delay(150);
 
-  // 2. Inicializar LoRa
+  Serial2.begin(GPS_BAUDRATE);
+
+  // 2. Inicializar módem LoRa
   SPI.begin();
   int state = radio.begin(LORA_FREQ);
   if (state == RADIOLIB_ERR_NONE) {
@@ -95,8 +91,19 @@ void setup() {
     radio.sleep();
   }
 
-  // Apagar el GPS físicamente hasta el inicio del ciclo
-  powerOffGps();
+  // 3. Sincronización inicial (Cold Start): hasta 40s para descargar efemérides
+  unsigned long startBootGps = millis();
+  while (millis() - startBootGps < 40000) {
+    while (Serial2.available() > 0) {
+      if (gps.encode(Serial2.read())) {
+        if (gps.location.isValid()) break;
+      }
+    }
+    if (gps.location.isValid()) break;
+  }
+
+  // Suspender el GPS conservando las efemérides en RAM
+  sleepGps();
 }
 
 void loop() {
@@ -105,14 +112,14 @@ void loop() {
   // 1. Medir batería en reposo
   uint16_t batMv = readBatteryMilliVolts();
 
-  // 2. Encender GPS y capturar datos satelitales
-  powerOnGps();
+  // 2. Despertar GPS (Hot Start)
+  wakeGps();
 
   unsigned long startGpsTime = millis();
   bool gotFreshFix = false;
 
-  // Espera dinámica: sale apenas obtiene Fix válido, con límite de seguridad de 6 segundos
-  while (millis() - startGpsTime < 6000) {
+  // Timeout dinámico de hasta 15s; sale apenas obtiene Fix (< 2s habituales)
+  while (millis() - startGpsTime < 15000) {
     while (Serial2.available() > 0) {
       if (gps.encode(Serial2.read())) {
         if (gps.location.isValid() && gps.location.age() < 2000) {
@@ -144,14 +151,14 @@ void loop() {
     packet.gps_flags = sats;
   }
 
-  // 4. Apagar físicamente el GPS de inmediato (0 mA)
-  powerOffGps();
+  // 4. Suspender el GPS conservando efemérides en RAM (~7 uA)
+  sleepGps();
 
-  // 5. Transmisión LoRa y suspensión del transceptor (< 2 uA)
+  // 5. Transmitir por LoRa y suspender radio
   radio.transmit((uint8_t *)&packet, sizeof(MinimalCollarPacket));
   radio.sleep();
 
-  // 6. Reposo del microcontrolador por el tiempo restante del ciclo de 60 segundos
+  // 6. Dormir el resto del ciclo de 60 segundos
   uint32_t elapsed = millis() - cycleStart;
   if (elapsed < INTERVAL_MS) {
     delay(INTERVAL_MS - elapsed);
