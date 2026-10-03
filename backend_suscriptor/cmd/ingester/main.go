@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -23,7 +24,7 @@ import (
 // Constantes globales de configuración
 const (
 	RetentionDays     = 15 // TTL para histórico y alertas en Firestore (días)
-	CollarIntervalSec = 10 // Intervalo de transmisión predeterminado (segundos)
+	CollarIntervalSec = 60 // Intervalo de transmisión predeterminado (segundos)
 )
 
 // IngestService Estructura de manejo de clientes y lógica para el servicio de ingesta
@@ -69,11 +70,19 @@ func main() {
 		log.Fatalf("🔥 [FATAL] Error inicializando FCM Client: %v", err)
 	}
 
+	// Leer intervalo de variable de entorno con fallback a 60 segundos
+	intervalSec := CollarIntervalSec
+	if envInterval := getEnv("COLLAR_INTERVAL_SEC", ""); envInterval != "" {
+		if val, err := strconv.Atoi(envInterval); err == nil && val > 0 {
+			intervalSec = val
+		}
+	}
+
 	svc := &IngestService{
 		firestoreClient:   fsClient,
 		fcmClient:         fcmClient,
 		projectID:         projectID,
-		collarIntervalSec: CollarIntervalSec,
+		collarIntervalSec: intervalSec,
 	}
 
 	// 4. Configuración del cliente MQTT Paho
@@ -515,13 +524,12 @@ func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.
 func (s *IngestService) startOfflineWatchdog(ctx context.Context) {
 	log.Printf("⏱️ [WATCHDOG] Iniciando supervisor de presencia (Intervalo base: %ds)...", s.collarIntervalSec)
 
-	// La frecuencia de evaluación se ajusta proporcionalmente al intervalo del collar
-	checkDuration := max(time.Duration(s.collarIntervalSec)*time.Second, 5*time.Second)
+	// Comprobar cada 30 segundos (o la mitad del intervalo)
+	checkDuration := 30 * time.Second
 	ticker := time.NewTicker(checkDuration)
 	defer ticker.Stop()
 
-	// Umbral de inactividad: 3.5 veces el intervalo configurado
-	// (Ej.: 10 s -> 35 s | 60 s -> 210 s)
+	// Umbral de inactividad: 3.5 veces el intervalo (60 s -> 210 s = 3.5 minutos)
 	offlineThreshold := time.Duration(float64(s.collarIntervalSec)*3.5) * time.Second
 
 	for {
