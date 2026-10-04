@@ -7,10 +7,7 @@
 // IDENTIFICACIÓN DEL NODO Y TEMPORIZACIÓN
 // ==========================================
 constexpr uint64_t COLLAR_ID = 0x9E2B4A1F8C3D2E5AULL;
-
-// Configurado a 75 segundos (1m 15s) para asegurar > 3 días holgados (> 75 horas).
-// Si requieres 60 segundos exactos, cambia a: 60000 (brinda ~71.4h útiles / 79h totales).
-constexpr uint32_t INTERVAL_MS = 60000;
+constexpr uint32_t INTERVAL_MS = 60000; // 60 segundos de intervalo entre envíos
 
 // ==========================================
 // PARÁMETROS DE RADIOENLACE LORA SX1262
@@ -31,7 +28,7 @@ constexpr uint8_t PIN_LORA_RESET = 18;
 constexpr uint8_t PIN_LORA_BUSY = 17;
 
 // GPS Quectel L76K
-constexpr uint8_t GPS_POWER_PIN = 21; // Vext (HIGH para habilitar)
+constexpr uint8_t GPS_POWER_PIN = 21; // Riel Vext (HIGH para habilitar)
 constexpr uint8_t GPS_RESET_PIN = 38; // Reset físico por hardware
 constexpr uint32_t GPS_BAUDRATE = 9600;
 

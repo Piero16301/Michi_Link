@@ -21,26 +21,52 @@ SX1262 radio =
 TinyGPSPlus gps;
 uint16_t packetSeq = 1;
 
-// Comando Standby nativo para Quectel L76K / AT6558R (~7 uA en RAM)
-const char *GPS_STANDBY_CMD = "$PCAS12,1*1F\r\n";
+// Sentencias válidas de bajo consumo para Quectel L76K / AT6558R
+// $PCAS11,1*1C: Stop Mode nativo CASIC (~15 uA en SRAM)
+// $PCAS11,2*1F: Standby Mode CASIC
+// $PMTK161,0*28: Standby Mode protocolo MTK (compatibilidad de firmware Quectel)
+const char *CASIC_STOP_CMD    = "$PCAS11,1*1C\r\n";
+const char *CASIC_STANDBY_CMD = "$PCAS11,2*1F\r\n";
+const char *PMTK_STANDBY_CMD  = "$PMTK161,0*28\r\n";
 
 // ========================================================
-// CONTROL DE ENERGÍA SEGURO DEL GNSS (UART SIEMPRE ESTABLE)
+// CONTROL DE ENERGÍA GNSS (COMANDOS CASIC REALES)
 // ========================================================
 
 void wakeGps() {
-  // Enviar cualquier byte despierta al L76K inmediatamente de Standby
+  // Transmitir bytes en el bus UART despierta al AT6558R del Stop Mode
   Serial2.write(0xFF);
-  delay(15);
+  Serial2.print("\r\n");
+  Serial2.flush();
+  delay(25);
 }
 
 void sleepGps() {
-  // Transmitir comando de Standby CASIC y vaciar búfer UART.
-  // NO cerramos Serial2: la línea TX permanece en nivel lógico ALTO (3.3V),
-  // evitando flancos de bajada accidentales que despierten al módulo GNSS.
-  Serial2.print(GPS_STANDBY_CMD);
+  // 1. Drenar búfer de recepción previo
+  while (Serial2.available() > 0) {
+    Serial2.read();
+  }
+
+  // 2. Enviar Stop Mode nativo CASIC (Zhongke Micro AT6558R)
+  Serial2.print(CASIC_STOP_CMD);
   Serial2.flush();
-  delay(10);
+  delay(15);
+
+  // 3. Enviar sentencias de respaldo para variantes de firmware L76K
+  Serial2.print(CASIC_STANDBY_CMD);
+  Serial2.flush();
+  delay(15);
+  Serial2.print(PMTK_STANDBY_CMD);
+  Serial2.flush();
+  delay(15);
+
+  // 4. Vaciar las últimas tramas NMEA que estuvieran en tránsito de transmisión
+  unsigned long drainStart = millis();
+  while (millis() - drainStart < 80) {
+    while (Serial2.available() > 0) {
+      Serial2.read();
+    }
+  }
 }
 
 // ========================================================
@@ -48,7 +74,7 @@ void sleepGps() {
 // ========================================================
 
 uint16_t readBatteryMilliVolts() {
-  digitalWrite(PIN_BAT_ADC_CTL, LOW); // Activa el divisor
+  digitalWrite(PIN_BAT_ADC_CTL, LOW); // Habilitar divisor
   delay(5);
 
   analogReadResolution(12);
@@ -63,7 +89,7 @@ uint16_t readBatteryMilliVolts() {
     delayMicroseconds(100);
   }
 
-  digitalWrite(PIN_BAT_ADC_CTL, HIGH); // Apaga el divisor para evitar fugas
+  digitalWrite(PIN_BAT_ADC_CTL, HIGH); // Aislar divisor para suprimir corriente de fuga
 
   float rawAvg = (float)sum / (float)SAMPLES;
   float voltage = (rawAvg * 3.6f / 4096.0f) * BAT_AMPLIFY;
@@ -75,22 +101,22 @@ uint16_t readBatteryMilliVolts() {
 // ========================================================
 
 void setup() {
-  // 1. Activar reguladores conmutados DC-DC internos del nRF52840 (REG1 y REG0)
-  // Reduce el consumo de reposo de CPU y osciladores de ~4.5 mA a ~2.3 mA
+  // 1. Habilitar reguladores conmutados DC-DC internos del nRF52840 (REG1 y REG0)
+  // Reduce el consumo del microcontrolador de ~4.5 mA a ~2.3 mA
   NRF_POWER->DCDCEN = 1;
   NRF_POWER->DCDCEN0 = 1;
 
 #if ENABLE_SERIAL_DEBUG
   Serial.begin(115200);
   delay(1000);
-  DBG_PRINTLN("\n=== MICHIN LINK - ESTABLE > 3 DIAS ===");
+  DBG_PRINTLN("\n=== MICHIN LINK - CASIC POWER FIX ===");
 #endif
 
-  // 2. Aislar compuerta ADC desde el inicio para evitar fugas en arranque
+  // 2. Aislar compuerta ADC desde el arranque
   pinMode(PIN_BAT_ADC_CTL, OUTPUT);
   digitalWrite(PIN_BAT_ADC_CTL, HIGH);
 
-  // 3. Energizar GPS (Riel Vext)
+  // 3. Energizar módulo GNSS
   pinMode(GPS_POWER_PIN, OUTPUT);
   digitalWrite(GPS_POWER_PIN, HIGH);
   pinMode(GPS_RESET_PIN, OUTPUT);
@@ -99,10 +125,9 @@ void setup() {
   digitalWrite(GPS_RESET_PIN, HIGH);
   delay(150);
 
-  // El bus UART se inicializa una sola vez y no se destruye
   Serial2.begin(GPS_BAUDRATE);
 
-  // 4. Inicializar módem LoRa SX1262
+  // 4. Inicializar transceptor LoRa SX1262
   SPI.begin();
   int state = radio.begin(LORA_FREQ);
   if (state == RADIOLIB_ERR_NONE) {
@@ -114,7 +139,7 @@ void setup() {
     radio.sleep();
   }
 
-  // 5. Sincronización inicial (Cold Start): hasta 40s para descargar efemérides
+  // 5. Cold Start inicial para bajar efemérides (hasta 40s)
   unsigned long startBootGps = millis();
   while (millis() - startBootGps < 40000) {
     while (Serial2.available() > 0) {
@@ -125,18 +150,18 @@ void setup() {
     if (gps.location.isValid()) break;
   }
 
-  // Suspender el GNSS conservando efemérides en RAM interna
+  // Poner el GPS en Stop Mode conservando efemérides en SRAM
   sleepGps();
 }
 
 // ========================================================
-// CICLO PRINCIPAL DE TELEMETRÍA
+// CICLO PRINCIPAL (60 SEGUNDOS)
 // ========================================================
 
 void loop() {
   uint32_t cycleStart = millis();
 
-  // 1. Medir batería en reposo
+  // 1. Medir tensión de celda en reposo
   uint16_t batMv = readBatteryMilliVolts();
 
   // 2. Despertar GPS (Hot Start)
@@ -145,8 +170,8 @@ void loop() {
   unsigned long startGpsTime = millis();
   bool gotFreshFix = false;
 
-  // Timeout dinámico acotado a 4s (Hot Start fija en < 2s; no drena en interiores)
-  while (millis() - startGpsTime < 4000) {
+  // Timeout dinámico de 5s (Hot Start fija en < 2s; previene drenaje en interiores)
+  while (millis() - startGpsTime < 5000) {
     while (Serial2.available() > 0) {
       if (gps.encode(Serial2.read())) {
         if (gps.location.isValid() && gps.location.age() < 2000) {
@@ -158,7 +183,7 @@ void loop() {
     if (gotFreshFix) break;
   }
 
-  // 3. Estructurar paquete binario compacto (23 bytes)
+  // 3. Empaquetar datos binarios (23 bytes)
   MinimalCollarPacket packet;
   packet.collar_id = COLLAR_ID;
   packet.seq = packetSeq++;
@@ -178,14 +203,14 @@ void loop() {
     packet.gps_flags = sats;
   }
 
-  // 4. Suspender el GPS conservando efemérides en RAM
+  // 4. Suspender GPS a modo Stop (~15 uA en RAM)
   sleepGps();
 
-  // 5. Transmitir paquete LoRa a +22 dBm y suspender radio
+  // 5. Transmitir paquete por LoRa a +22 dBm y suspender radio
   radio.transmit((uint8_t *)&packet, sizeof(MinimalCollarPacket));
   radio.sleep();
 
-  // 6. Dormir el resto del ciclo (nRF52840 en reposo con DC-DC activo)
+  // 6. Reposo del procesador nRF52840 durante el resto de los 60 segundos
   uint32_t elapsed = millis() - cycleStart;
   if (elapsed < INTERVAL_MS) {
     delay(INTERVAL_MS - elapsed);
