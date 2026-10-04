@@ -60,6 +60,8 @@ class AppCubit extends Cubit<AppState> {
         fontFamily: _localStorage.getFontFamily(),
       ),
     );
+
+    emit(state.setSelectedCollarId(_localStorage.getSelectedCollarId()));
   }
 
   void changeLanguage({required Locale language}) {

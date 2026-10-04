@@ -1,16 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
+import 'package:michi_link_mobile/app/global/app_variables.dart';
 import 'package:michi_link_mobile/app/models/collar_config.dart';
 import 'package:michi_link_mobile/app/models/collar_coords.dart';
 import 'package:michi_link_mobile/app/models/collar_last_alert.dart';
 import 'package:michi_link_mobile/app/models/collar_radio.dart';
 import 'package:michi_link_mobile/app/models/collar_status.dart';
 
-/// {@template collar_model}
-/// A class that represents a collar device and its complete state
-/// {@endtemplate}
 class CollarModel extends Equatable {
-  /// {@macro collar_model}
   const CollarModel({
     required this.deviceId,
     required this.name,
@@ -26,9 +23,9 @@ class CollarModel extends Equatable {
     required this.status,
     required this.lastSeen,
     this.lastAlert,
+    this.breed = CatBreed.defaultBreed,
   });
 
-  /// Creates an instance of [CollarModel] from a [Map]
   factory CollarModel.fromJson(Map<String, dynamic> json) {
     return CollarModel(
       deviceId: json['device_id'] as String? ?? '',
@@ -74,10 +71,15 @@ class CollarModel extends Equatable {
               gpsFix: false,
               sats: 0,
             ),
+      breed: json['breed'] != null
+          ? CatBreed.values.firstWhere(
+              (b) => b.name == json['breed'],
+              orElse: () => CatBreed.defaultBreed,
+            )
+          : CatBreed.defaultBreed,
     );
   }
 
-  /// Creates a [Map] from an instance of [CollarModel]
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'device_id': deviceId,
@@ -94,50 +96,61 @@ class CollarModel extends Equatable {
       'last_alert': lastAlert?.toJson(),
       'radio': radio.toJson(),
       'status': status.toJson(),
+      'breed': breed.name,
     };
   }
 
-  /// Unique identifier of the collar device
   final String deviceId;
-
-  /// Pet or collar display name
   final String name;
-
-  /// Whether the device is currently online
   final bool isOnline;
-
-  /// Whether there is currently an active alert
   final bool hasActiveAlert;
-
-  /// Timestamp of the last received signal
   final DateTime lastSeen;
-
-  /// Packet loss percentage formatted string
   final String packetLossPct;
-
-  /// Count of lost packets
   final int packetsLost;
-
-  /// Count of received packets
   final int packetsReceived;
-
-  /// Collar configuration parameters
   final CollarConfig config;
-
-  /// Current GPS coordinates
   final CollarCoords coords;
-
-  /// Base GPS coordinates (home)
   final CollarCoords baseCoords;
-
-  /// Most recent alert details, if any
   final CollarLastAlert? lastAlert;
-
-  /// LoRa radio metrics
   final CollarRadio radio;
-
-  /// Device hardware status
   final CollarStatus status;
+  final CatBreed breed;
+
+  CollarModel copyWith({
+    String? deviceId,
+    String? name,
+    bool? isOnline,
+    bool? hasActiveAlert,
+    DateTime? lastSeen,
+    String? packetLossPct,
+    int? packetsLost,
+    int? packetsReceived,
+    CollarConfig? config,
+    CollarCoords? coords,
+    CollarCoords? baseCoords,
+    CollarLastAlert? lastAlert,
+    CollarRadio? radio,
+    CollarStatus? status,
+    CatBreed? breed,
+  }) {
+    return CollarModel(
+      deviceId: deviceId ?? this.deviceId,
+      name: name ?? this.name,
+      isOnline: isOnline ?? this.isOnline,
+      hasActiveAlert: hasActiveAlert ?? this.hasActiveAlert,
+      lastSeen: lastSeen ?? this.lastSeen,
+      packetLossPct: packetLossPct ?? this.packetLossPct,
+      packetsLost: packetsLost ?? this.packetsLost,
+      packetsReceived: packetsReceived ?? this.packetsReceived,
+      config: config ?? this.config,
+      coords: coords ?? this.coords,
+      baseCoords: baseCoords ?? this.baseCoords,
+      lastAlert: lastAlert ?? this.lastAlert,
+      radio: radio ?? this.radio,
+      status: status ?? this.status,
+      breed: breed ?? this.breed,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -155,5 +168,6 @@ class CollarModel extends Equatable {
     lastAlert,
     radio,
     status,
+    breed,
   ];
 }

@@ -10,6 +10,7 @@ abstract class LocalStorageRepository {
   static const kUserFontFamily = '__user_font_family__';
 
   static const kCollars = '__collars__';
+  static const kSelectedCollarId = '__selected_collar_id__';
 
   Future<void> initialize();
   void saveLanguage({required Locale language});
@@ -23,6 +24,8 @@ abstract class LocalStorageRepository {
   void saveCollars({required List<String> collars});
   List<String> getCollars();
   ValueListenable<List<String>> getCollarsListenable();
+  void saveSelectedCollarId({required String collarId});
+  String? getSelectedCollarId();
 }
 
 class MockLocalStorageRepository implements LocalStorageRepository {
@@ -73,6 +76,14 @@ class MockLocalStorageRepository implements LocalStorageRepository {
   ValueListenable<List<String>> getCollarsListenable() {
     return ValueNotifier<List<String>>([]);
   }
+
+  @override
+  void saveSelectedCollarId({required String collarId}) {}
+
+  @override
+  String? getSelectedCollarId() {
+    return null;
+  }
 }
 
 class HiveLocalStorageRepository implements LocalStorageRepository {
@@ -80,9 +91,11 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
 
   static const kSettingsBoxName = '__settings__';
   static const kCollarsBoxName = '__collars__';
+  static const kPropertiesBoxName = '__properties__';
 
   late final Box<String> _settingsBox;
   late final Box<String> _collarsBox;
+  late final Box<String> _propertiesBox;
 
   @override
   Future<void> initialize() async {
@@ -102,6 +115,11 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
         await Hive.openBox<String>(kCollarsBoxName);
       }
       _collarsBox = Hive.box<String>(kCollarsBoxName);
+
+      if (!Hive.isBoxOpen(kPropertiesBoxName)) {
+        await Hive.openBox<String>(kPropertiesBoxName);
+      }
+      _propertiesBox = Hive.box<String>(kPropertiesBoxName);
     } finally {
       performance.stopTrace(trace);
     }
@@ -189,6 +207,18 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
   @override
   ValueListenable<List<String>> getCollarsListenable() {
     return _BoxListenable<String>(_collarsBox.listenable());
+  }
+
+  @override
+  void saveSelectedCollarId({required String collarId}) {
+    _propertiesBox
+        .put(LocalStorageRepository.kSelectedCollarId, collarId)
+        .ignore();
+  }
+
+  @override
+  String? getSelectedCollarId() {
+    return _propertiesBox.get(LocalStorageRepository.kSelectedCollarId);
   }
 }
 

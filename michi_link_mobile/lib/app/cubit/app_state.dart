@@ -6,12 +6,14 @@ class AppState extends Equatable {
     this.theme = ThemeMode.system,
     this.baseColor = Colors.green,
     this.fontFamily = 'GoogleSansFlex',
+    this.selectedCollarId,
   });
 
   final Locale language;
   final ThemeMode theme;
   final Color baseColor;
   final String fontFamily;
+  final String? selectedCollarId;
 
   AppState copyWith({
     Locale? language,
@@ -27,6 +29,22 @@ class AppState extends Equatable {
     );
   }
 
+  AppState setSelectedCollarId(String? collarId) {
+    return AppState(
+      language: language,
+      theme: theme,
+      baseColor: baseColor,
+      fontFamily: fontFamily,
+      selectedCollarId: collarId,
+    );
+  }
+
   @override
-  List<Object> get props => [language, theme, baseColor, fontFamily];
+  List<Object?> get props => [
+    language,
+    theme,
+    baseColor,
+    fontFamily,
+    selectedCollarId,
+  ];
 }

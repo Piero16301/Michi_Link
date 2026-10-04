@@ -71,5 +71,231 @@
     "settingsVersionTitle": "Version",
     "@settingsVersionTitle": {},
     "settingsUpdateDateTitle": "Last update",
-    "@settingsUpdateDateTitle": {}
+    "@settingsUpdateDateTitle": {},
+    "catBreedDefault": "Default",
+    "@catBreedDefault": {},
+    "catBreedEuropeanOrangeWhite": "European Shorthair",
+    "@catBreedEuropeanOrangeWhite": {},
+    "catBreedPersian": "Persian",
+    "@catBreedPersian": {},
+    "catBreedSiamese": "Siamese",
+    "@catBreedSiamese": {},
+    "catBreedMaineCoon": "Maine Coon",
+    "@catBreedMaineCoon": {},
+    "catBreedRagdoll": "Ragdoll",
+    "@catBreedRagdoll": {},
+    "catBreedBritishShorthair": "British Shorthair",
+    "@catBreedBritishShorthair": {},
+    "catBreedBengal": "Bengal",
+    "@catBreedBengal": {},
+    "catBreedRussianBlue": "Russian Blue",
+    "@catBreedRussianBlue": {},
+    "catBreedSphynx": "Sphynx",
+    "@catBreedSphynx": {},
+    "homeStatusOnline": "Online",
+    "@homeStatusOnline": {},
+    "homeTimeAgo": "{time} ago",
+    "@homeTimeAgo": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "homePetsTooltip": "Pets",
+    "@homePetsTooltip": {},
+    "homeGeofenceSafe": "SAFE GEOFENCE (500M)",
+    "@homeGeofenceSafe": {},
+    "homeBaseHome": "Base ESP32  •  Home",
+    "@homeBaseHome": {},
+    "homeDistance": "DISTANCE",
+    "@homeDistance": {},
+    "homeSafeZone": "SAFE ZONE",
+    "@homeSafeZone": {},
+    "homeMetersFromHome": "m from home",
+    "@homeMetersFromHome": {},
+    "homeCollarBattery": "COLLAR BATTERY",
+    "@homeCollarBattery": {},
+    "homePositioning": "POSITIONING",
+    "@homePositioning": {},
+    "homeActiveSatellites": "{count} Active satellites",
+    "@homeActiveSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "homeLoraLink": "LORA LINK",
+    "@homeLoraLink": {},
+    "homeSignalOptimal": "Optimal",
+    "@homeSignalOptimal": {},
+    "homeConfigCollar": "Configure collar",
+    "@homeConfigCollar": {},
+    "homeNoCollarTitle": "No collar added yet",
+    "@homeNoCollarTitle": {},
+    "homeNoCollarDescription": "To start tracking and caring for your cat in real time, you must first register or link a collar.",
+    "@homeNoCollarDescription": {},
+    "homeGoToPets": "Go to pets",
+    "@homeGoToPets": {},
+    "collarsTitle": "My Pets",
+    "@collarsTitle": {},
+    "collarsLinkedCount": "Linked Collars ({count})",
+    "@collarsLinkedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsLinkNew": "+ Link new collar",
+    "@collarsLinkNew": {},
+    "collarsAddDeviceTitle": "Link Device",
+    "@collarsAddDeviceTitle": {},
+    "collarsAddDeviceSubtitle": "LoRa Mesh Node & GPS Tracker",
+    "@collarsAddDeviceSubtitle": {},
+    "collarsAddDeviceDescription": "Enter the serial number engraved on the collar casing to manually register and assign it to your pet.",
+    "@collarsAddDeviceDescription": {},
+    "collarsScanQrTitle": "Scan QR code",
+    "@collarsScanQrTitle": {},
+    "collarsScanQrSubtitle": "Located on the back of the IP68 waterproof collar",
+    "@collarsScanQrSubtitle": {},
+    "collarsOrEnterManualId": "OR ENTER ID MANUALLY",
+    "@collarsOrEnterManualId": {},
+    "collarsHardwareId": "HARDWARE IDENTIFIER",
+    "@collarsHardwareId": {},
+    "collarsPetName": "PET NAME",
+    "@collarsPetName": {},
+    "collarsPetNameHint": "e.g. Michin, Kira, Oliver",
+    "@collarsPetNameHint": {},
+    "collarsChooseCatBreed": "CHOOSE YOUR CAT'S BREED",
+    "@collarsChooseCatBreed": {},
+    "collarsBreedsSvgCount": "{count} SVG Breeds",
+    "@collarsBreedsSvgCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsDefaultPetName": "New Michi",
+    "@collarsDefaultPetName": {},
+    "collarsLinkedSuccess": "Collar \"{name}\" linked successfully",
+    "@collarsLinkedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsSaveAndLink": "Save and Link",
+    "@collarsSaveAndLink": {},
+    "collarsEditCardTitle": "Edit Card: {name}",
+    "@collarsEditCardTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsSettingsSubtitle": "Collar settings",
+    "@collarsSettingsSubtitle": {},
+    "collarsStatusLinked": "Linked",
+    "@collarsStatusLinked": {},
+    "collarsStatusDisconnected": "Disconnected",
+    "@collarsStatusDisconnected": {},
+    "collarsHardwareIdImmutable": "HARDWARE ID (IMMUTABLE)",
+    "@collarsHardwareIdImmutable": {},
+    "collarsCryptographicallySigned": "Cryptographically signed on LoRa node",
+    "@collarsCryptographicallySigned": {},
+    "collarsPublicAliasOnMap": "PUBLIC ALIAS ON MAP",
+    "@collarsPublicAliasOnMap": {},
+    "collarsLowBatteryAlert": "Low battery alert (<20%)",
+    "@collarsLowBatteryAlert": {},
+    "collarsPriorityNotificationMobile": "Priority mobile notification",
+    "@collarsPriorityNotificationMobile": {},
+    "collarsUpdateData": "Update Data",
+    "@collarsUpdateData": {},
+    "collarsCardUpdated": "Card for \"{name}\" updated",
+    "@collarsCardUpdated": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkAndClear": "Unlink collar and clear local telemetry",
+    "@collarsUnlinkAndClear": {},
+    "collarsUnlinkedSuccess": "Collar \"{name}\" unlinked",
+    "@collarsUnlinkedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsStatusActiveRealtime": "Online • Active in real time",
+    "@collarsStatusActiveRealtime": {},
+    "collarsBatteryLabel": "BATTERY",
+    "@collarsBatteryLabel": {},
+    "collarsConstellationLabel": "CONSTELLATION",
+    "@collarsConstellationLabel": {},
+    "collarsSatellitesCount": "{count} Satellites",
+    "@collarsSatellitesCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsPrecisionMeters": "Accuracy {precision}m",
+    "@collarsPrecisionMeters": {
+        "placeholders": {
+            "precision": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsNoGpsFix": "No GPS Fix",
+    "@collarsNoGpsFix": {},
+    "collarsGpsFix": "GPS Fix",
+    "@collarsGpsFix": {},
+    "collarsConfigureAndTelemetry": "Configure Collar & Telemetry",
+    "@collarsConfigureAndTelemetry": {},
+    "collarsSignalLabel": "LORA SIGNAL",
+    "@collarsSignalLabel": {},
+    "collarsDistanceHome": "To home: {distance}",
+    "@collarsDistanceHome": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsPacketsLabel": "PACKETS",
+    "@collarsPacketsLabel": {},
+    "collarsPacketsLostCount": "{count} lost",
+    "@collarsPacketsLostCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsPacketsReceivedCount": "{count} rx",
+    "@collarsPacketsReceivedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsLossRate": "{pct} loss",
+    "@collarsLossRate": {
+        "placeholders": {
+            "pct": {
+                "type": "String"
+            }
+        }
+    }
 }

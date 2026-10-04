@@ -71,5 +71,231 @@
     "settingsVersionTitle": "Versión",
     "@settingsVersionTitle": {},
     "settingsUpdateDateTitle": "Fecha de actualización",
-    "@settingsUpdateDateTitle": {}
+    "@settingsUpdateDateTitle": {},
+    "catBreedDefault": "Por defecto",
+    "@catBreedDefault": {},
+    "catBreedEuropeanOrangeWhite": "Gato común europeo",
+    "@catBreedEuropeanOrangeWhite": {},
+    "catBreedPersian": "Persa",
+    "@catBreedPersian": {},
+    "catBreedSiamese": "Siamés",
+    "@catBreedSiamese": {},
+    "catBreedMaineCoon": "Maine Coon",
+    "@catBreedMaineCoon": {},
+    "catBreedRagdoll": "Ragdoll",
+    "@catBreedRagdoll": {},
+    "catBreedBritishShorthair": "British Shorthair",
+    "@catBreedBritishShorthair": {},
+    "catBreedBengal": "Bengala",
+    "@catBreedBengal": {},
+    "catBreedRussianBlue": "Azul ruso",
+    "@catBreedRussianBlue": {},
+    "catBreedSphynx": "Esfinge",
+    "@catBreedSphynx": {},
+    "homeStatusOnline": "En línea",
+    "@homeStatusOnline": {},
+    "homeTimeAgo": "hace {time}",
+    "@homeTimeAgo": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "homePetsTooltip": "Mascotas",
+    "@homePetsTooltip": {},
+    "homeGeofenceSafe": "GEOVALLA SEGURA (500M)",
+    "@homeGeofenceSafe": {},
+    "homeBaseHome": "Base ESP32  •  Casa",
+    "@homeBaseHome": {},
+    "homeDistance": "DISTANCIA",
+    "@homeDistance": {},
+    "homeSafeZone": "ZONA SEGURA",
+    "@homeSafeZone": {},
+    "homeMetersFromHome": "m de casa",
+    "@homeMetersFromHome": {},
+    "homeCollarBattery": "BATERÍA COLLAR",
+    "@homeCollarBattery": {},
+    "homePositioning": "POSICIONAMIENTO",
+    "@homePositioning": {},
+    "homeActiveSatellites": "{count} Satélites activos",
+    "@homeActiveSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "homeLoraLink": "ENLACE LORA",
+    "@homeLoraLink": {},
+    "homeSignalOptimal": "Óptimo",
+    "@homeSignalOptimal": {},
+    "homeConfigCollar": "Configurar collar",
+    "@homeConfigCollar": {},
+    "homeNoCollarTitle": "Aún no tienes un collar agregado",
+    "@homeNoCollarTitle": {},
+    "homeNoCollarDescription": "Para comenzar a rastrear y cuidar a tu michi en tiempo real, primero debes registrar o vincular un collar.",
+    "@homeNoCollarDescription": {},
+    "homeGoToPets": "Ir a mascotas",
+    "@homeGoToPets": {},
+    "collarsTitle": "Mis Mascotas",
+    "@collarsTitle": {},
+    "collarsLinkedCount": "Collares Vinculados ({count})",
+    "@collarsLinkedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsLinkNew": "+ Vincular nuevo collar",
+    "@collarsLinkNew": {},
+    "collarsAddDeviceTitle": "Vincular Dispositivo",
+    "@collarsAddDeviceTitle": {},
+    "collarsAddDeviceSubtitle": "Nodo LoRa Mesh & GPS Tracker",
+    "@collarsAddDeviceSubtitle": {},
+    "collarsAddDeviceDescription": "Ingresa el número de serie grabado en la carcasa del collar para registrarlo manualmente y asignarlo a tu mascota.",
+    "@collarsAddDeviceDescription": {},
+    "collarsScanQrTitle": "Escanear código QR",
+    "@collarsScanQrTitle": {},
+    "collarsScanQrSubtitle": "Ubicado en la parte trasera del collar impermeable IP68",
+    "@collarsScanQrSubtitle": {},
+    "collarsOrEnterManualId": "O INGRESA EL ID MANUALMENTE",
+    "@collarsOrEnterManualId": {},
+    "collarsHardwareId": "IDENTIFICADOR DE HARDWARE",
+    "@collarsHardwareId": {},
+    "collarsPetName": "NOMBRE DE TU MASCOTA",
+    "@collarsPetName": {},
+    "collarsPetNameHint": "ej. Michín, Kira, Oliver",
+    "@collarsPetNameHint": {},
+    "collarsChooseCatBreed": "ELIGE LA RAZA DE TU GATO",
+    "@collarsChooseCatBreed": {},
+    "collarsBreedsSvgCount": "{count} Razas SVG",
+    "@collarsBreedsSvgCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsDefaultPetName": "Nuevo Michi",
+    "@collarsDefaultPetName": {},
+    "collarsLinkedSuccess": "Collar \"{name}\" vinculado con éxito",
+    "@collarsLinkedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsSaveAndLink": "Guardar y Vincular",
+    "@collarsSaveAndLink": {},
+    "collarsEditCardTitle": "Editar Ficha: {name}",
+    "@collarsEditCardTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsSettingsSubtitle": "Configuración del collar",
+    "@collarsSettingsSubtitle": {},
+    "collarsStatusLinked": "Vinculado",
+    "@collarsStatusLinked": {},
+    "collarsStatusDisconnected": "Desconectado",
+    "@collarsStatusDisconnected": {},
+    "collarsHardwareIdImmutable": "HARDWARE ID (INMUTABLE)",
+    "@collarsHardwareIdImmutable": {},
+    "collarsCryptographicallySigned": "Firmado criptográficamente en nodo LoRa",
+    "@collarsCryptographicallySigned": {},
+    "collarsPublicAliasOnMap": "ALIAS PÚBLICO EN MAPA",
+    "@collarsPublicAliasOnMap": {},
+    "collarsLowBatteryAlert": "Alerta por batería baja (<20%)",
+    "@collarsLowBatteryAlert": {},
+    "collarsPriorityNotificationMobile": "Notificación prioritaria en móvil",
+    "@collarsPriorityNotificationMobile": {},
+    "collarsUpdateData": "Actualizar Datos",
+    "@collarsUpdateData": {},
+    "collarsCardUpdated": "Ficha de \"{name}\" actualizada",
+    "@collarsCardUpdated": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkAndClear": "Desvincular collar y borrar telemetría local",
+    "@collarsUnlinkAndClear": {},
+    "collarsUnlinkedSuccess": "Collar \"{name}\" desvinculado",
+    "@collarsUnlinkedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsStatusActiveRealtime": "Online • Activo en tiempo real",
+    "@collarsStatusActiveRealtime": {},
+    "collarsBatteryLabel": "BATERÍA",
+    "@collarsBatteryLabel": {},
+    "collarsConstellationLabel": "CONSTELACIÓN",
+    "@collarsConstellationLabel": {},
+    "collarsSatellitesCount": "{count} Satélites",
+    "@collarsSatellitesCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsPrecisionMeters": "Precisión {precision}m",
+    "@collarsPrecisionMeters": {
+        "placeholders": {
+            "precision": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsNoGpsFix": "Sin Fix GPS",
+    "@collarsNoGpsFix": {},
+    "collarsGpsFix": "Con Fix GPS",
+    "@collarsGpsFix": {},
+    "collarsConfigureAndTelemetry": "Configurar Collar & Telemetría",
+    "@collarsConfigureAndTelemetry": {},
+    "collarsSignalLabel": "SEÑAL LORA",
+    "@collarsSignalLabel": {},
+    "collarsDistanceHome": "A casa: {distance}",
+    "@collarsDistanceHome": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsPacketsLabel": "PAQUETES",
+    "@collarsPacketsLabel": {},
+    "collarsPacketsLostCount": "{count} perdidos",
+    "@collarsPacketsLostCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsPacketsReceivedCount": "{count} rx",
+    "@collarsPacketsReceivedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsLossRate": "{pct} pérdida",
+    "@collarsLossRate": {
+        "placeholders": {
+            "pct": {
+                "type": "String"
+            }
+        }
+    }
 }

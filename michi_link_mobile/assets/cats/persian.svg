@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <!-- Persian cream coat gradient -->
+    <linearGradient id="per_coat" x1="64" y1="20" x2="64" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="60%" stop-color="#FDF8F0"/>
+      <stop offset="100%" stop-color="#F2E6D5"/>
+    </linearGradient>
+    <!-- Ear pink gradient -->
+    <linearGradient id="per_ear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F69584"/>
+      <stop offset="100%" stop-color="#E26857"/>
+    </linearGradient>
+    <!-- Copper amber eye gradient -->
+    <linearGradient id="per_eye" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A1800"/>
+      <stop offset="35%" stop-color="#8C3300"/>
+      <stop offset="70%" stop-color="#E66500"/>
+      <stop offset="100%" stop-color="#FFAB33"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fluffy Chest Peek -->
+  <path d="M34 104C30 114 42 126 64 126C86 126 98 114 94 104C82 100 46 100 34 104Z" fill="#F2E6D5" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Chest fur tufts -->
+  <path d="M50 110C56 116 64 118 72 116C68 122 60 123 54 118" fill="#FFFFFF"/>
+
+  <!-- Left Ear Exterior -->
+  <path d="M26 22C21 21 16 26 16 32C15 42 20 52 28 58L46 40C38 30 31 23 26 22Z" fill="url(#per_coat)" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Left Ear Interior -->
+  <path d="M25 28C22 34 22 44 28 50C31 46 37 38 40 36C35 30 30 27 25 28Z" fill="url(#per_ear)"/>
+  <!-- Fluffy Ear Tufts -->
+  <path d="M20 46C24 40 30 36 38 36C34 40 32 46 33 50C36 46 42 44 46 45C41 50 36 54 28 54C24 54 21 50 20 46Z" fill="#FFFFFF"/>
+
+  <!-- Right Ear Exterior -->
+  <path d="M102 22C107 21 112 26 112 32C113 42 108 52 100 58L82 40C90 30 97 23 102 22Z" fill="url(#per_coat)" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Right Ear Interior -->
+  <path d="M103 28C106 34 106 44 100 50C97 46 91 38 88 36C93 30 98 27 103 28Z" fill="url(#per_ear)"/>
+  <!-- Fluffy Ear Tufts -->
+  <path d="M108 46C104 40 98 36 90 36C94 40 96 46 95 50C92 46 86 44 82 45C87 50 92 54 100 54C104 54 107 50 108 46Z" fill="#FFFFFF"/>
+
+  <!-- Fluffy Round Head with Puffed Cheek Fur Locks -->
+  <path d="
+    M64 24
+    C84 24 102 36 106 50
+    C112 58 118 66 114 76
+    C112 82 116 88 112 94
+    C106 102 96 106 84 108
+    C74 109 54 109 44 108
+    C32 106 22 102 16 94
+    C12 88 16 82 14 76
+    C10 66 16 58 22 50
+    C26 36 44 24 64 24Z" 
+    fill="url(#per_coat)" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Fluffy Cheek Ruffs accents -->
+  <path d="M16 78C22 80 26 84 24 92" stroke="#E5D7C5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M112 78C106 80 102 84 104 92" stroke="#E5D7C5" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Cheerful Happy Eyebrows -->
+  <path d="M33 46C37 41 45 41 51 45" stroke="#3D291F" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M95 46C91 41 83 41 77 45" stroke="#3D291F" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+
+  <!-- Happy Smiling Anime Eyes (Copper Amber) -->
+  <!-- Left Eye -->
+  <g>
+    <path d="M30 63C30 52 40 47 48 51C55 55 56 68 53 74C48 80 36 78 32 72C30 69 30 66 30 63Z" fill="#FFFFFF"/>
+    <path d="M33 63C33 54 40 50 46 53C52 56 53 66 50 71C46 76 37 75 34 70C33 68 33 65 33 63Z" fill="url(#per_eye)"/>
+    <ellipse cx="43" cy="63" rx="5.5" ry="7.5" fill="#1C0900"/>
+    <path d="M36 67C38 72 44 74 48 71" stroke="#FFCC80" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <circle cx="39" cy="58" r="3.5" fill="#FFFFFF"/>
+    <circle cx="46" cy="66" r="1.8" fill="#FFFFFF"/>
+    <!-- Upward curling joyful eyelid -->
+    <path d="M26 60C28 50 38 46 49 50C53 51 54 54 53 55C50 54 42 49 33 53C29 55 26 60 25 62Z" fill="#3D291F"/>
+    <path d="M26 60C24 57 23 53 26 50C26 53 25 57 26 60Z" fill="#3D291F"/>
+    <!-- Smiling lower eyelid contour -->
+    <path d="M33 68C37 72 45 72 50 68" stroke="#3D291F" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Right Eye -->
+  <g>
+    <path d="M98 63C98 52 88 47 80 51C73 55 72 68 75 74C80 80 92 78 96 72C98 69 98 66 98 63Z" fill="#FFFFFF"/>
+    <path d="M95 63C95 54 88 50 82 53C76 56 75 66 78 71C82 76 91 75 94 70C95 68 95 65 95 63Z" fill="url(#per_eye)"/>
+    <ellipse cx="85" cy="63" rx="5.5" ry="7.5" fill="#1C0900"/>
+    <path d="M92 67C90 72 84 74 80 71" stroke="#FFCC80" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <circle cx="82" cy="58" r="3.5" fill="#FFFFFF"/>
+    <circle cx="89" cy="66" r="1.8" fill="#FFFFFF"/>
+    <!-- Upward curling joyful eyelid -->
+    <path d="M102 60C100 50 90 46 79 50C75 51 74 54 75 55C78 54 86 49 95 53C99 55 102 60 103 62Z" fill="#3D291F"/>
+    <path d="M102 60C104 57 105 53 102 50C102 53 103 57 102 60Z" fill="#3D291F"/>
+    <!-- Smiling lower eyelid contour -->
+    <path d="M95 68C91 72 83 72 78 68" stroke="#3D291F" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Cute Rosy Blush Cheeks -->
+  <ellipse cx="26" cy="73" rx="6" ry="3.5" fill="#FF8A80" opacity="0.4"/>
+  <ellipse cx="102" cy="73" rx="6" ry="3.5" fill="#FF8A80" opacity="0.4"/>
+
+  <!-- Short Snub Nose placed high between eyes -->
+  <path d="M64 68C67 68 69 65.5 68.5 64C68 62.8 66.5 62.2 64 62.2C61.5 62.2 60 62.8 59.5 64C59 65.5 61 68 64 68Z" fill="#E86E5E"/>
+  <ellipse cx="63.5" cy="63.8" rx="2" ry="0.8" fill="#FFA599"/>
+
+  <!-- Beaming Open Smiling Mouth -->
+  <path d="M55 72C55 72 57 80 64 80C71 80 73 72 73 72C68 73.5 60 73.5 55 72Z" fill="#A82828"/>
+  <path d="M58 76C60.5 78.8 64 79.5 64 79.5C64 79.5 67.5 78.8 70 76C67 75.2 61 75.2 58 76Z" fill="#FF8DA1"/>
+  <!-- Upturned :3 lip line -->
+  <path d="M64 68V72M64 72C61 72 56 71 51 68.5M64 72C67 72 72 71 77 68.5" stroke="#3D291F" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- Whisker Dots -->
+  <circle cx="50" cy="73" r="1" fill="#D5C5B5"/>
+  <circle cx="46" cy="76" r="1" fill="#D5C5B5"/>
+  <circle cx="78" cy="73" r="1" fill="#D5C5B5"/>
+  <circle cx="82" cy="76" r="1" fill="#D5C5B5"/>
+
+  <!-- Elegant Curving White Whiskers (Rendered on top of the face silhouette) -->
+  <g stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none">
+    <path d="M42 75C28 75 16 79 6 84"/>
+    <path d="M40 80C26 83 16 90 10 97"/>
+    <path d="M86 75C100 75 112 79 122 84"/>
+    <path d="M88 80C102 83 112 90 118 97"/>
+  </g>
+</svg>

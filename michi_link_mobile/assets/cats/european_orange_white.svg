@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <!-- Orange coat gradient -->
+    <linearGradient id="eow_orange" x1="64" y1="10" x2="64" y2="85" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FCAE3B"/>
+      <stop offset="50%" stop-color="#F39422"/>
+      <stop offset="100%" stop-color="#E06D10"/>
+    </linearGradient>
+    <!-- Inner ear pink gradient -->
+    <linearGradient id="eow_ear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F27965"/>
+      <stop offset="100%" stop-color="#D94B36"/>
+    </linearGradient>
+    <!-- Eye blue gradient -->
+    <linearGradient id="eow_eye" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0E2D4A"/>
+      <stop offset="35%" stop-color="#19557D"/>
+      <stop offset="70%" stop-color="#2D88BA"/>
+      <stop offset="100%" stop-color="#55B8DE"/>
+    </linearGradient>
+    <!-- Face shading -->
+    <linearGradient id="eow_white_shade" x1="64" y1="40" x2="64" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="80%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#EDE6DD"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Body / Chest Peek -->
+  <path d="M38 106C36 116 46 126 64 126C82 126 92 116 90 106C78 102 50 102 38 106Z" fill="#F4EEE6" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Left Ear Exterior -->
+  <path d="M22 8C19 6 14 10 13 14C11 26 13 42 22 52L44 30C36 18 28 10 22 8Z" fill="url(#eow_orange)" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Left Ear Interior -->
+  <path d="M22 14C18 22 18 36 24 44C28 40 34 32 38 28C32 20 26 15 22 14Z" fill="url(#eow_ear)"/>
+  <!-- Left Ear Fur Tufts -->
+  <path d="M22 42C24 38 28 35 34 35C30 38 28 43 28 46C31 43 36 41 40 42C36 46 32 50 26 50C24 50 22 46 22 42Z" fill="#FFFFFF"/>
+
+  <!-- Right Ear Exterior -->
+  <path d="M106 8C109 6 114 10 115 14C117 26 115 42 106 52L84 30C92 18 100 10 106 8Z" fill="url(#eow_orange)" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Right Ear Interior -->
+  <path d="M106 14C110 22 110 36 104 44C100 40 94 32 90 28C96 20 102 15 106 14Z" fill="url(#eow_ear)"/>
+  <!-- Right Ear Fur Tufts -->
+  <path d="M106 42C104 38 100 35 94 35C98 38 100 43 100 46C97 43 92 41 88 42C92 46 96 50 102 50C104 50 106 46 106 42Z" fill="#FFFFFF"/>
+
+  <!-- Head Base (Orange Cap) -->
+  <path d="
+    M64 22
+    C84 22 104 36 108 56
+    C112 68 114 80 108 92
+    C100 104 84 109 64 109
+    C44 109 28 104 20 92
+    C14 80 16 68 20 56
+    C24 36 44 22 64 22Z" 
+    fill="url(#eow_orange)" stroke="#3D291F" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- White Face Blaze & Chubby Cheeks Mask -->
+  <path d="
+    M64 26
+    C68 26 70 38 72 48
+    C76 49 84 52 90 56
+    C98 62 106 72 104 84
+    C102 96 90 104 78 106
+    C72 107 68 107.5 64 107.5
+    C60 107.5 56 107 50 106
+    C38 104 26 96 24 84
+    C22 72 30 62 38 56
+    C44 52 52 49 56 48
+    C58 38 60 26 64 26Z" 
+    fill="url(#eow_white_shade)"/>
+
+  <!-- Cheerful Happy Eyebrows (Cejas felices y amigables) -->
+  <path d="M33 46C37 41 45 41 51 45" stroke="#3D291F" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+  <path d="M95 46C91 41 83 41 77 45" stroke="#3D291F" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+
+  <!-- Happy Smiling Anime Eyes -->
+  <!-- Left Eye -->
+  <g>
+    <!-- Sclera -->
+    <path d="M30 63C30 52 40 47 48 51C55 55 56 68 53 74C48 80 36 78 32 72C30 69 30 66 30 63Z" fill="#FFFFFF"/>
+    <!-- Iris -->
+    <path d="M33 63C33 54 40 50 46 53C52 56 53 66 50 71C46 76 37 75 34 70C33 68 33 65 33 63Z" fill="url(#eow_eye)"/>
+    <!-- Pupil -->
+    <ellipse cx="43" cy="63" rx="5.5" ry="7.5" fill="#0A1826"/>
+    <!-- Iris light ring reflection -->
+    <path d="M36 67C38 72 44 74 48 71" stroke="#8FE0FF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <!-- Catchlights -->
+    <circle cx="39" cy="58" r="3.5" fill="#FFFFFF"/>
+    <circle cx="46" cy="66" r="1.8" fill="#FFFFFF"/>
+    <!-- Cheerful Eyelash & Wing curling upwards -->
+    <path d="M26 60C28 50 38 46 49 50C53 51 54 54 53 55C50 54 42 49 33 53C29 55 26 60 25 62Z" fill="#3D291F"/>
+    <path d="M26 60C24 57 23 53 26 50C26 53 25 57 26 60Z" fill="#3D291F"/>
+    <!-- Smiling lower eyelid contour -->
+    <path d="M33 68C37 72 45 72 50 68" stroke="#3D291F" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Right Eye -->
+  <g>
+    <!-- Sclera -->
+    <path d="M98 63C98 52 88 47 80 51C73 55 72 68 75 74C80 80 92 78 96 72C98 69 98 66 98 63Z" fill="#FFFFFF"/>
+    <!-- Iris -->
+    <path d="M95 63C95 54 88 50 82 53C76 56 75 66 78 71C82 76 91 75 94 70C95 68 95 65 95 63Z" fill="url(#eow_eye)"/>
+    <!-- Pupil -->
+    <ellipse cx="85" cy="63" rx="5.5" ry="7.5" fill="#0A1826"/>
+    <!-- Iris light ring reflection -->
+    <path d="M92 67C90 72 84 74 80 71" stroke="#8FE0FF" stroke-width="1.6" stroke-linecap="round" fill="none" opacity="0.8"/>
+    <!-- Catchlights -->
+    <circle cx="82" cy="58" r="3.5" fill="#FFFFFF"/>
+    <circle cx="89" cy="66" r="1.8" fill="#FFFFFF"/>
+    <!-- Cheerful Eyelash & Wing curling upwards -->
+    <path d="M102 60C100 50 90 46 79 50C75 51 74 54 75 55C78 54 86 49 95 53C99 55 102 60 103 62Z" fill="#3D291F"/>
+    <path d="M102 60C104 57 105 53 102 50C102 53 103 57 102 60Z" fill="#3D291F"/>
+    <!-- Smiling lower eyelid contour -->
+    <path d="M95 68C91 72 83 72 78 68" stroke="#3D291F" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- Cute Rosy Blush Cheeks (Mejillas sonrosadas felices) -->
+  <ellipse cx="28" cy="73" rx="6" ry="3.5" fill="#FF8A80" opacity="0.45"/>
+  <ellipse cx="100" cy="73" rx="6" ry="3.5" fill="#FF8A80" opacity="0.45"/>
+
+  <!-- Soft Pink Nose with Highlight -->
+  <path d="M64 77C67.5 77 70 74 69.5 72C69 70.5 67 70 64 70C61 70 59 70.5 58.5 72C58 74 60.5 77 64 77Z" fill="#E86E5E"/>
+  <ellipse cx="63.5" cy="71.8" rx="2.5" ry="1" fill="#FFA599"/>
+
+  <!-- Beaming Smiling Mouth with Cute Open Smile (Sonrisa alegre y abierta) -->
+  <!-- Open mouth inside -->
+  <path d="M55 81C55 81 57 89 64 89C71 89 73 81 73 81C68 82.5 60 82.5 55 81Z" fill="#A82828"/>
+  <!-- Pink tongue -->
+  <path d="M58 85C60.5 87.8 64 88.5 64 88.5C64 88.5 67.5 87.8 70 85C67 84.2 61 84.2 58 85Z" fill="#FF8DA1"/>
+  <!-- Upper lip line (:3 happy cat smile curving upwards) -->
+  <path d="M64 77V81M64 81C61 81 56 80 51 77.5M64 81C67 81 72 80 77 77.5" stroke="#3D291F" stroke-width="2.4" stroke-linecap="round"/>
+
+  <!-- Whisker Dots -->
+  <circle cx="50" cy="76" r="1" fill="#C4B5A5"/>
+  <circle cx="46" cy="79" r="1" fill="#C4B5A5"/>
+  <circle cx="51" cy="81" r="1" fill="#C4B5A5"/>
+  <circle cx="78" cy="76" r="1" fill="#C4B5A5"/>
+  <circle cx="82" cy="79" r="1" fill="#C4B5A5"/>
+  <circle cx="77" cy="81" r="1" fill="#C4B5A5"/>
+
+  <!-- Smooth Outer Silhouette Outline -->
+  <path d="
+    M64 22
+    C84 22 104 36 108 56
+    C112 68 114 80 108 92
+    C100 104 84 109 64 109
+    C44 109 28 104 20 92
+    C14 80 16 68 20 56
+    C24 36 44 22 64 22Z" 
+    stroke="#3D291F" stroke-width="2.5" fill="none"/>
+
+  <!-- Elegant Curving White Whiskers (Rendered on top of the face silhouette) -->
+  <g stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none">
+    <path d="M42 78C28 78 16 82 6 87"/>
+    <path d="M40 83C26 86 16 94 10 102"/>
+    <path d="M86 78C100 78 112 82 122 87"/>
+    <path d="M88 83C102 86 112 94 118 102"/>
+  </g>
+</svg>

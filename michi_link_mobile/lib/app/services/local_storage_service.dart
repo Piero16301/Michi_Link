@@ -54,4 +54,12 @@ class LocalStorageService {
   ValueListenable<List<String>> getCollarsListenable() {
     return _localStorageRepository.getCollarsListenable();
   }
+
+  void saveSelectedCollarId({required String collarId}) {
+    _localStorageRepository.saveSelectedCollarId(collarId: collarId);
+  }
+
+  String? getSelectedCollarId() {
+    return _localStorageRepository.getSelectedCollarId();
+  }
 }

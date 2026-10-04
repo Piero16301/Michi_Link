@@ -5,8 +5,4 @@ part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit() : super(const HomeState());
-
-  void updateZoom(double zoom) {
-    emit(state.copyWith(zoom: zoom));
-  }
 }
