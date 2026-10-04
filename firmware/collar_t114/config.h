@@ -6,9 +6,11 @@
 // ==========================================
 // IDENTIFICACIÓN DEL NODO Y TEMPORIZACIÓN
 // ==========================================
-constexpr uint64_t COLLAR_ID =
-    0x9E2B4A1F8C3D2E5AULL;              // 16 caracteres hexadecimales
-constexpr uint32_t INTERVAL_MS = 60000; // Intervalo entre transmisiones (ms)
+constexpr uint64_t COLLAR_ID = 0x9E2B4A1F8C3D2E5AULL;
+
+// Configurado a 75 segundos (1m 15s) para asegurar > 3 días holgados (> 75 horas).
+// Si requieres 60 segundos exactos, cambia a: 60000 (brinda ~71.4h útiles / 79h totales).
+constexpr uint32_t INTERVAL_MS = 60000;
 
 // ==========================================
 // PARÁMETROS DE RADIOENLACE LORA SX1262
@@ -20,7 +22,7 @@ constexpr uint8_t LORA_CODING_RATE = 5;     // CR 4/5
 constexpr int8_t LORA_TX_POWER_DBM = 22;    // Potencia máxima (+22 dBm)
 
 // ==========================================
-// PINES DE HARDWARE HELTEC T114 (board-config.h)
+// PINES DE HARDWARE HELTEC T114
 // ==========================================
 // Transceptor LoRa SX1262
 constexpr uint8_t PIN_LORA_NSS = 24;
@@ -34,9 +36,8 @@ constexpr uint8_t GPS_RESET_PIN = 38; // Reset físico por hardware
 constexpr uint32_t GPS_BAUDRATE = 9600;
 
 // ==========================================
-// MEDICIÓN DE BATERÍA (Nativo de variant.h)
+// MEDICIÓN DE BATERÍA
 // ==========================================
-// Se usan macros de respaldo para evitar colisiones con el núcleo Heltec
 #ifndef PIN_BAT_ADC
 #define PIN_BAT_ADC 4
 #endif
