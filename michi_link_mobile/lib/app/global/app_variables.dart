@@ -49,11 +49,6 @@ class AppVariables {
     Locale('en', 'US'),
     Locale('es', 'ES'),
   ];
-
-  static const Map<String, Locale> deviceLanguageMap = {
-    'en': Locale('en', 'US'),
-    'es': Locale('es', 'ES'),
-  };
 }
 
 enum SnackBarType {

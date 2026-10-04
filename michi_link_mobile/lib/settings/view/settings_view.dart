@@ -13,154 +13,447 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return BlocBuilder<AppCubit, AppState>(
       builder: (context, state) {
+        final currentColorKey = ColorHelper.getColorName(state.baseColor);
+        final currentColorName = _getColorName(currentColorKey, l10n);
+        final currentThemeName = _getThemeName(state.theme, l10n);
+        final currentLanguageName = _getLanguageName(state.language, l10n);
+
         return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              l10n.settingsAppBarTitle,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontVariations: <FontVariation>[
-                  ...(Theme.of(context).textTheme.titleLarge?.fontVariations ??
-                          const <FontVariation>[])
-                      .where((v) => v.axis != 'wght'),
-                  const FontVariation('wght', 700),
-                ],
+          appBar: ExpressiveTopAppBar(
+            centerTitle: false,
+            leading: Padding(
+              padding: const EdgeInsets.all(8),
+              child: ExpressiveIconButton.circle(
+                icon: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowLeft01,
+                  strokeWidth: 2,
+                ),
+                onPressed: () => context.pop(),
               ),
             ),
-            centerTitle: true,
-            leading: IconButton(
-              onPressed: () => context.pop(),
-              icon: const HugeIcon(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                strokeWidth: 2,
+            title: Text(
+              l10n.settingsAppBarTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
           body: ListView(
-            padding: const EdgeInsets.only(
-              left: 16,
-              right: 16,
-              top: 8,
-              bottom: 120,
-            ),
-            children: const [
-              Row(
-                spacing: 12,
-                children: [LocaleSettingsCard(), ThemeSettingsCard()],
+            padding: const EdgeInsets.only(top: 2, bottom: 24),
+            children: [
+              // Sección: Aspecto (Tema, Color base y Fuente agrupados)
+              ExpressiveCardGroup(
+                title: l10n.settingsAppearanceTitle,
+                children: [
+                  ExpressiveListTile(
+                    leading: const ExpressiveBadge(
+                      backgroundColor: Color(0xFF6750A4),
+                      foregroundColor: Colors.white,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedMoon02,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    title: Text(l10n.settingsThemeTitle),
+                    subtitle: Text(currentThemeName),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        HugeIcon(
+                          icon: _getThemeIcon(state.theme),
+                          color: colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowRight01,
+                          size: 20,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showThemePickerModal(context, state),
+                  ),
+                  ExpressiveListTile(
+                    leading: const ExpressiveBadge(
+                      backgroundColor: Color(0xFFE06D53),
+                      foregroundColor: Colors.white,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedPaintBoard,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    title: Text(l10n.settingsBaseColorTitle),
+                    subtitle: Text(currentColorName),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: state.baseColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowRight01,
+                          size: 20,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showColorPickerModal(context, state),
+                  ),
+                  ExpressiveListTile(
+                    leading: const ExpressiveBadge(
+                      backgroundColor: Color(0xFF1E88E5),
+                      foregroundColor: Colors.white,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedTextFont,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    title: Text(l10n.settingsFontTitle),
+                    subtitle: Text(
+                      state.fontFamily,
+                      style: TextStyle(fontFamily: state.fontFamily),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          height: 24,
+                          child: Center(
+                            child: Text(
+                              'Aa',
+                              style: TextStyle(
+                                fontFamily: state.fontFamily,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowRight01,
+                          size: 20,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showFontPickerModal(context, state),
+                  ),
+                ],
               ),
-              SizedBox(height: 12),
-              ColorSettingsCard(),
-              SizedBox(height: 12),
-              FontSettingsCard(),
-              SizedBox(height: 12),
-              Divider(),
-              SizedBox(height: 12),
-              SettingsAppSpecs(),
+
+              // Sección: Idioma
+              ExpressiveCardGroup(
+                title: l10n.settingsLanguageTitle,
+                children: [
+                  ExpressiveListTile(
+                    leading: const ExpressiveBadge(
+                      backgroundColor: Color(0xFF00ACC1),
+                      foregroundColor: Colors.white,
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedGlobe02,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    title: Text(l10n.settingsLanguageTitle),
+                    subtitle: Text(currentLanguageName),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CountryFlag.fromLanguageCode(
+                          state.language.languageCode,
+                          theme: const ImageTheme(
+                            width: 24,
+                            height: 24,
+                            shape: RoundedRectangle(6),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowRight01,
+                          size: 20,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ],
+                    ),
+                    onTap: () => _showLanguagePickerModal(context, state),
+                  ),
+                ],
+              ),
+
+              // Sección: Información de la aplicación
+              const SettingsAppSpecs(),
+              const SizedBox(height: 24),
             ],
           ),
         );
       },
     );
   }
-}
 
-class LocaleSettingsCard extends StatelessWidget {
-  const LocaleSettingsCard({super.key});
+  void _showSettingsModal({
+    required BuildContext context,
+    required String title,
+    required List<Widget> Function(BuildContext modalContext) itemsBuilder,
+  }) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final sheetHeight = MediaQuery.of(context).size.height * 0.52;
 
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<AppCubit>().state;
-
-    return SettingsCardBlock<Locale>(
-      isExpanded: true,
-      title: l10n.settingsLanguageTitle,
-      value: state.language,
-      items: AppVariables.supportedLocales.map((locale) {
-        return DropdownMenuItem<Locale>(
-          value: locale,
-          child: Row(
-            spacing: 12,
-            children: [
-              CountryFlag.fromLanguageCode(
-                locale.languageCode,
-                theme: const ImageTheme(
-                  width: 25,
-                  height: 25,
-                  shape: RoundedRectangle(4),
-                ),
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: colorScheme.surfaceContainer,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (modalContext) {
+        return SizedBox(
+          height: sheetHeight,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.4,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: itemsBuilder(modalContext),
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                _getLanguageName(locale, l10n),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
+            ),
           ),
         );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          context.read<AppCubit>().changeLanguage(language: value);
-        }
       },
+    );
+  }
+
+  void _showThemePickerModal(BuildContext context, AppState state) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final options = [
+      (ThemeMode.light, l10n.settingsThemeLight, HugeIcons.strokeRoundedSun03),
+      (ThemeMode.dark, l10n.settingsThemeDark, HugeIcons.strokeRoundedMoon02),
+      (
+        ThemeMode.system,
+        l10n.settingsThemeSystem,
+        HugeIcons.strokeRoundedComputerPhoneSync,
+      ),
+    ];
+
+    _showSettingsModal(
+      context: context,
+      title: l10n.settingsThemeTitle,
+      itemsBuilder: (modalContext) => options.map((option) {
+        final mode = option.$1;
+        final title = option.$2;
+        final icon = option.$3;
+        final isSelected = state.theme == mode;
+
+        return ListTile(
+          leading: HugeIcon(
+            icon: icon,
+            color: isSelected
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+            strokeWidth: 2,
+          ),
+          title: Text(
+            title,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? colorScheme.primary : colorScheme.onSurface,
+            ),
+          ),
+          trailing: isSelected
+              ? HugeIcon(
+                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                  color: colorScheme.primary,
+                  strokeWidth: 2,
+                )
+              : null,
+          onTap: () {
+            context.read<AppCubit>().changeTheme(theme: mode);
+            Navigator.pop(modalContext);
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  void _showColorPickerModal(BuildContext context, AppState state) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    _showSettingsModal(
+      context: context,
+      title: l10n.settingsBaseColorTitle,
+      itemsBuilder: (modalContext) => ColorHelper.colorMap.entries.map((entry) {
+        final isSelected = entry.value == state.baseColor;
+        return ListTile(
+          leading: Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: entry.value,
+              shape: BoxShape.circle,
+            ),
+          ),
+          title: Text(_getColorName(entry.key, l10n)),
+          trailing: isSelected
+              ? HugeIcon(
+                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                  color: colorScheme.primary,
+                  strokeWidth: 2,
+                )
+              : null,
+          onTap: () {
+            context.read<AppCubit>().changeBaseColor(baseColor: entry.value);
+            Navigator.pop(modalContext);
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  void _showFontPickerModal(BuildContext context, AppState state) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    _showSettingsModal(
+      context: context,
+      title: l10n.settingsFontTitle,
+      itemsBuilder: (modalContext) => AppVariables.availableFonts.entries.map((
+        entry,
+      ) {
+        final isSelected = entry.value == state.fontFamily;
+        return ListTile(
+          leading: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? colorScheme.primaryContainer
+                  : colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              'Aa',
+              style: TextStyle(
+                fontFamily: entry.value,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isSelected
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          title: Text(
+            entry.key,
+            style: TextStyle(
+              fontFamily: entry.value,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          trailing: isSelected
+              ? HugeIcon(
+                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                  color: colorScheme.primary,
+                  strokeWidth: 2,
+                )
+              : null,
+          onTap: () {
+            context.read<AppCubit>().changeFontFamily(fontFamily: entry.value);
+            Navigator.pop(modalContext);
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  void _showLanguagePickerModal(BuildContext context, AppState state) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    _showSettingsModal(
+      context: context,
+      title: l10n.selectLanguage,
+      itemsBuilder: (modalContext) => AppVariables.supportedLocales.map((
+        locale,
+      ) {
+        final isSelected = locale.languageCode == state.language.languageCode;
+        return ListTile(
+          leading: CountryFlag.fromLanguageCode(
+            locale.languageCode,
+            theme: const ImageTheme(
+              width: 28,
+              height: 28,
+              shape: RoundedRectangle(6),
+            ),
+          ),
+          title: Text(_getLanguageName(locale, l10n)),
+          trailing: isSelected
+              ? HugeIcon(
+                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                  color: colorScheme.primary,
+                  strokeWidth: 2,
+                )
+              : null,
+          onTap: () {
+            context.read<AppCubit>().changeLanguage(language: locale);
+            Navigator.pop(modalContext);
+          },
+        );
+      }).toList(),
     );
   }
 
   String _getLanguageName(Locale locale, AppLocalizations l10n) {
-    switch (locale.languageCode) {
-      case 'en':
-        return l10n.settingsLanguageEnglish;
-      case 'es':
-        return l10n.settingsLanguageSpanish;
-      default:
-        return locale.languageCode;
+    if (locale.languageCode ==
+        AppVariables.supportedLocales.first.languageCode) {
+      return l10n.settingsLanguageEnglish;
+    } else if (locale.languageCode ==
+        AppVariables.supportedLocales.last.languageCode) {
+      return l10n.settingsLanguageSpanish;
     }
-  }
-}
-
-class ThemeSettingsCard extends StatelessWidget {
-  const ThemeSettingsCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<AppCubit>().state;
-
-    return SettingsCardBlock<ThemeMode>(
-      isExpanded: true,
-      title: l10n.settingsThemeTitle,
-      value: state.theme,
-      items: ThemeMode.values.map((themeMode) {
-        return DropdownMenuItem<ThemeMode>(
-          value: themeMode,
-          child: Row(
-            spacing: 12,
-            children: [
-              HugeIcon(
-                icon: themeMode == ThemeMode.light
-                    ? HugeIcons.strokeRoundedSun03
-                    : (themeMode == ThemeMode.dark
-                          ? HugeIcons.strokeRoundedMoon02
-                          : HugeIcons.strokeRoundedFan01),
-                size: 20,
-                strokeWidth: 2,
-              ),
-              Text(
-                _getThemeName(themeMode, l10n),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          context.read<AppCubit>().changeTheme(theme: value);
-        }
-      },
-    );
+    return locale.languageCode;
   }
 
   String _getThemeName(ThemeMode themeMode, AppLocalizations l10n) {
@@ -173,52 +466,16 @@ class ThemeSettingsCard extends StatelessWidget {
         return l10n.settingsThemeSystem;
     }
   }
-}
 
-class ColorSettingsCard extends StatelessWidget {
-  const ColorSettingsCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<AppCubit>().state;
-
-    return SettingsCardBlock<Color>(
-      title: l10n.settingsBaseColorTitle,
-      value: state.baseColor,
-      items: ColorHelper.colorMap.entries.map((entry) {
-        return DropdownMenuItem<Color>(
-          value: entry.value,
-          child: Row(
-            spacing: 12,
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: entry.value,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.3),
-                  ),
-                ),
-              ),
-              Text(
-                _getColorName(entry.key, l10n),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value != null) {
-          context.read<AppCubit>().changeBaseColor(baseColor: value);
-        }
-      },
-    );
+  List<List<dynamic>> _getThemeIcon(ThemeMode themeMode) {
+    switch (themeMode) {
+      case ThemeMode.light:
+        return HugeIcons.strokeRoundedSun03;
+      case ThemeMode.dark:
+        return HugeIcons.strokeRoundedMoon02;
+      case ThemeMode.system:
+        return HugeIcons.strokeRoundedComputerPhoneSync;
+    }
   }
 
   String _getColorName(String colorKey, AppLocalizations l10n) {
@@ -264,44 +521,5 @@ class ColorSettingsCard extends StatelessWidget {
       default:
         return colorKey;
     }
-  }
-}
-
-class FontSettingsCard extends StatelessWidget {
-  const FontSettingsCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.watch<AppCubit>().state;
-
-    final fontItems = AppVariables.availableFonts.entries.map((entry) {
-      return DropdownMenuItem<String>(
-        value: entry.value,
-        child: Text(
-          entry.key,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontFamily: entry.value),
-        ),
-      );
-    }).toList();
-
-    final validValue = fontItems.any((item) => item.value == state.fontFamily)
-        ? state.fontFamily
-        : (AppVariables.availableFonts[state.fontFamily] ??
-              fontItems.firstOrNull?.value ??
-              state.fontFamily);
-
-    return SettingsCardBlock<String>(
-      title: l10n.settingsFontTitle,
-      value: validValue,
-      items: fontItems,
-      onChanged: (value) {
-        if (value != null) {
-          context.read<AppCubit>().changeFontFamily(fontFamily: value);
-        }
-      },
-    );
   }
 }

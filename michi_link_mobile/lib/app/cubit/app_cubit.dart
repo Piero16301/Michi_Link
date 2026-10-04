@@ -19,9 +19,10 @@ class AppCubit extends Cubit<AppState> {
     final language = _localStorage.getLanguage();
     if (language == null) {
       final deviceLocale = Platform.localeName.split('_').first;
-      final deviceLanguage =
-          AppVariables.deviceLanguageMap[deviceLocale] ??
-          AppVariables.supportedLocales.first;
+      final deviceLanguage = AppVariables.supportedLocales.firstWhere(
+        (locale) => locale.languageCode == deviceLocale,
+        orElse: () => AppVariables.supportedLocales.first,
+      );
       _localStorage.saveLanguage(language: deviceLanguage);
     }
 

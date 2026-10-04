@@ -57,17 +57,17 @@ android {
         create("production") {
             dimension = "default"
             applicationIdSuffix = ""
-            manifestPlaceholders["appName"] = "Michi Link Mobile"
+            manifestPlaceholders["appName"] = "Michi Link"
         }
         create("staging") {
             dimension = "default"
             applicationIdSuffix = ".stg"
-            manifestPlaceholders["appName"] = "[STG] Michi Link Mobile"
+            manifestPlaceholders["appName"] = "[STG] Michi Link"
         }
         create("development") {
             dimension = "default"
             applicationIdSuffix = ".dev"
-            manifestPlaceholders["appName"] = "[DEV] Michi Link Mobile"
+            manifestPlaceholders["appName"] = "[DEV] Michi Link"
         }
     }
 
