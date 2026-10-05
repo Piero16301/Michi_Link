@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"os/signal"
 	"strconv"
@@ -242,7 +243,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"radio":            payload.Radio,
 			"packets_received": totalReceived,
 			"packets_lost":     totalLost,
-			"packet_loss_pct":  fmt.Sprintf("%.2f%%", lossPct),
+			"packet_loss_pct":  math.Round(lossPct*100.0) / 100.0,
 		}
 
 		// Si es un collar nuevo o no tiene configuración, inicializar valores por defecto
