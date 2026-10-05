@@ -2,12 +2,6 @@
     "@@locale": "en",
     "selectLanguage": "Select language",
     "@selectLanguage": {},
-    "selectTheme": "Select theme",
-    "@selectTheme": {},
-    "errorLoadingElements": "An error occurred while loading elements",
-    "@errorLoadingElements": {},
-    "elementsNoData": "No elements have been registered",
-    "@elementsNoData": {},
     "settingsAppBarTitle": "Settings",
     "@settingsAppBarTitle": {},
     "settingsLanguageTitle": "Language",
@@ -104,10 +98,6 @@
     },
     "homePetsTooltip": "Pets",
     "@homePetsTooltip": {},
-    "homeGeofenceSafe": "SAFE GEOFENCE (500M)",
-    "@homeGeofenceSafe": {},
-    "homeBaseHome": "Base ESP32  •  Home",
-    "@homeBaseHome": {},
     "homeDistance": "DISTANCE",
     "@homeDistance": {},
     "homeSafeZone": "SAFE ZONE",
@@ -140,15 +130,7 @@
     "@homeGoToPets": {},
     "collarsTitle": "My Pets",
     "@collarsTitle": {},
-    "collarsLinkedCount": "Linked Collars ({count})",
-    "@collarsLinkedCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "collarsLinkNew": "+ Link new collar",
+    "collarsLinkNew": "Link new collar",
     "@collarsLinkNew": {},
     "collarsAddDeviceTitle": "Link Device",
     "@collarsAddDeviceTitle": {},
@@ -156,12 +138,6 @@
     "@collarsAddDeviceSubtitle": {},
     "collarsAddDeviceDescription": "Enter the serial number engraved on the collar casing to manually register and assign it to your pet.",
     "@collarsAddDeviceDescription": {},
-    "collarsScanQrTitle": "Scan QR code",
-    "@collarsScanQrTitle": {},
-    "collarsScanQrSubtitle": "Located on the back of the IP68 waterproof collar",
-    "@collarsScanQrSubtitle": {},
-    "collarsOrEnterManualId": "OR ENTER ID MANUALLY",
-    "@collarsOrEnterManualId": {},
     "collarsHardwareId": "HARDWARE IDENTIFIER",
     "@collarsHardwareId": {},
     "collarsPetName": "PET NAME",
@@ -234,7 +210,7 @@
             }
         }
     },
-    "collarsStatusActiveRealtime": "Online • Active in real time",
+    "collarsStatusActiveRealtime": "Online",
     "@collarsStatusActiveRealtime": {},
     "collarsBatteryLabel": "BATTERY",
     "@collarsBatteryLabel": {},
@@ -248,20 +224,10 @@
             }
         }
     },
-    "collarsPrecisionMeters": "Accuracy {precision}m",
-    "@collarsPrecisionMeters": {
-        "placeholders": {
-            "precision": {
-                "type": "String"
-            }
-        }
-    },
     "collarsNoGpsFix": "No GPS Fix",
     "@collarsNoGpsFix": {},
     "collarsGpsFix": "GPS Fix",
     "@collarsGpsFix": {},
-    "collarsConfigureAndTelemetry": "Configure Collar & Telemetry",
-    "@collarsConfigureAndTelemetry": {},
     "collarsSignalLabel": "LORA SIGNAL",
     "@collarsSignalLabel": {},
     "collarsDistanceHome": "To home: {distance}",
@@ -274,7 +240,7 @@
     },
     "collarsPacketsLabel": "PACKETS",
     "@collarsPacketsLabel": {},
-    "collarsPacketsLostCount": "{count} lost",
+    "collarsPacketsLostCount": "• {count} lost",
     "@collarsPacketsLostCount": {
         "placeholders": {
             "count": {
@@ -297,5 +263,11 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "collarsNotificationsTooltip": "Notifications",
+    "@collarsNotificationsTooltip": {},
+    "collarsLocationHistoryTooltip": "Location history",
+    "@collarsLocationHistoryTooltip": {},
+    "collarsEditTooltip": "Edit",
+    "@collarsEditTooltip": {}
 }

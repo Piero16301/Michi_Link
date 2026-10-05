@@ -46,26 +46,45 @@ class CollarsView extends StatelessWidget {
               return ListView(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Text(
-                      l10n.collarsLinkedCount(state.collars.length),
-                      style: textTheme.titleLarge?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
                   for (final collar in state.collars) ...[
                     CollarCard(
                       collar: collar,
                       onEditTap: () => _showEditCollarModal(context, collar),
                       onTap: () => _showEditCollarModal(context, collar),
+                      onNotificationsTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${collar.name}: '
+                              '${context.l10n.collarsNotificationsTooltip}',
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      onLocationHistoryTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              '${collar.name}: '
+                              '${context.l10n.collarsLocationHistoryTooltip}',
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 16),
                   ],
-                  _DashedAddCollarButton(
-                    onTap: () => _showAddCollarModal(context),
+                  ExpressiveButton.filled(
+                    onPressed: () => _showAddCollarModal(context),
+                    label: l10n.collarsLinkNew,
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      size: 20,
+                    ),
+                    isExpanded: true,
+                    size: ExpressiveButtonSize.large,
                   ),
                 ],
               );
@@ -110,128 +129,6 @@ class CollarsView extends StatelessWidget {
         child: _EditCollarBottomSheet(parentContext: context, collar: collar),
       ),
     );
-  }
-}
-
-class _DashedAddCollarButton extends StatelessWidget {
-  const _DashedAddCollarButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final l10n = context.l10n;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: CustomPaint(
-        painter: _DashedBorderPainter(
-          color: colorScheme.primary.withValues(alpha: 0.6),
-          strokeWidth: 1.5,
-          gap: 6,
-          dash: 6,
-          radius: 24,
-        ),
-        child: Container(
-          height: 60,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: colorScheme.primary.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedAdd01,
-                    size: 18,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                l10n.collarsLinkNew,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  const _DashedBorderPainter({
-    required this.color,
-    required this.strokeWidth,
-    required this.gap,
-    required this.dash,
-    required this.radius,
-  });
-
-  final Color color;
-  final double strokeWidth;
-  final double gap;
-  final double dash;
-  final double radius;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(
-        strokeWidth / 2,
-        strokeWidth / 2,
-        size.width - strokeWidth,
-        size.height - strokeWidth,
-      ),
-      Radius.circular(radius),
-    );
-
-    final path = Path()..addRRect(rrect);
-    final pathMetrics = path.computeMetrics();
-
-    for (final metric in pathMetrics) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        final next = distance + dash;
-        final extractPath = metric.extractPath(
-          distance,
-          next > metric.length ? metric.length : next,
-        );
-        canvas.drawPath(extractPath, paint);
-        distance += dash + gap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _DashedBorderPainter oldDelegate) {
-    return oldDelegate.color != color ||
-        oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.gap != gap ||
-        oldDelegate.dash != dash ||
-        oldDelegate.radius != radius;
   }
 }
 

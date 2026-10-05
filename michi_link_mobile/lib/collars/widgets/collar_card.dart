@@ -1,7 +1,6 @@
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/models/collar_model.dart';
-import 'package:michi_link_mobile/app/widgets/expressive_button.dart';
 import 'package:michi_link_mobile/app/widgets/expressive_icon_button.dart';
 import 'package:michi_link_mobile/l10n/l10n.dart';
 
@@ -10,12 +9,16 @@ class CollarCard extends StatelessWidget {
     required this.collar,
     this.onTap,
     this.onEditTap,
+    this.onNotificationsTap,
+    this.onLocationHistoryTap,
     super.key,
   });
 
   final CollarModel collar;
   final VoidCallback? onTap;
   final VoidCallback? onEditTap;
+  final VoidCallback? onNotificationsTap;
+  final VoidCallback? onLocationHistoryTap;
 
   static Widget _signalBars(BuildContext context, int rssi) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -93,8 +96,8 @@ class CollarCard extends StatelessWidget {
               Stack(
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 80,
+                    height: 80,
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: colorScheme.surfaceContainerHigh,
@@ -107,7 +110,7 @@ class CollarCard extends StatelessWidget {
                       ),
                     ),
                     child: Center(
-                      child: collar.breed.svgPicture(width: 42, height: 42),
+                      child: collar.breed.svgPicture(width: 70, height: 70),
                     ),
                   ),
                   Positioned(
@@ -198,14 +201,46 @@ class CollarCard extends StatelessWidget {
                   ],
                 ),
               ),
-              ExpressiveIconButton.circle(
-                variant: ExpressiveIconButtonVariant.tonal,
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedEdit02,
-                  size: 18,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                onPressed: onEditTap ?? onTap,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExpressiveIconButton.circle(
+                    size: ExpressiveIconButtonSize.small,
+                    variant: ExpressiveIconButtonVariant.tonal,
+                    tooltip: l10n.collarsNotificationsTooltip,
+                    showBadgeDot: collar.hasActiveAlert,
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedNotification01,
+                      size: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: onNotificationsTap,
+                  ),
+                  const SizedBox(width: 6),
+                  ExpressiveIconButton.circle(
+                    size: ExpressiveIconButtonSize.small,
+                    variant: ExpressiveIconButtonVariant.tonal,
+                    tooltip: l10n.collarsLocationHistoryTooltip,
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedRoute01,
+                      size: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: onLocationHistoryTap,
+                  ),
+                  const SizedBox(width: 6),
+                  ExpressiveIconButton.circle(
+                    size: ExpressiveIconButtonSize.small,
+                    variant: ExpressiveIconButtonVariant.tonal,
+                    tooltip: l10n.collarsEditTooltip,
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedEdit02,
+                      size: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: onEditTap ?? onTap,
+                  ),
+                ],
               ),
             ],
           ),
@@ -242,7 +277,6 @@ class CollarCard extends StatelessWidget {
                                 HugeIcon(
                                   icon:
                                       HugeIcons.strokeRoundedBatteryCharging01,
-                                  size: 16,
                                   color: colorScheme.primary,
                                 ),
                               ],
@@ -281,7 +315,7 @@ class CollarCard extends StatelessWidget {
                               0.0,
                               1.0,
                             ),
-                            minHeight: 5,
+                            minHeight: 7,
                             backgroundColor:
                                 colorScheme.surfaceContainerHighest,
                             valueColor: AlwaysStoppedAnimation(
@@ -323,7 +357,6 @@ class CollarCard extends StatelessWidget {
                                 ),
                                 HugeIcon(
                                   icon: HugeIcons.strokeRoundedSatellite01,
-                                  size: 16,
                                   color: colorScheme.primary,
                                 ),
                               ],
@@ -390,7 +423,6 @@ class CollarCard extends StatelessWidget {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,9 +471,10 @@ class CollarCard extends StatelessWidget {
                         Row(
                           children: [
                             HugeIcon(
-                              icon: HugeIcons.strokeRoundedHome01,
-                              size: 13,
+                              icon: HugeIcons.strokeRoundedHome03,
+                              size: 16,
                               color: colorScheme.primary,
+                              strokeWidth: 2,
                             ),
                             const SizedBox(width: 5),
                             Expanded(
@@ -491,7 +524,6 @@ class CollarCard extends StatelessWidget {
                                 ),
                                 HugeIcon(
                                   icon: HugeIcons.strokeRoundedPackage,
-                                  size: 16,
                                   color: colorScheme.primary,
                                 ),
                               ],
@@ -512,9 +544,9 @@ class CollarCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '• ${l10n.collarsPacketsLostCount(
+                                  l10n.collarsPacketsLostCount(
                                     collar.packetsLost,
-                                  )}',
+                                  ),
                                   style: textTheme.bodySmall?.copyWith(
                                     fontSize: 10,
                                     color: colorScheme.onSurfaceVariant,
@@ -535,7 +567,7 @@ class CollarCard extends StatelessWidget {
                                     0.0,
                                     1.0,
                                   ),
-                                  minHeight: 5,
+                                  minHeight: 7,
                                   backgroundColor: colorScheme.error.withValues(
                                     alpha: 0.25,
                                   ),
@@ -567,17 +599,6 @@ class CollarCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          ExpressiveButton.filled(
-            onPressed: onTap ?? onEditTap,
-            label: l10n.collarsConfigureAndTelemetry,
-            isExpanded: true,
-            trailingIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedArrowRight02,
-              size: 18,
-              color: colorScheme.onPrimary,
             ),
           ),
         ],
