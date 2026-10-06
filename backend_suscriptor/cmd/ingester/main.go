@@ -170,12 +170,11 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		var totalReceived int64 = 0
 		var totalLost int64 = 0
 		hasConfig := false
+		hasValidBaseCoords := false
 
-		// Coordenadas base por defecto si el documento aún no tiene base_coords configurado
-		baseCoords := models.BaseCoords{
-			Lat: -8.066663,
-			Lon: -79.062807,
-		}
+		// Coordenadas base de respaldo (hogar inicial)
+		baseLat := -8.066663
+		baseLon := -79.062807
 
 		if err == nil && docSnapshot.Exists() {
 			if existingName, err := docSnapshot.DataAt("name"); err == nil {
@@ -200,14 +199,16 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 				hasConfig = true
 			}
 
-			// 1. EXTRAER base_coords DINÁMICO DE FIRESTORE (Configurable desde Flutter)
+			// 1. LEER base_coords DE FIRESTORE (Sin sobrescribirlo)
 			if bcVal, err := docSnapshot.DataAt("base_coords"); err == nil {
 				if bcMap, ok := bcVal.(map[string]any); ok {
-					if latVal, ok := parseCoordinate(bcMap["lat"]); ok {
-						baseCoords.Lat = latVal
-					}
-					if lonVal, ok := parseCoordinate(bcMap["lon"]); ok {
-						baseCoords.Lon = lonVal
+					latVal, okLat := parseCoordinate(bcMap["lat"])
+					lonVal, okLon := parseCoordinate(bcMap["lon"])
+					// Si existen y no son 0,0, usamos las coordenadas guardadas
+					if okLat && okLon && (latVal != 0 || lonVal != 0) {
+						baseLat = latVal
+						baseLon = lonVal
+						hasValidBaseCoords = true
 					}
 				}
 			}
@@ -221,15 +222,13 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			}
 		}
 
-		// Cálculo de paquetes perdidos en el salto
+		// Cálculo de paquetes perdidos
 		var lostInGap int64 = 0
 		if prevSeq > 0 {
 			if payload.Seq > prevSeq {
 				lostInGap = int64(payload.Seq - prevSeq - 1)
 			} else if prevSeq > 65000 && payload.Seq < 500 {
 				lostInGap = int64((65535 - prevSeq) + payload.Seq)
-			} else {
-				lostInGap = 0
 			}
 		}
 
@@ -240,14 +239,13 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		if totalExpected := totalReceived + totalLost; totalExpected > 0 {
 			lossPct = (float64(totalLost) / float64(totalExpected)) * 100.0
 		}
-
 		payload.Radio.PacketsLostGap = int(lostInGap)
 
-		// 2. CÁLCULO DE DISTANCIA GEODÉSICA SOBRE ELIPSOIDE WGS-84
+		// 2. CALCULAR DISTANCIA WGS-84 USANDO LAS COORDENADAS BASE LEÍDAS
 		var distHomeM = 0.0
-		if payload.Status.GpsFix && payload.Coords.Lat != 0 && payload.Coords.Lon != 0 && baseCoords.Lat != 0 && baseCoords.Lon != 0 {
-			rawDist := GeodesicDistanceWGS84(payload.Coords.Lat, payload.Coords.Lon, baseCoords.Lat, baseCoords.Lon)
-			distHomeM = math.Round(rawDist*10.0) / 10.0 // Redondeo a 1 decimal
+		if payload.Status.GpsFix && payload.Coords.Lat != 0 && payload.Coords.Lon != 0 && baseLat != 0 && baseLon != 0 {
+			rawDist := GeodesicDistanceWGS84(payload.Coords.Lat, payload.Coords.Lon, baseLat, baseLon)
+			distHomeM = math.Round(rawDist*10.0) / 10.0
 		}
 		payload.Radio.DistanceHomeM = distHomeM
 
@@ -260,6 +258,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			Radio:     payload.Radio,
 		}
 
+		// 3. latestData YA NO INCLUYE base_coords (Se preserva lo que esté en la base de datos)
 		latestData := map[string]any{
 			"device_id":        payload.DeviceID,
 			"name":             nameToKeep,
@@ -267,7 +266,6 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"is_online":        true,
 			"seq":              payload.Seq,
 			"coords":           payload.Coords,
-			"base_coords":      baseCoords, // Preserva y persiste las coordenadas base dinámicas
 			"status":           payload.Status,
 			"radio":            payload.Radio,
 			"packets_received": totalReceived,
@@ -275,15 +273,21 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"packet_loss_pct":  math.Round(lossPct*100.0) / 100.0,
 		}
 
-		// Inicialización si es un collar nuevo
+		// Si es un collar nuevo o estaba en 0,0, inicializar una sola vez
+		if !hasValidBaseCoords {
+			latestData["base_coords"] = models.BaseCoords{
+				Lat: baseLat,
+				Lon: baseLon,
+			}
+		}
+
 		if !hasConfig {
 			defaultConfig := models.CollarConfig{
-				MaxDistanceM:  200.0,
+				MaxDistanceM:  150.0,
 				MinBatteryPct: 10,
 				RequireGpsFix: true,
 			}
 			latestData["config"] = defaultConfig
-			log.Printf("⚙️ [CONFIG INIT] Creando configuración por defecto en Firestore para %s", payload.DeviceID)
 		}
 
 		if err := tx.Set(collarDocRef, latestData, firestore.MergeAll); err != nil {
