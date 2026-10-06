@@ -104,9 +104,9 @@ class CollarsView extends StatelessWidget {
 
   static void _showAddCollarModal(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final sheetHeight =
+    final maxHeight =
         MediaQuery.of(context).size.height *
-        AppVariables.modalBottomSheetHeightPct;
+        AppVariables.modalBottomSheetMaxHeightPct;
 
     showModalBottomSheet<void>(
       context: context,
@@ -115,8 +115,8 @@ class CollarsView extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (modalContext) => SizedBox(
-        height: sheetHeight,
+      builder: (modalContext) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
         child: AddCollarBottomSheet(parentContext: context),
       ),
     );

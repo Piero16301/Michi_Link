@@ -348,5 +348,39 @@
                 "type": "String"
             }
         }
+    },
+    "homeZoomInTooltip": "Acercar",
+    "@homeZoomInTooltip": {},
+    "homeZoomOutTooltip": "Alejar",
+    "@homeZoomOutTooltip": {},
+    "homeMyLocationTooltip": "Mi ubicación (Base)",
+    "@homeMyLocationTooltip": {},
+    "homeCatLocationTooltip": "Ubicación del gato",
+    "@homeCatLocationTooltip": {},
+    "homeFitRangeTooltip": "Ajustar al rango máximo",
+    "@homeFitRangeTooltip": {},
+    "homeLocationHistoryTooltip": "Historial de ubicaciones",
+    "@homeLocationHistoryTooltip": {},
+    "homeDistanceToPet": "A {distance} m de ti",
+    "@homeDistanceToPet": {
+        "placeholders": {
+            "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "homeLocationServiceDisabled": "El GPS está desactivado. Actívalo para ver tu ubicación",
+    "@homeLocationServiceDisabled": {},
+    "homeOpenSettingsPrompt": "Permisos de ubicación deshabilitados. Abre ajustes para activarlos",
+    "@homeOpenSettingsPrompt": {},
+    "homeSettingsAction": "Ajustes",
+    "@homeSettingsAction": {},
+    "homeSafeZoneRadius": "Zona segura: {distance} m",
+    "@homeSafeZoneRadius": {
+        "placeholders": {
+            "distance": {
+                "type": "int"
+            }
+        }
     }
 }

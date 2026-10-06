@@ -45,6 +45,7 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 36,
@@ -55,7 +56,7 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Expanded(
+            Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(

@@ -348,5 +348,39 @@
                 "type": "String"
             }
         }
+    },
+    "homeZoomInTooltip": "Zoom in",
+    "@homeZoomInTooltip": {},
+    "homeZoomOutTooltip": "Zoom out",
+    "@homeZoomOutTooltip": {},
+    "homeMyLocationTooltip": "My location (Base)",
+    "@homeMyLocationTooltip": {},
+    "homeCatLocationTooltip": "Cat's location",
+    "@homeCatLocationTooltip": {},
+    "homeFitRangeTooltip": "Fit to maximum range",
+    "@homeFitRangeTooltip": {},
+    "homeLocationHistoryTooltip": "Location history",
+    "@homeLocationHistoryTooltip": {},
+    "homeDistanceToPet": "{distance} m from you",
+    "@homeDistanceToPet": {
+        "placeholders": {
+            "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "homeLocationServiceDisabled": "GPS is disabled. Turn it on to view your location",
+    "@homeLocationServiceDisabled": {},
+    "homeOpenSettingsPrompt": "Location permissions are disabled. Open settings to enable them",
+    "@homeOpenSettingsPrompt": {},
+    "homeSettingsAction": "Settings",
+    "@homeSettingsAction": {},
+    "homeSafeZoneRadius": "Safe zone: {distance} m",
+    "@homeSafeZoneRadius": {
+        "placeholders": {
+            "distance": {
+                "type": "int"
+            }
+        }
     }
 }

@@ -380,7 +380,9 @@ class HomeTelemetryPanel extends StatelessWidget {
 
   static void _showConfigCollarModal(BuildContext context, CollarModel collar) {
     final colorScheme = Theme.of(context).colorScheme;
-    final sheetHeight = MediaQuery.of(context).size.height * 0.72;
+    final maxHeight =
+        MediaQuery.of(context).size.height *
+        AppVariables.modalBottomSheetMaxHeightPct;
 
     showModalBottomSheet<void>(
       context: context,
@@ -389,8 +391,8 @@ class HomeTelemetryPanel extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (modalContext) => SizedBox(
-        height: sheetHeight,
+      builder: (modalContext) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
         child: CollarConfigBottomSheet(parentContext: context, collar: collar),
       ),
     );

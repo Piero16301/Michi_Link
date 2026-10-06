@@ -210,9 +210,9 @@ class SettingsView extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final sheetHeight =
+    final maxHeight =
         MediaQuery.of(context).size.height *
-        AppVariables.modalBottomSheetHeightPct;
+        AppVariables.modalBottomSheetMaxHeightPct;
 
     showModalBottomSheet<void>(
       context: context,
@@ -222,13 +222,14 @@ class SettingsView extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (modalContext) {
-        return SizedBox(
-          height: sheetHeight,
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
           child: SafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     width: 36,
@@ -248,10 +249,13 @@ class SettingsView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Expanded(
-                    child: ListView(
+                  Flexible(
+                    child: SingleChildScrollView(
                       padding: EdgeInsets.zero,
-                      children: itemsBuilder(modalContext),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: itemsBuilder(modalContext),
+                      ),
                     ),
                   ),
                 ],

@@ -21,7 +21,8 @@ class AppVariables {
   static const mobileChartMaxHeight = 340.0;
   static const webChartMaxHeight = 480.0;
   static const paginationSize = 10;
-  static const modalBottomSheetHeightPct = 0.6;
+  static const modalBottomSheetMaxHeightPct = 0.72;
+  static const mapFocusZoom = 19.0;
 
   static const animationDuration = Duration(milliseconds: 400);
   static const snackBarDuration = Duration(seconds: 5);
