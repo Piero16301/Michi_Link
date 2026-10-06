@@ -9,11 +9,11 @@
 #define ENABLE_SERIAL_DEBUG 0
 
 #if ENABLE_SERIAL_DEBUG
-  #define DBG_PRINTLN(x) Serial.println(x)
-  #define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
+#define DBG_PRINTLN(x) Serial.println(x)
+#define DBG_PRINTF(...) Serial.printf(__VA_ARGS__)
 #else
-  #define DBG_PRINTLN(x)
-  #define DBG_PRINTF(...)
+#define DBG_PRINTLN(x)
+#define DBG_PRINTF(...)
 #endif
 
 SX1262 radio =
@@ -21,42 +21,47 @@ SX1262 radio =
 TinyGPSPlus gps;
 uint16_t packetSeq = 1;
 
-// Solo GGA + RMC (lo único que necesita TinyGPSPlus). Menos tráfico UART = menos CPU despierta.
-// Nota: $PCAS11 es el modelo dinámico de navegación (NO un comando de energía) y
-// $PMTK161 es MTK (el L76K/AT6558R lo ignora). El reposo se controla por el pin STANDBY.
-static const char *CASIC_NMEA_GGA_RMC = "$PCAS03,1,0,0,0,1,0,0,0,0,0,,,0,0*02\r\n";
-// GPS + BeiDou + GLONASS: más satélites candidatos = readquisición más rápida con señal débil
+// Solo GGA + RMC (lo único que necesita TinyGPSPlus). Menos tráfico UART =
+// menos CPU despierta. Nota: $PCAS11 es el modelo dinámico de navegación (NO un
+// comando de energía) y $PMTK161 es MTK (el L76K/AT6558R lo ignora). El reposo
+// se controla por el pin STANDBY.
+static const char *CASIC_NMEA_GGA_RMC =
+    "$PCAS03,1,0,0,0,1,0,0,0,0,0,,,0,0*02\r\n";
+// GPS + BeiDou + GLONASS: más satélites candidatos = readquisición más rápida
+// con señal débil
 static const char *CASIC_GNSS_GPS_BDS_GLO = "$PCAS04,7*1E\r\n";
 
 static uint32_t lastTtffMs = 0;
 
-static bool     gpsUartOn          = false;
-static uint8_t  gpsMissStreak      = 0;
+static bool gpsUartOn = false;
+static uint8_t gpsMissStreak = 0;
 static uint16_t cyclesSinceRefresh = 0xFFFF;
-static uint16_t refreshCooldown    = GPS_REFRESH_COOLDOWN_MIN;
-static uint16_t cyclesSinceMaint   = 0;
-static uint8_t  lowBatCount        = 0;
+static uint16_t refreshCooldown = GPS_REFRESH_COOLDOWN_MIN;
+static uint16_t cyclesSinceMaint = 0;
+static uint8_t lowBatCount = 0;
 
 // ========================================================
 // UART GPS: SUSPENSIÓN SIN FLANCO DE BAJADA EN EL RX DEL L76K
 // ========================================================
 
 void gpsUartResume() {
-  if (gpsUartOn) return;
+  if (gpsUartOn)
+    return;
   Serial2.begin(GPS_BAUDRATE);
   gpsUartOn = true;
 }
 
 void gpsUartSuspend() {
-  if (!gpsUartOn) return;
+  if (!gpsUartOn)
+    return;
   Serial2.flush();
   // Precargar el latch GPIO en ALTO ANTES de soltar el pin: mientras la UARTE
   // está habilitada ella controla el pin; al deshabilitarla, el pin vuelve al
   // GPIO, que ya está en OUTPUT/HIGH (idle UART). Así no hay flanco de bajada.
   pinMode(GPS_UART_TX_PIN, OUTPUT);
   digitalWrite(GPS_UART_TX_PIN, HIGH);
-  Serial2.end();                    // Libera el HFCLK (~1 mA)
-  pinMode(GPS_UART_RX_PIN, INPUT);  // El L76K mantiene su TX en idle-high
+  Serial2.end();                   // Libera el HFCLK (~1 mA)
+  pinMode(GPS_UART_RX_PIN, INPUT); // El L76K mantiene su TX en idle-high
   gpsUartOn = false;
 }
 
@@ -65,12 +70,13 @@ void gpsUartSuspend() {
 // ========================================================
 
 void gpsWake() {
-  digitalWrite(GPS_STANDBY_PIN, HIGH);  // Forzar activo
+  digitalWrite(GPS_STANDBY_PIN, HIGH); // Forzar activo
   gpsUartResume();
 }
 
 void gpsSleep() {
-  digitalWrite(GPS_STANDBY_PIN, LOW);   // Standby: RF off, SRAM + RTC vivos (~0.4 mA)
+  digitalWrite(GPS_STANDBY_PIN,
+               LOW); // Standby: RF off, SRAM + RTC vivos (~0.4 mA)
   gpsUartSuspend();
 }
 
@@ -90,15 +96,15 @@ bool gpsWaitFreshFix(uint32_t windowMs) {
   uint32_t t0 = millis();
   while (millis() - t0 < windowMs) {
     while (Serial2.available() > 0) {
-      if (gps.encode(Serial2.read()) &&
-          gps.location.isValid() && gps.location.age() < 1500 &&
-          gps.hdop.isValid() && gps.hdop.hdop() <= GPS_MAX_HDOP) {
+      if (gps.encode(Serial2.read()) && gps.location.isValid() &&
+          gps.location.age() < 1500 && gps.hdop.isValid() &&
+          gps.hdop.hdop() <= GPS_MAX_HDOP) {
         lastTtffMs = millis() - t0;
         DBG_PRINTF("TTFF %lu ms\n", lastTtffMs);
         return true;
       }
     }
-    delay(10);  // Deja a FreeRTOS entrar en idle (WFE) entre ráfagas NMEA
+    delay(10); // Deja a FreeRTOS entrar en idle (WFE) entre ráfagas NMEA
   }
   return false;
 }
@@ -108,7 +114,8 @@ bool gpsWaitFreshFix(uint32_t windowMs) {
 // ========================================================
 
 uint16_t readBatteryMilliVolts() {
-  // NOTA: Meshtastic define ADC_CTRL_ENABLED = HIGH para el T114. Verificar polaridad.
+  // NOTA: Meshtastic define ADC_CTRL_ENABLED = HIGH para el T114. Verificar
+  // polaridad.
   digitalWrite(PIN_BAT_ADC_CTL, LOW); // Habilitar divisor
   delay(5);
 
@@ -124,7 +131,8 @@ uint16_t readBatteryMilliVolts() {
     delayMicroseconds(100);
   }
 
-  digitalWrite(PIN_BAT_ADC_CTL, HIGH); // Aislar divisor para suprimir corriente de fuga
+  digitalWrite(PIN_BAT_ADC_CTL,
+               HIGH); // Aislar divisor para suprimir corriente de fuga
 
   float rawAvg = (float)sum / (float)SAMPLES;
   float voltage = (rawAvg * 3.6f / 4096.0f) * BAT_AMPLIFY;
@@ -141,9 +149,9 @@ void shutdownLowBattery() {
   // Evitar phantom powering del GPS a través de su pin RX al cortar Vext
   pinMode(GPS_UART_TX_PIN, INPUT);
   pinMode(GPS_STANDBY_PIN, INPUT);
-  digitalWrite(GPS_POWER_PIN, LOW);  // Cortar Vext
-  radio.sleep(false);                // Cold sleep SX1262
-  systemOff(USER_BUTTON_PIN, LOW);   // nRF52 System OFF; despierta con el botón
+  digitalWrite(GPS_POWER_PIN, LOW); // Cortar Vext
+  radio.sleep(false);               // Cold sleep SX1262
+  systemOff(USER_BUTTON_PIN, LOW);  // nRF52 System OFF; despierta con el botón
 }
 
 // ========================================================
@@ -151,7 +159,8 @@ void shutdownLowBattery() {
 // ========================================================
 
 void setup() {
-  // 1. Habilitar reguladores conmutados DC-DC internos del nRF52840 (REG1 y REG0)
+  // 1. Habilitar reguladores conmutados DC-DC internos del nRF52840 (REG1 y
+  // REG0)
   NRF_POWER->DCDCEN = 1;
   NRF_POWER->DCDCEN0 = 1;
 
@@ -184,7 +193,8 @@ void setup() {
   Serial2.flush();
   delay(250);
 
-  // 4. Inicializar transceptor LoRa SX1262 (TCXO 1.8 V; sync word por defecto = el mismo de antes)
+  // 4. Inicializar transceptor LoRa SX1262 (TCXO 1.8 V; sync word por defecto =
+  // el mismo de antes)
   SPI.begin();
   int state = radio.begin(LORA_FREQ, LORA_BANDWIDTH_KHZ, LORA_SPREADING_FACT,
                           LORA_CODING_RATE, RADIOLIB_SX126X_SYNC_WORD_PRIVATE,
@@ -212,10 +222,12 @@ void setup() {
 void loop() {
   uint32_t cycleStart = millis();
 
-  // 1. Medir tensión de celda en reposo (GPS dormido) + corte crítico con histéresis
+  // 1. Medir tensión de celda en reposo (GPS dormido) + corte crítico con
+  // histéresis
   uint16_t batMv = readBatteryMilliVolts();
   if (batMv < BAT_CRITICAL_MV) {
-    if (++lowBatCount >= 3) shutdownLowBattery();
+    if (++lowBatCount >= 3)
+      shutdownLowBattery();
   } else {
     lowBatCount = 0;
   }
@@ -245,7 +257,8 @@ void loop() {
       cyclesSinceMaint = 0;
     }
   } else {
-    if (gpsMissStreak < 255) gpsMissStreak++;
+    if (gpsMissStreak < 255)
+      gpsMissStreak++;
     // Backoff en interiores: no quemar 40 s cada 10 min si no hay cielo
     if (refreshing && refreshCooldown < GPS_REFRESH_COOLDOWN_MAX) {
       refreshCooldown *= 2;
@@ -267,7 +280,8 @@ void loop() {
 
   if (gps.location.isValid()) {
     // Con fix fresco: bit FIX = 1. Sin fix fresco: se envía la ÚLTIMA posición
-    // conocida con bit FIX = 0, para que el backend la muestre como "última ubicación".
+    // conocida con bit FIX = 0, para que el backend la muestre como "última
+    // ubicación".
     packet.lat_scaled = (int32_t)(gps.location.lat() * 10000000.0);
     packet.lon_scaled = (int32_t)(gps.location.lng() * 10000000.0);
     packet.alt_m = (int16_t)gps.altitude.meters();
@@ -290,9 +304,14 @@ void loop() {
   radio.transmit((uint8_t *)&packet, sizeof(MinimalCollarPacket));
   radio.sleep();
 
-  // 7. Reposo del nRF52840 el resto de los 60 s (delay -> vTaskDelay -> tickless idle / WFE)
+  // 7. Reposo del nRF52840 (delay -> vTaskDelay -> tickless idle / WFE)
+  // Aseguramos que los envíos se mantengan en una grilla de tiempo estable
   uint32_t elapsed = millis() - cycleStart;
   if (elapsed < INTERVAL_MS) {
     delay(INTERVAL_MS - elapsed);
+  } else {
+    // Si el GPS tomó más de 60s (ej. ventana de 90s), no disparamos
+    // inmediatamente. Esperamos el tiempo restante para el SIGUIENTE ciclo.
+    delay(INTERVAL_MS - (elapsed % INTERVAL_MS));
   }
 }

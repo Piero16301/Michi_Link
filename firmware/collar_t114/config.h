@@ -30,27 +30,38 @@ constexpr uint8_t PIN_LORA_BUSY = 17;
 
 // GPS Quectel L76K
 constexpr uint8_t GPS_POWER_PIN = 21; // Riel Vext (HIGH para habilitar)
-constexpr uint8_t GPS_RESET_PIN = 38; // Reset físico por hardware (activo LOW, > 100 ms)
+constexpr uint8_t GPS_RESET_PIN =
+    38; // Reset físico por hardware (activo LOW, > 100 ms)
 constexpr uint32_t GPS_BAUDRATE = 9600;
 
 // Control de energía L76K (según variant.h de Meshtastic para el T114)
 constexpr uint8_t GPS_STANDBY_PIN = 34; // P1.02: LOW = standby, HIGH = activo
-constexpr uint8_t GPS_UART_TX_PIN = 37; // P1.05: nRF -> GPS (debe coincidir con PIN_SERIAL2_TX)
-constexpr uint8_t GPS_UART_RX_PIN = 39; // P1.07: GPS -> nRF (debe coincidir con PIN_SERIAL2_RX)
+constexpr uint8_t GPS_UART_TX_PIN =
+    37; // P1.05: nRF -> GPS (debe coincidir con PIN_SERIAL2_TX)
+constexpr uint8_t GPS_UART_RX_PIN =
+    39; // P1.07: GPS -> nRF (debe coincidir con PIN_SERIAL2_RX)
 
 // Ventanas de adquisición GNSS
-constexpr uint32_t GPS_BOOT_TIMEOUT_MS = 90000;      // Cold start inicial
-constexpr uint32_t GPS_BOOT_SETTLE_MS = 30000;       // Rastreo extra tras 1er fix (más efemérides)
-// Ventana normal: sale en cuanto hay fix. Con señal débil (interiores/urbano) la
-// readquisición tras 60 s de standby puede tardar más, ampliamos a 25 s.
-constexpr uint32_t GPS_WINDOW_MS = 25000;
-constexpr uint32_t GPS_REFRESH_WINDOW_MS = 75000;    // Ventana larga para recuperar efemérides
-constexpr uint8_t GPS_MISSES_BEFORE_REFRESH = 2;     // Fallos seguidos antes de ventana larga (reducido)
-constexpr uint16_t GPS_REFRESH_COOLDOWN_MIN = 5;     // Ciclos mínimos entre ventanas largas (reducido)
-constexpr uint16_t GPS_REFRESH_COOLDOWN_MAX = 15;    // Backoff máximo en interiores (reducido)
-constexpr uint16_t GPS_EPH_MAINT_CYCLES = 60;        // Mantenimiento cada ~1 h (reducido)
-constexpr uint32_t GPS_EPH_MAINT_EXTRA_MS = 45000;   // 45 s extra para asegurar descarga completa
-constexpr float GPS_MAX_HDOP = 10.0f;                // Umbral relajado para aceptar fixes en interiores
+constexpr uint32_t GPS_BOOT_TIMEOUT_MS = 90000; // Cold start inicial
+constexpr uint32_t GPS_BOOT_SETTLE_MS =
+    30000; // Rastreo extra tras 1er fix (más efemérides)
+// Ventana normal: sale en cuanto hay fix. Con señal débil (interiores/urbano)
+// la readquisición tras 60 s de standby puede tardar más, ampliamos a 35 s.
+constexpr uint32_t GPS_WINDOW_MS = 35000;
+constexpr uint32_t GPS_REFRESH_WINDOW_MS =
+    90000; // Ventana larga para recuperar efemérides
+constexpr uint8_t GPS_MISSES_BEFORE_REFRESH =
+    2; // Fallos seguidos antes de ventana larga (reducido)
+constexpr uint16_t GPS_REFRESH_COOLDOWN_MIN =
+    2; // Ciclos mínimos entre ventanas largas (muy reducido)
+constexpr uint16_t GPS_REFRESH_COOLDOWN_MAX =
+    5; // Backoff máximo en interiores (muy reducido)
+constexpr uint16_t GPS_EPH_MAINT_CYCLES =
+    60; // Mantenimiento cada ~1 h (reducido)
+constexpr uint32_t GPS_EPH_MAINT_EXTRA_MS =
+    45000; // 45 s extra para asegurar descarga completa
+constexpr float GPS_MAX_HDOP =
+    10.0f; // Umbral relajado para aceptar fixes en interiores
 
 // Botón de usuario (despertar desde System OFF)
 constexpr uint8_t USER_BUTTON_PIN = 42; // P1.10

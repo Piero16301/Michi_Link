@@ -26,6 +26,10 @@ import (
 const (
 	RetentionDays     = 15 // TTL para histórico y alertas en Firestore (días)
 	CollarIntervalSec = 60 // Intervalo de transmisión predeterminado (segundos)
+
+	// Parámetros oficiales del elipsoide de referencia WGS-84
+	wgs84A = 6378137.0           // Semieje mayor (metros)
+	wgs84F = 1.0 / 298.257223563 // Achatamiento polar
 )
 
 // IngestService Estructura de manejo de clientes y lógica para el servicio de ingesta
@@ -137,7 +141,7 @@ func main() {
 }
 
 // ----------------------------------------------------------------------------
-// HANDLER 1: TELEMETRÍA PERIÓDICA CON AUDITORÍA DE PÉRDIDAS Y CONFIG POR DEFECTO
+// HANDLER 1: TELEMETRÍA PERIÓDICA CON AUDITORÍA DE PÉRDIDAS Y CÁLCULO WGS-84
 // ----------------------------------------------------------------------------
 func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.TelemetryPayload
@@ -167,6 +171,12 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		var totalLost int64 = 0
 		hasConfig := false
 
+		// Coordenadas base por defecto si el documento aún no tiene base_coords configurado
+		baseCoords := models.BaseCoords{
+			Lat: -8.066663,
+			Lon: -79.062807,
+		}
+
 		if err == nil && docSnapshot.Exists() {
 			if existingName, err := docSnapshot.DataAt("name"); err == nil {
 				nameToKeep = fmt.Sprintf("%v", existingName)
@@ -186,9 +196,20 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 					totalLost = v
 				}
 			}
-			// Comprobar si ya existe el mapa de configuración
 			if _, err := docSnapshot.DataAt("config"); err == nil {
 				hasConfig = true
+			}
+
+			// 1. EXTRAER base_coords DINÁMICO DE FIRESTORE (Configurable desde Flutter)
+			if bcVal, err := docSnapshot.DataAt("base_coords"); err == nil {
+				if bcMap, ok := bcVal.(map[string]any); ok {
+					if latVal, ok := parseCoordinate(bcMap["lat"]); ok {
+						baseCoords.Lat = latVal
+					}
+					if lonVal, ok := parseCoordinate(bcMap["lon"]); ok {
+						baseCoords.Lon = lonVal
+					}
+				}
 			}
 		}
 
@@ -222,6 +243,14 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 
 		payload.Radio.PacketsLostGap = int(lostInGap)
 
+		// 2. CÁLCULO DE DISTANCIA GEODÉSICA SOBRE ELIPSOIDE WGS-84
+		var distHomeM = 0.0
+		if payload.Status.GpsFix && payload.Coords.Lat != 0 && payload.Coords.Lon != 0 && baseCoords.Lat != 0 && baseCoords.Lon != 0 {
+			rawDist := GeodesicDistanceWGS84(payload.Coords.Lat, payload.Coords.Lon, baseCoords.Lat, baseCoords.Lon)
+			distHomeM = math.Round(rawDist*10.0) / 10.0 // Redondeo a 1 decimal
+		}
+		payload.Radio.DistanceHomeM = distHomeM
+
 		historyRecord := models.HistoryRecord{
 			Timestamp: now,
 			ExpireAt:  expireAt,
@@ -238,7 +267,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"is_online":        true,
 			"seq":              payload.Seq,
 			"coords":           payload.Coords,
-			"base_coords":      payload.BaseCoords,
+			"base_coords":      baseCoords, // Preserva y persiste las coordenadas base dinámicas
 			"status":           payload.Status,
 			"radio":            payload.Radio,
 			"packets_received": totalReceived,
@@ -246,11 +275,11 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			"packet_loss_pct":  math.Round(lossPct*100.0) / 100.0,
 		}
 
-		// Si es un collar nuevo o no tiene configuración, inicializar valores por defecto
+		// Inicialización si es un collar nuevo
 		if !hasConfig {
 			defaultConfig := models.CollarConfig{
-				MaxDistanceM:  500.0,
-				MinBatteryPct: 20,
+				MaxDistanceM:  200.0,
+				MinBatteryPct: 10,
 				RequireGpsFix: true,
 			}
 			latestData["config"] = defaultConfig
@@ -268,8 +297,8 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Pérdida salto: %d",
-		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Radio.PacketsLostGap)
+	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Dist WGS-84: %.1fm | Pérdida salto: %d",
+		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Radio.DistanceHomeM, payload.Radio.PacketsLostGap)
 }
 
 // ----------------------------------------------------------------------------
@@ -525,12 +554,10 @@ func (s *IngestService) watchConfigChanges(ctx context.Context, mqttClient mqtt.
 func (s *IngestService) startOfflineWatchdog(ctx context.Context) {
 	log.Printf("⏱️ [WATCHDOG] Iniciando supervisor de presencia (Intervalo base: %ds)...", s.collarIntervalSec)
 
-	// Comprobar cada 30 segundos (o la mitad del intervalo)
 	checkDuration := 30 * time.Second
 	ticker := time.NewTicker(checkDuration)
 	defer ticker.Stop()
 
-	// Umbral de inactividad: 3.5 veces el intervalo (60 s -> 210 s = 3.5 minutos)
 	offlineThreshold := time.Duration(float64(s.collarIntervalSec)*3.5) * time.Second
 
 	for {
@@ -571,6 +598,85 @@ func (s *IngestService) startOfflineWatchdog(ctx context.Context) {
 				}
 			}
 		}
+	}
+}
+
+// ----------------------------------------------------------------------------
+// HELPERS MATEMÁTICOS Y GEODÉSICOS
+// ----------------------------------------------------------------------------
+
+// GeodesicDistanceWGS84 calcula la distancia geodésica sobre el elipsoide WGS-84 (Lambert-Andoyer)
+func GeodesicDistanceWGS84(lat1, lon1, lat2, lon2 float64) float64 {
+	if lat1 == lat2 && lon1 == lon2 {
+		return 0.0
+	}
+
+	rad := math.Pi / 180.0
+	phi1 := lat1 * rad
+	phi2 := lat2 * rad
+	lambda1 := lon1 * rad
+	lambda2 := lon2 * rad
+
+	f := wgs84F
+	a := wgs84A
+
+	// Latitudes reducidas sobre el elipsoide
+	u1 := math.Atan((1.0 - f) * math.Tan(phi1))
+	u2 := math.Atan((1.0 - f) * math.Tan(phi2))
+
+	deltaLambda := lambda2 - lambda1
+
+	sinU1, cosU1 := math.Sin(u1), math.Cos(u1)
+	sinU2, cosU2 := math.Sin(u2), math.Cos(u2)
+	cosDeltaLambda := math.Cos(deltaLambda)
+
+	cosD := sinU1*sinU2 + cosU1*cosU2*cosDeltaLambda
+	if cosD > 1.0 {
+		cosD = 1.0
+	} else if cosD < -1.0 {
+		cosD = -1.0
+	}
+	d := math.Acos(cosD)
+
+	if d == 0.0 {
+		return 0.0
+	}
+
+	sinD := math.Sin(d)
+	p := (u1 + u2) / 2.0
+	q := (u2 - u1) / 2.0
+
+	sinP := math.Sin(p)
+	cosP := math.Cos(p)
+	sinQ := math.Sin(q)
+	cosQ := math.Cos(q)
+
+	cosHalfD := math.Cos(d / 2.0)
+	sinHalfD := math.Sin(d / 2.0)
+	if cosHalfD == 0.0 || sinHalfD == 0.0 {
+		return a * d
+	}
+
+	termX := (d - sinD) * (sinP * sinP * cosQ * cosQ) / (cosHalfD * cosHalfD)
+	termY := (d + sinD) * (cosP * cosP * sinQ * sinQ) / (sinHalfD * sinHalfD)
+
+	deltaD := (f / 4.0) * (termX - termY)
+	distance := a * (d + deltaD)
+
+	return math.Abs(distance)
+}
+
+// parseCoordinate castea con seguridad cualquier valor numérico (int, int64 o float64) de Firestore
+func parseCoordinate(val any) (float64, bool) {
+	switch v := val.(type) {
+	case float64:
+		return v, true
+	case int64:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	default:
+		return 0, false
 	}
 }
 
