@@ -13,6 +13,7 @@ class HistoryRecord extends Equatable {
     required this.id,
     required this.coords,
     required this.radio,
+    required this.seq,
     required this.status,
     required this.expireAt,
     required this.timestamp,
@@ -35,8 +36,8 @@ class HistoryRecord extends Equatable {
               packetsLostGap: 0,
               rssi: 0,
               snr: 0,
-              seq: 0,
             ),
+      seq: (json['seq'] as num?)?.toInt() ?? 0,
       status: json['status'] != null
           ? CollarStatus.fromJson(json['status'] as Map<String, dynamic>)
           : const CollarStatus(
@@ -57,6 +58,7 @@ class HistoryRecord extends Equatable {
       'id': id,
       'coords': coords.toJson(),
       'radio': radio.toJson(),
+      'seq': seq,
       'status': status.toJson(),
       'expire_at': expireAt.toUtc(),
       'timestamp': timestamp.toUtc(),
@@ -75,6 +77,9 @@ class HistoryRecord extends Equatable {
   /// LoRa radio metrics at the time of recording
   final CollarRadio radio;
 
+  /// Telemetry packet sequence number
+  final int seq;
+
   /// Hardware status at the time of recording
   final CollarStatus status;
 
@@ -82,5 +87,13 @@ class HistoryRecord extends Equatable {
   final DateTime timestamp;
 
   @override
-  List<Object?> get props => [id, coords, expireAt, radio, status, timestamp];
+  List<Object?> get props => [
+    id,
+    coords,
+    expireAt,
+    radio,
+    seq,
+    status,
+    timestamp,
+  ];
 }

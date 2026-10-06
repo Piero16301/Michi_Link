@@ -56,7 +56,6 @@ void main() {
       expect(radio.packetsLostGap, 0);
       expect(radio.rssi, -43);
       expect(radio.snr, 13.3);
-      expect(radio.seq, 272);
       expect(radio.toJson(), json);
     });
 
@@ -111,11 +110,7 @@ void main() {
           'min_battery_pct': 20,
           'require_gps_fix': true,
         },
-        'coords': {
-          'alt_m': 35.0,
-          'lat': -8.0666408,
-          'lon': -79.0628176,
-        },
+        'coords': {'alt_m': 35.0, 'lat': -8.0666408, 'lon': -79.0628176},
         'last_alert': {
           'severity': 'INFO',
           'type': 'SIGNAL_NORMAL',
@@ -147,7 +142,6 @@ void main() {
       expect(collar.config.maxDistanceM, 500);
       expect(collar.coords.lat, -8.0666408);
       expect(collar.lastAlert?.type, AlertType.signalNormal);
-      expect(collar.radio.seq, 272);
       expect(collar.status.batteryPct, 91);
       expect(collar.lastSeen, now.toLocal());
       expect(collar.toJson()['last_seen'], now.toUtc());
@@ -158,11 +152,7 @@ void main() {
       final timestamp = Timestamp.fromDate(now);
 
       final json = <String, dynamic>{
-        'coords': {
-          'alt_m': 82.0,
-          'lat': -8.0667321,
-          'lon': -79.0627358,
-        },
+        'coords': {'alt_m': 82.0, 'lat': -8.0667321, 'lon': -79.0627358},
         'expire_at': timestamp,
         'radio': {
           'distance_home_m': 11.0,

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
@@ -23,9 +22,10 @@ abstract class LocalStorageRepository {
   String? getFontFamily();
   void saveCollars({required List<String> collars});
   List<String> getCollars();
-  ValueListenable<List<String>> getCollarsListenable();
-  void saveSelectedCollarId({required String collarId});
+  Stream<List<String>> getCollarsStream();
+  void saveSelectedCollarId({String? collarId});
   String? getSelectedCollarId();
+  Stream<String?> getSelectedCollarIdStream();
 }
 
 class MockLocalStorageRepository implements LocalStorageRepository {
@@ -73,16 +73,21 @@ class MockLocalStorageRepository implements LocalStorageRepository {
   }
 
   @override
-  ValueListenable<List<String>> getCollarsListenable() {
-    return ValueNotifier<List<String>>([]);
+  Stream<List<String>> getCollarsStream() {
+    return const Stream.empty();
   }
 
   @override
-  void saveSelectedCollarId({required String collarId}) {}
+  void saveSelectedCollarId({String? collarId}) {}
 
   @override
   String? getSelectedCollarId() {
     return null;
+  }
+
+  @override
+  Stream<String?> getSelectedCollarIdStream() {
+    return const Stream.empty();
   }
 }
 
@@ -196,7 +201,11 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
 
   @override
   void saveCollars({required List<String> collars}) {
-    _collarsBox.clear().then((_) => _collarsBox.addAll(collars)).ignore();
+    _collarsBox.clear().then((_) async {
+      if (collars.isNotEmpty) {
+        await _collarsBox.addAll(collars);
+      }
+    }).ignore();
   }
 
   @override
@@ -205,35 +214,34 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
   }
 
   @override
-  ValueListenable<List<String>> getCollarsListenable() {
-    return _BoxListenable<String>(_collarsBox.listenable());
+  Stream<List<String>> getCollarsStream() async* {
+    yield getCollars();
+    yield* _collarsBox.watch().map((_) => getCollars());
   }
 
   @override
-  void saveSelectedCollarId({required String collarId}) {
-    _propertiesBox
-        .put(LocalStorageRepository.kSelectedCollarId, collarId)
-        .ignore();
+  void saveSelectedCollarId({String? collarId}) {
+    if (collarId == null) {
+      _propertiesBox
+          .delete(LocalStorageRepository.kSelectedCollarId)
+          .ignore();
+    } else {
+      _propertiesBox
+          .put(LocalStorageRepository.kSelectedCollarId, collarId)
+          .ignore();
+    }
   }
 
   @override
   String? getSelectedCollarId() {
     return _propertiesBox.get(LocalStorageRepository.kSelectedCollarId);
   }
-}
-
-class _BoxListenable<T> extends ValueListenable<List<T>> {
-  _BoxListenable(this._listenable);
-
-  final ValueListenable<Box<T>> _listenable;
 
   @override
-  void addListener(VoidCallback listener) => _listenable.addListener(listener);
-
-  @override
-  void removeListener(VoidCallback listener) =>
-      _listenable.removeListener(listener);
-
-  @override
-  List<T> get value => _listenable.value.values.toList();
+  Stream<String?> getSelectedCollarIdStream() async* {
+    yield getSelectedCollarId();
+    yield* _propertiesBox
+        .watch(key: LocalStorageRepository.kSelectedCollarId)
+        .map((_) => getSelectedCollarId());
+  }
 }

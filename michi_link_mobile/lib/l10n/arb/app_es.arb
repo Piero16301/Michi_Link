@@ -130,6 +130,8 @@
     "@homeGoToPets": {},
     "collarsTitle": "Mis Mascotas",
     "@collarsTitle": {},
+    "collarsEmptyTitle": "Aún no hay collares vinculados",
+    "@collarsEmptyTitle": {},
     "collarsLinkNew": "Vincular nuevo collar",
     "@collarsLinkNew": {},
     "collarsAddDeviceTitle": "Vincular Dispositivo",
@@ -184,7 +186,7 @@
     "@collarsHardwareIdImmutable": {},
     "collarsCryptographicallySigned": "Firmado criptográficamente en nodo LoRa",
     "@collarsCryptographicallySigned": {},
-    "collarsPublicAliasOnMap": "ALIAS PÚBLICO EN MAPA",
+    "collarsPublicAliasOnMap": "ALIAS PÚBLICO",
     "@collarsPublicAliasOnMap": {},
     "collarsLowBatteryAlert": "Alerta por batería baja (<20%)",
     "@collarsLowBatteryAlert": {},
@@ -200,7 +202,7 @@
             }
         }
     },
-    "collarsUnlinkAndClear": "Desvincular collar y borrar telemetría local",
+    "collarsUnlinkAndClear": "Desvincular collar",
     "@collarsUnlinkAndClear": {},
     "collarsUnlinkedSuccess": "Collar \"{name}\" desvinculado",
     "@collarsUnlinkedSuccess": {
@@ -210,10 +212,36 @@
             }
         }
     },
+    "collarsUnlinkDialogTitle": "¿Desvincular collar?",
+    "@collarsUnlinkDialogTitle": {},
+    "collarsUnlinkDialogMessage": "¿Estás seguro de que deseas desvincular \"{name}\"? Se eliminará de tu lista de dispositivos.",
+    "@collarsUnlinkDialogMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkDialogCancel": "Cancelar",
+    "@collarsUnlinkDialogCancel": {},
+    "collarsUnlinkDialogConfirm": "Desvincular",
+    "@collarsUnlinkDialogConfirm": {},
     "collarsStatusActiveRealtime": "En línea",
     "@collarsStatusActiveRealtime": {},
     "collarsBatteryLabel": "BATERÍA",
     "@collarsBatteryLabel": {},
+    "collarsBatteryVoltage": "• {voltage} V",
+    "@collarsBatteryVoltage": {
+        "placeholders": {
+            "voltage": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 2
+                }
+            }
+        }
+    },
     "collarsConstellationLabel": "CONSTELACIÓN",
     "@collarsConstellationLabel": {},
     "collarsSatellitesCount": "{count} Satélites",
@@ -230,11 +258,27 @@
     "@collarsGpsFix": {},
     "collarsSignalLabel": "SEÑAL LORA",
     "@collarsSignalLabel": {},
-    "collarsDistanceHome": "A casa: {distance}",
+    "collarsSignalSnr": "• SNR {snr} dB",
+    "@collarsSignalSnr": {
+        "placeholders": {
+            "snr": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 1
+                }
+            }
+        }
+    },
+    "collarsDistanceHome": "A casa: {distance} m",
     "@collarsDistanceHome": {
         "placeholders": {
             "distance": {
-                "type": "String"
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 1
+                }
             }
         }
     },
@@ -256,11 +300,12 @@
             }
         }
     },
-    "collarsLossRate": "{pct} pérdida",
+    "collarsLossRate": "{pct}% pérdida",
     "@collarsLossRate": {
         "placeholders": {
             "pct": {
-                "type": "String"
+                "type": "double",
+                "format": "decimalPattern"
             }
         }
     },

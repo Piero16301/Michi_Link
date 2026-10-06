@@ -130,6 +130,8 @@
     "@homeGoToPets": {},
     "collarsTitle": "My Pets",
     "@collarsTitle": {},
+    "collarsEmptyTitle": "No collars linked yet",
+    "@collarsEmptyTitle": {},
     "collarsLinkNew": "Link new collar",
     "@collarsLinkNew": {},
     "collarsAddDeviceTitle": "Link Device",
@@ -184,7 +186,7 @@
     "@collarsHardwareIdImmutable": {},
     "collarsCryptographicallySigned": "Cryptographically signed on LoRa node",
     "@collarsCryptographicallySigned": {},
-    "collarsPublicAliasOnMap": "PUBLIC ALIAS ON MAP",
+    "collarsPublicAliasOnMap": "PUBLIC ALIAS",
     "@collarsPublicAliasOnMap": {},
     "collarsLowBatteryAlert": "Low battery alert (<20%)",
     "@collarsLowBatteryAlert": {},
@@ -200,7 +202,7 @@
             }
         }
     },
-    "collarsUnlinkAndClear": "Unlink collar and clear local telemetry",
+    "collarsUnlinkAndClear": "Unlink collar",
     "@collarsUnlinkAndClear": {},
     "collarsUnlinkedSuccess": "Collar \"{name}\" unlinked",
     "@collarsUnlinkedSuccess": {
@@ -210,10 +212,36 @@
             }
         }
     },
+    "collarsUnlinkDialogTitle": "Unlink collar?",
+    "@collarsUnlinkDialogTitle": {},
+    "collarsUnlinkDialogMessage": "Are you sure you want to unlink \"{name}\"? It will be removed from your devices list.",
+    "@collarsUnlinkDialogMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkDialogCancel": "Cancel",
+    "@collarsUnlinkDialogCancel": {},
+    "collarsUnlinkDialogConfirm": "Unlink",
+    "@collarsUnlinkDialogConfirm": {},
     "collarsStatusActiveRealtime": "Online",
     "@collarsStatusActiveRealtime": {},
     "collarsBatteryLabel": "BATTERY",
     "@collarsBatteryLabel": {},
+    "collarsBatteryVoltage": "• {voltage} V",
+    "@collarsBatteryVoltage": {
+        "placeholders": {
+            "voltage": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 2
+                }
+            }
+        }
+    },
     "collarsConstellationLabel": "CONSTELLATION",
     "@collarsConstellationLabel": {},
     "collarsSatellitesCount": "{count} Satellites",
@@ -230,11 +258,27 @@
     "@collarsGpsFix": {},
     "collarsSignalLabel": "LORA SIGNAL",
     "@collarsSignalLabel": {},
-    "collarsDistanceHome": "To home: {distance}",
+    "collarsSignalSnr": "• SNR {snr} dB",
+    "@collarsSignalSnr": {
+        "placeholders": {
+            "snr": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 1
+                }
+            }
+        }
+    },
+    "collarsDistanceHome": "To home: {distance} m",
     "@collarsDistanceHome": {
         "placeholders": {
             "distance": {
-                "type": "String"
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 1
+                }
             }
         }
     },
@@ -256,11 +300,12 @@
             }
         }
     },
-    "collarsLossRate": "{pct} loss",
+    "collarsLossRate": "{pct}% loss",
     "@collarsLossRate": {
         "placeholders": {
             "pct": {
-                "type": "String"
+                "type": "double",
+                "format": "decimalPattern"
             }
         }
     },

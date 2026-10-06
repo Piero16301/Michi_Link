@@ -21,6 +21,7 @@ class AppVariables {
   static const mobileChartMaxHeight = 340.0;
   static const webChartMaxHeight = 480.0;
   static const paginationSize = 10;
+  static const modalBottomSheetHeightPct = 0.6;
 
   static const animationDuration = Duration(milliseconds: 400);
   static const snackBarDuration = Duration(seconds: 5);
@@ -80,7 +81,7 @@ enum CatBreed {
   static const CatBreed unspecified = CatBreed.defaultBreed;
 
   String displayName(BuildContext context) {
-    final l10n = context.l10n;
+    final l10n = AppLocalizations.of(context);
     switch (this) {
       case CatBreed.defaultBreed:
         return l10n.catBreedDefault;

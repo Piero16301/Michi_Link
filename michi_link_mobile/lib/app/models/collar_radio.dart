@@ -10,7 +10,6 @@ class CollarRadio extends Equatable {
     required this.packetsLostGap,
     required this.rssi,
     required this.snr,
-    required this.seq,
   });
 
   /// Creates an instance of [CollarRadio] from a [Map]
@@ -20,7 +19,6 @@ class CollarRadio extends Equatable {
       packetsLostGap: (json['packets_lost_gap'] as num?)?.toInt() ?? 0,
       rssi: (json['rssi'] as num?)?.toInt() ?? 0,
       snr: (json['snr'] as num?)?.toDouble() ?? 0.0,
-      seq: (json['seq'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -31,7 +29,6 @@ class CollarRadio extends Equatable {
       'packets_lost_gap': packetsLostGap,
       'rssi': rssi,
       'snr': snr,
-      'seq': seq,
     };
   }
 
@@ -47,9 +44,6 @@ class CollarRadio extends Equatable {
   /// Signal-to-Noise Ratio in dB
   final double snr;
 
-  /// Sequence number of the transmission packet
-  final int seq;
-
   @override
-  List<Object?> get props => [distanceHomeM, packetsLostGap, rssi, snr, seq];
+  List<Object?> get props => [distanceHomeM, packetsLostGap, rssi, snr];
 }

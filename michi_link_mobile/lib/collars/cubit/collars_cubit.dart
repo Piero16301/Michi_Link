@@ -1,87 +1,72 @@
+import 'dart:async';
+
+import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:michi_link_mobile/app/global/app_variables.dart';
-import 'package:michi_link_mobile/app/models/collar_config.dart';
-import 'package:michi_link_mobile/app/models/collar_coords.dart';
-import 'package:michi_link_mobile/app/models/collar_model.dart';
-import 'package:michi_link_mobile/app/models/collar_radio.dart';
-import 'package:michi_link_mobile/app/models/collar_status.dart';
+import 'package:michi_link_mobile/app/app.dart';
 
 part 'collars_state.dart';
 
 class CollarsCubit extends Cubit<CollarsState> {
-  CollarsCubit() : super(CollarsState.initial());
-
-  void addCollar({
-    required String name,
-    required String deviceId,
-    required CatBreed breed,
-  }) {
-    final newCollar = CollarModel(
-      deviceId: deviceId,
-      name: name,
-      isOnline: true,
-      hasActiveAlert: false,
-      packetLossPct: '0.0%',
-      packetsLost: 0,
-      packetsReceived: 1,
-      config: const CollarConfig(
-        maxDistanceM: 500,
-        minBatteryPct: 20,
-        requireGpsFix: true,
-      ),
-      coords: const CollarCoords(lat: -8.066663, lon: -79.062807, altM: 35),
-      baseCoords: const CollarCoords(lat: -8.066663, lon: -79.062807, altM: 35),
-      radio: const CollarRadio(
-        distanceHomeM: 0,
-        packetsLostGap: 0,
-        rssi: -80,
-        snr: 10,
-        seq: 1,
-      ),
-      status: const CollarStatus(
-        batteryPct: 100,
-        batteryV: 4.20,
-        gpsFix: true,
-        sats: 12,
-      ),
-      lastSeen: DateTime.now(),
-      breed: breed,
+  CollarsCubit({
+    LocalStorageService? localStorage,
+    DatabaseService? databaseService,
+  })  : _localStorage = localStorage ?? getIt<LocalStorageService>(),
+        _databaseService = databaseService ?? getIt<DatabaseService>(),
+        super(
+          CollarsState(
+            collars:
+                (localStorage ?? getIt<LocalStorageService>()).getCollars(),
+          ),
+        ) {
+    _collarsSubscription = _localStorage.getCollarsStream().listen(
+      _onCollarsChanged,
     );
+  }
 
-    emit(state.copyWith(collars: [...state.collars, newCollar]));
+  final LocalStorageService _localStorage;
+  final DatabaseService _databaseService;
+  late final StreamSubscription<List<String>> _collarsSubscription;
+
+  void _onCollarsChanged(List<String> collars) {
+    emit(state.copyWith(collars: collars));
+  }
+
+  void addCollar({required String deviceId, String? name, CatBreed? breed}) {
+    if (state.collars.contains(deviceId)) return;
+
+    _localStorage.saveCollars(collars: [...state.collars, deviceId]);
   }
 
   void updateCollar({
-    required String deviceId,
+    required String collarId,
     required String name,
-    int? minBatteryPct,
-    CatBreed? breed,
+    required CatBreed breed,
   }) {
-    final updatedList = state.collars.map((collar) {
-      if (collar.deviceId == deviceId) {
-        return collar.copyWith(
-          name: name,
-          breed: breed ?? collar.breed,
-          config: minBatteryPct != null
-              ? CollarConfig(
-                  maxDistanceM: collar.config.maxDistanceM,
-                  minBatteryPct: minBatteryPct,
-                  requireGpsFix: collar.config.requireGpsFix,
-                )
-              : collar.config,
-        );
-      }
-      return collar;
-    }).toList();
-
-    emit(state.copyWith(collars: updatedList));
+    _databaseService.updateCollar(
+      collarId: collarId,
+      name: name,
+      breed: breed,
+    );
   }
 
   void removeCollar(String deviceId) {
-    final updatedList = state.collars
-        .where((c) => c.deviceId != deviceId)
-        .toList();
-    emit(state.copyWith(collars: updatedList));
+    if (!state.collars.contains(deviceId)) return;
+
+    final updatedList = state.collars.where((id) => id != deviceId).toList();
+    _localStorage.saveCollars(collars: updatedList);
+
+    final selectedCollarId = _localStorage.getSelectedCollarId();
+    if (selectedCollarId == deviceId) {
+      final nextSelectedCollarId = updatedList.isNotEmpty
+          ? updatedList.first
+          : null;
+      _localStorage.saveSelectedCollarId(collarId: nextSelectedCollarId);
+    }
+  }
+
+  @override
+  Future<void> close() async {
+    await _collarsSubscription.cancel();
+    return await super.close();
   }
 }

@@ -210,7 +210,9 @@ class SettingsView extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final sheetHeight = MediaQuery.of(context).size.height * 0.52;
+    final sheetHeight =
+        MediaQuery.of(context).size.height *
+        AppVariables.modalBottomSheetHeightPct;
 
     showModalBottomSheet<void>(
       context: context,

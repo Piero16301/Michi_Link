@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -10,9 +11,18 @@ part 'app_state.dart';
 class AppCubit extends Cubit<AppState> {
   AppCubit({LocalStorageService? localStorage})
     : _localStorage = localStorage ?? getIt<LocalStorageService>(),
-      super(const AppState());
+      super(const AppState()) {
+    _selectedCollarSubscription = _localStorage
+        .getSelectedCollarIdStream()
+        .listen(_onSelectedCollarChanged);
+  }
 
   final LocalStorageService _localStorage;
+  late final StreamSubscription<String?> _selectedCollarSubscription;
+
+  void _onSelectedCollarChanged(String? collarId) {
+    emit(state.setSelectedCollarId(collarId));
+  }
 
   void initialLoad() {
     // Setting the language to the device language if it's not set
@@ -102,5 +112,15 @@ class AppCubit extends Cubit<AppState> {
       parameters: {'font': fontFamily},
     );
     emit(state.copyWith(fontFamily: fontFamily));
+  }
+
+  void changeSelectedCollarId({String? collarId}) {
+    _localStorage.saveSelectedCollarId(collarId: collarId);
+  }
+
+  @override
+  Future<void> close() async {
+    await _selectedCollarSubscription.cancel();
+    return await super.close();
   }
 }

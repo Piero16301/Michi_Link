@@ -10,8 +10,8 @@ class CollarLastAlert extends Equatable {
   const CollarLastAlert({
     required this.severity,
     required this.type,
-    required this.value,
     required this.timestamp,
+    required this.value,
   });
 
   /// Creates an instance of [CollarLastAlert] from a [Map]
@@ -19,10 +19,10 @@ class CollarLastAlert extends Equatable {
     return CollarLastAlert(
       severity: AlertSeverity.fromString(json['severity'] as String?),
       type: AlertType.fromString(json['type'] as String?),
-      value: (json['value'] as num?) ?? 0,
       timestamp: (json['timestamp'] as Timestamp? ?? Timestamp.now())
           .toDate()
           .toLocal(),
+      value: (json['value'] as num?) ?? 0,
     );
   }
 
@@ -31,8 +31,8 @@ class CollarLastAlert extends Equatable {
     return <String, dynamic>{
       'severity': severity.value,
       'type': type.value,
-      'value': value,
       'timestamp': timestamp.toUtc(),
+      'value': value,
     };
   }
 
@@ -42,12 +42,12 @@ class CollarLastAlert extends Equatable {
   /// Type of alert (e.g. SIGNAL_NORMAL, BATTERY_NORMAL)
   final AlertType type;
 
-  /// Value associated with the alert
-  final num value;
-
   /// Timestamp when the alert occurred
   final DateTime timestamp;
 
+  /// Value associated with the alert
+  final num value;
+
   @override
-  List<Object?> get props => [severity, type, value, timestamp];
+  List<Object?> get props => [severity, type, timestamp, value];
 }

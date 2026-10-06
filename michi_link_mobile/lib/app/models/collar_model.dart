@@ -7,7 +7,11 @@ import 'package:michi_link_mobile/app/models/collar_last_alert.dart';
 import 'package:michi_link_mobile/app/models/collar_radio.dart';
 import 'package:michi_link_mobile/app/models/collar_status.dart';
 
+/// {@template collar_model}
+/// A class that represents a collar device with telemetry and status
+/// {@endtemplate}
 class CollarModel extends Equatable {
+  /// {@macro collar_model}
   const CollarModel({
     required this.deviceId,
     required this.name,
@@ -20,12 +24,14 @@ class CollarModel extends Equatable {
     required this.coords,
     required this.baseCoords,
     required this.radio,
+    required this.seq,
     required this.status,
     required this.lastSeen,
     this.lastAlert,
     this.breed = CatBreed.defaultBreed,
   });
 
+  /// Creates an instance of [CollarModel] from a [Map]
   factory CollarModel.fromJson(Map<String, dynamic> json) {
     return CollarModel(
       deviceId: json['device_id'] as String? ?? '',
@@ -35,7 +41,7 @@ class CollarModel extends Equatable {
       lastSeen: (json['last_seen'] as Timestamp? ?? Timestamp.now())
           .toDate()
           .toLocal(),
-      packetLossPct: json['packet_loss_pct'] as String? ?? '0%',
+      packetLossPct: (json['packet_loss_pct'] as num?)?.toDouble() ?? 0,
       packetsLost: (json['packets_lost'] as num?)?.toInt() ?? 0,
       packetsReceived: (json['packets_received'] as num?)?.toInt() ?? 0,
       config: json['config'] != null
@@ -61,8 +67,8 @@ class CollarModel extends Equatable {
               packetsLostGap: 0,
               rssi: 0,
               snr: 0,
-              seq: 0,
             ),
+      seq: (json['seq'] as num?)?.toInt() ?? 0,
       status: json['status'] != null
           ? CollarStatus.fromJson(json['status'] as Map<String, dynamic>)
           : const CollarStatus(
@@ -80,6 +86,7 @@ class CollarModel extends Equatable {
     );
   }
 
+  /// Creates a [Map] from an instance of [CollarModel]
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'device_id': deviceId,
@@ -95,34 +102,68 @@ class CollarModel extends Equatable {
       'base_coords': baseCoords.toJson(),
       'last_alert': lastAlert?.toJson(),
       'radio': radio.toJson(),
+      'seq': seq,
       'status': status.toJson(),
       'breed': breed.name,
     };
   }
 
+  /// Unique identifier of the collar device
   final String deviceId;
+
+  /// Name of the collar or pet
   final String name;
+
+  /// Whether the collar is currently connected and transmitting
   final bool isOnline;
+
+  /// Whether the collar currently has an active alert
   final bool hasActiveAlert;
+
+  /// Timestamp when the collar was last seen
   final DateTime lastSeen;
-  final String packetLossPct;
+
+  /// Percentage of lost packets
+  final double packetLossPct;
+
+  /// Total number of packets lost
   final int packetsLost;
+
+  /// Total number of packets successfully received
   final int packetsReceived;
+
+  /// Configuration thresholds and settings for the collar
   final CollarConfig config;
+
+  /// Current GPS coordinates of the collar
   final CollarCoords coords;
+
+  /// GPS coordinates of the base station
   final CollarCoords baseCoords;
+
+  /// Most recent alert triggered by the collar, if any
   final CollarLastAlert? lastAlert;
+
+  /// LoRa radio transmission and reception metrics
   final CollarRadio radio;
+
+  /// Telemetry packet sequence number
+  final int seq;
+
+  /// Hardware status of the collar (battery, GPS fix, satellites)
   final CollarStatus status;
+
+  /// Cat breed assigned to this collar
   final CatBreed breed;
 
+  /// Creates a copy of [CollarModel] with the given fields replaced
   CollarModel copyWith({
     String? deviceId,
     String? name,
     bool? isOnline,
     bool? hasActiveAlert,
     DateTime? lastSeen,
-    String? packetLossPct,
+    double? packetLossPct,
     int? packetsLost,
     int? packetsReceived,
     CollarConfig? config,
@@ -130,6 +171,7 @@ class CollarModel extends Equatable {
     CollarCoords? baseCoords,
     CollarLastAlert? lastAlert,
     CollarRadio? radio,
+    int? seq,
     CollarStatus? status,
     CatBreed? breed,
   }) {
@@ -147,6 +189,7 @@ class CollarModel extends Equatable {
       baseCoords: baseCoords ?? this.baseCoords,
       lastAlert: lastAlert ?? this.lastAlert,
       radio: radio ?? this.radio,
+      seq: seq ?? this.seq,
       status: status ?? this.status,
       breed: breed ?? this.breed,
     );
@@ -167,6 +210,7 @@ class CollarModel extends Equatable {
     baseCoords,
     lastAlert,
     radio,
+    seq,
     status,
     breed,
   ];

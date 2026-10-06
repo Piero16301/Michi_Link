@@ -1,20 +1,27 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:michi_link_mobile/app/app.dart';
 
 abstract class DatabaseRepository {
-  Stream<CollarModel> getCollarStream(String deviceId);
+  Stream<CollarModel> getCollarStream({required String collarId});
+  void updateCollar({
+    required String collarId,
+    required String name,
+    required CatBreed breed,
+  });
 }
 
 class MockDatabaseRepository implements DatabaseRepository {
   @override
-  Stream<CollarModel> getCollarStream(String deviceId) {
+  Stream<CollarModel> getCollarStream({required String collarId}) {
     return Stream.value(
       CollarModel(
-        deviceId: deviceId,
+        deviceId: collarId,
         name: 'Collar 1',
         isOnline: true,
         hasActiveAlert: true,
-        packetLossPct: '100',
+        packetLossPct: 100,
         packetsLost: 100,
         packetsReceived: 100,
         config: const CollarConfig(
@@ -27,7 +34,6 @@ class MockDatabaseRepository implements DatabaseRepository {
           distanceHomeM: 10,
           rssi: 10,
           snr: 10,
-          seq: 10,
           packetsLostGap: 10,
         ),
         status: const CollarStatus(
@@ -38,9 +44,17 @@ class MockDatabaseRepository implements DatabaseRepository {
         ),
         lastSeen: DateTime.now(),
         baseCoords: const CollarCoords(altM: 0, lat: 0, lon: 0),
+        seq: 10,
       ),
     );
   }
+
+  @override
+  void updateCollar({
+    required String collarId,
+    required String name,
+    required CatBreed breed,
+  }) {}
 }
 
 class FirestoreDatabaseRepository implements DatabaseRepository {
@@ -50,11 +64,25 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
   final FirebaseFirestore _firestore;
 
   @override
-  Stream<CollarModel> getCollarStream(String deviceId) {
+  Stream<CollarModel> getCollarStream({required String collarId}) {
     return _firestore
         .collection('collars')
-        .doc(deviceId)
+        .doc(collarId)
         .snapshots()
         .map((snapshot) => CollarModel.fromJson(snapshot.data()!));
+  }
+
+  @override
+  void updateCollar({
+    required String collarId,
+    required String name,
+    required CatBreed breed,
+  }) {
+    unawaited(
+      _firestore.collection('collars').doc(collarId).update({
+        'name': name,
+        'breed': breed.name,
+      }),
+    );
   }
 }

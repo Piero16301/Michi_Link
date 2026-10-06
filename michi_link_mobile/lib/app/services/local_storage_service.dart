@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
 
@@ -51,15 +50,19 @@ class LocalStorageService {
     return _localStorageRepository.getCollars();
   }
 
-  ValueListenable<List<String>> getCollarsListenable() {
-    return _localStorageRepository.getCollarsListenable();
+  Stream<List<String>> getCollarsStream() {
+    return _localStorageRepository.getCollarsStream();
   }
 
-  void saveSelectedCollarId({required String collarId}) {
+  void saveSelectedCollarId({String? collarId}) {
     _localStorageRepository.saveSelectedCollarId(collarId: collarId);
   }
 
   String? getSelectedCollarId() {
     return _localStorageRepository.getSelectedCollarId();
+  }
+
+  Stream<String?> getSelectedCollarIdStream() {
+    return _localStorageRepository.getSelectedCollarIdStream();
   }
 }

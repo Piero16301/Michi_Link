@@ -7,7 +7,19 @@ class DatabaseService {
 
   final DatabaseRepository _databaseRepository;
 
-  Stream<CollarModel> getCollarStream({required String deviceId}) {
-    return _databaseRepository.getCollarStream(deviceId);
+  Stream<CollarModel> getCollarStream({required String collarId}) {
+    return _databaseRepository.getCollarStream(collarId: collarId);
+  }
+
+  void updateCollar({
+    required String collarId,
+    required String name,
+    required CatBreed breed,
+  }) {
+    return _databaseRepository.updateCollar(
+      collarId: collarId,
+      name: name,
+      breed: breed,
+    );
   }
 }
