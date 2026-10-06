@@ -1,3 +1,4 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
@@ -19,6 +20,10 @@ class SuccessCollarCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context);
+
+    final isSelected = context.select<AppCubit, bool>(
+      (cubit) => cubit.state.selectedCollarId == collar.deviceId,
+    );
 
     final shortId = _getShortId(collar.deviceId);
     final isOnline = collar.isOnline;
@@ -153,16 +158,57 @@ class SuccessCollarCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  ExpressiveIconButton.circle(
-                    size: ExpressiveIconButtonSize.small,
-                    variant: ExpressiveIconButtonVariant.tonal,
-                    tooltip: l10n.collarsEditTooltip,
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedEdit02,
-                      size: 16,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: onEdit,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSelected)
+                        Tooltip(
+                          message: l10n.collarsSelectedTooltip,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                                size: 18,
+                                color: colorScheme.onPrimary,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        ExpressiveIconButton.circle(
+                          size: ExpressiveIconButtonSize.small,
+                          variant: ExpressiveIconButtonVariant.tonal,
+                          tooltip: l10n.collarsSelectTooltip,
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                            size: 16,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: () {
+                            context.read<AppCubit>().changeSelectedCollarId(
+                              collarId: collar.deviceId,
+                            );
+                          },
+                        ),
+                      const SizedBox(width: 6),
+                      ExpressiveIconButton.circle(
+                        size: ExpressiveIconButtonSize.small,
+                        variant: ExpressiveIconButtonVariant.tonal,
+                        tooltip: l10n.collarsEditTooltip,
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedEdit02,
+                          size: 16,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: onEdit,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Row(

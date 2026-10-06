@@ -21,7 +21,7 @@ class AppCubit extends Cubit<AppState> {
   late final StreamSubscription<String?> _selectedCollarSubscription;
 
   void _onSelectedCollarChanged(String? collarId) {
-    emit(state.setSelectedCollarId(collarId));
+    emit(state.copyWith(selectedCollarId: collarId));
   }
 
   void initialLoad() {
@@ -68,10 +68,9 @@ class AppCubit extends Cubit<AppState> {
         theme: _localStorage.getTheme(),
         baseColor: _localStorage.getBaseColor(),
         fontFamily: _localStorage.getFontFamily(),
+        selectedCollarId: _localStorage.getSelectedCollarId(),
       ),
     );
-
-    emit(state.setSelectedCollarId(_localStorage.getSelectedCollarId()));
   }
 
   void changeLanguage({required Locale language}) {

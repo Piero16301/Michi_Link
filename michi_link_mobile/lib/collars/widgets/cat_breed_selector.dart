@@ -24,7 +24,6 @@ class CatBreedSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               l10n.collarsChooseCatBreed,
@@ -32,21 +31,6 @@ class CatBreedSelector extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0.6,
                 color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: colorScheme.tertiaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                l10n.collarsBreedsSvgCount(CatBreed.values.length),
-                style: textTheme.labelSmall?.copyWith(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onTertiaryContainer,
-                ),
               ),
             ),
           ],

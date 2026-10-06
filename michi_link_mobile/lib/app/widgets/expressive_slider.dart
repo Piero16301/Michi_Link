@@ -62,7 +62,13 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
   void _updateValueFromPosition(double localDx, double trackWidth) {
     if (widget.onChanged == null || trackWidth <= 0) return;
 
-    final ratio = (localDx / trackWidth).clamp(0.0, 1.0);
+    final effectiveTrackWidth = trackWidth - widget.thumbWidth;
+    final ratio = effectiveTrackWidth > 0
+        ? ((localDx - (widget.thumbWidth / 2)) / effectiveTrackWidth).clamp(
+            0.0,
+            1.0,
+          )
+        : 0.0;
     var newValue = widget.min + (ratio * _range);
 
     if (widget.divisions != null && widget.divisions! > 0) {
@@ -121,9 +127,7 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
       children: [
         if (widget.showSteppers) ...[
           ExpressiveIconButton(
-            icon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedRemove01,
-            ),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedRemove01),
             size: ExpressiveIconButtonSize.small,
             onPressed: isEnabled && widget.value > widget.min
                 ? _stepDown
@@ -140,6 +144,11 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
                   widget.thumbWidth / 2 +
                   (_normalizedValue *
                       effectiveTrackWidth.clamp(0.0, double.infinity));
+              final activeTrackWidth =
+                  (thumbPosition -
+                          (widget.thumbWidth / 2) +
+                          (widget.thumbWidth * _normalizedValue))
+                      .clamp(0.0, trackWidth);
 
               return GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -175,6 +184,7 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
                       }
                     : null,
                 child: SizedBox(
+                  width: trackWidth,
                   height: widget.thumbHeight,
                   child: Stack(
                     alignment: Alignment.centerLeft,
@@ -182,6 +192,7 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
                       // Pista continua redondeada
                       Center(
                         child: Container(
+                          width: double.infinity,
                           height: widget.trackHeight,
                           decoration: BoxDecoration(
                             color: inactiveTrackColor,
@@ -191,17 +202,15 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
                           ),
                           clipBehavior: Clip.antiAlias,
                           child: Stack(
+                            alignment: Alignment.centerLeft,
                             children: [
                               // Parte activa
-                              FractionallySizedBox(
-                                widthFactor: _normalizedValue,
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: activeTrackColor,
-                                    borderRadius: BorderRadius.circular(
-                                      widget.trackHeight / 2,
-                                    ),
+                              Container(
+                                width: activeTrackWidth,
+                                decoration: BoxDecoration(
+                                  color: activeTrackColor,
+                                  borderRadius: BorderRadius.circular(
+                                    widget.trackHeight / 2,
                                   ),
                                 ),
                               ),
@@ -209,32 +218,35 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
                               if (widget.divisions != null &&
                                   widget.divisions! > 1)
                                 Positioned.fill(
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: List.generate(
-                                      widget.divisions! + 1,
-                                      (index) {
-                                        final dotRatio =
-                                            index / widget.divisions!;
-                                        final isPassed =
-                                            dotRatio <= _normalizedValue;
-                                        return Container(
-                                          margin: const EdgeInsets.symmetric(
-                                            horizontal: 4,
-                                          ),
-                                          width: 4,
-                                          height: 4,
-                                          decoration: BoxDecoration(
-                                            color: isPassed
-                                                ? colorScheme.onPrimary
-                                                      .withValues(alpha: 0.7)
-                                                : colorScheme.onSurfaceVariant
-                                                      .withValues(alpha: 0.5),
-                                            shape: BoxShape.circle,
-                                          ),
-                                        );
-                                      },
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: widget.thumbWidth / 2,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: List.generate(
+                                        widget.divisions! + 1,
+                                        (index) {
+                                          final dotRatio =
+                                              index / widget.divisions!;
+                                          final isPassed =
+                                              dotRatio <=
+                                              _normalizedValue + 0.001;
+                                          return Container(
+                                            width: 4,
+                                            height: 4,
+                                            decoration: BoxDecoration(
+                                              color: isPassed
+                                                  ? colorScheme.onPrimary
+                                                        .withValues(alpha: 0.7)
+                                                  : colorScheme.onSurfaceVariant
+                                                        .withValues(alpha: 0.5),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -296,9 +308,7 @@ class _ExpressiveSliderState extends State<ExpressiveSlider> {
         if (widget.showSteppers) ...[
           const SizedBox(width: 8),
           ExpressiveIconButton(
-            icon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedAdd01,
-            ),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01),
             size: ExpressiveIconButtonSize.small,
             onPressed: isEnabled && widget.value < widget.max ? _stepUp : null,
           ),

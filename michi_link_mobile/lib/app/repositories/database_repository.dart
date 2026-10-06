@@ -10,6 +10,10 @@ abstract class DatabaseRepository {
     required String name,
     required CatBreed breed,
   });
+  void updateCollarConfig({
+    required String collarId,
+    required CollarConfig config,
+  });
 }
 
 class MockDatabaseRepository implements DatabaseRepository {
@@ -55,6 +59,12 @@ class MockDatabaseRepository implements DatabaseRepository {
     required String name,
     required CatBreed breed,
   }) {}
+
+  @override
+  void updateCollarConfig({
+    required String collarId,
+    required CollarConfig config,
+  }) {}
 }
 
 class FirestoreDatabaseRepository implements DatabaseRepository {
@@ -82,6 +92,18 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
       _firestore.collection('collars').doc(collarId).update({
         'name': name,
         'breed': breed.name,
+      }),
+    );
+  }
+
+  @override
+  void updateCollarConfig({
+    required String collarId,
+    required CollarConfig config,
+  }) {
+    unawaited(
+      _firestore.collection('collars').doc(collarId).update({
+        'config': config.toJson(),
       }),
     );
   }

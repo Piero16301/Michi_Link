@@ -88,11 +88,13 @@
     "@catBreedSphynx": {},
     "homeStatusOnline": "Online",
     "@homeStatusOnline": {},
-    "homeTimeAgo": "{time} ago",
+    "homeStatusOffline": "Offline",
+    "@homeStatusOffline": {},
+    "homeTimeAgo": "{seconds, plural, =0{Now} other{{seconds}s ago}}",
     "@homeTimeAgo": {
         "placeholders": {
-            "time": {
-                "type": "String"
+            "seconds": {
+                "type": "int"
             }
         }
     },
@@ -148,14 +150,6 @@
     "@collarsPetNameHint": {},
     "collarsChooseCatBreed": "CHOOSE YOUR CAT'S BREED",
     "@collarsChooseCatBreed": {},
-    "collarsBreedsSvgCount": "{count} SVG Breeds",
-    "@collarsBreedsSvgCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "collarsDefaultPetName": "New Michi",
     "@collarsDefaultPetName": {},
     "collarsLinkedSuccess": "Collar \"{name}\" linked successfully",
@@ -314,5 +308,45 @@
     "collarsLocationHistoryTooltip": "Location history",
     "@collarsLocationHistoryTooltip": {},
     "collarsEditTooltip": "Edit",
-    "@collarsEditTooltip": {}
+    "@collarsEditTooltip": {},
+    "collarsSelectedTooltip": "Selected collar",
+    "@collarsSelectedTooltip": {},
+    "collarsSelectTooltip": "Select collar",
+    "@collarsSelectTooltip": {},
+    "collarConfigTitle": "Configure: {name}",
+    "@collarConfigTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarConfigSubtitle": "Collar parameters and thresholds",
+    "@collarConfigSubtitle": {},
+    "collarConfigMaxDistanceLabel": "MAXIMUM DISTANCE",
+    "@collarConfigMaxDistanceLabel": {},
+    "collarConfigMaxDistanceSubtitle": "Allowed radius from base station",
+    "@collarConfigMaxDistanceSubtitle": {},
+    "collarConfigMinBatteryLabel": "MINIMUM BATTERY",
+    "@collarConfigMinBatteryLabel": {},
+    "collarConfigMinBatterySubtitle": "Low battery warning threshold",
+    "@collarConfigMinBatterySubtitle": {},
+    "collarConfigRequireGpsFixLabel": "GPS FIX",
+    "@collarConfigRequireGpsFixLabel": {},
+    "collarConfigRequireGpsFixTitle": "Require GPS Fix",
+    "@collarConfigRequireGpsFixTitle": {},
+    "collarConfigRequireGpsFixSubtitle": "Require accurate satellite fix for telemetry",
+    "@collarConfigRequireGpsFixSubtitle": {},
+    "collarConfigSave": "Save configuration",
+    "@collarConfigSave": {},
+    "collarConfigCancel": "Cancel",
+    "@collarConfigCancel": {},
+    "collarConfigSavedSuccess": "Configuration for \"{name}\" updated",
+    "@collarConfigSavedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    }
 }

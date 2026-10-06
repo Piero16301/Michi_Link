@@ -10,14 +10,13 @@ class CollarsCubit extends Cubit<CollarsState> {
   CollarsCubit({
     LocalStorageService? localStorage,
     DatabaseService? databaseService,
-  })  : _localStorage = localStorage ?? getIt<LocalStorageService>(),
-        _databaseService = databaseService ?? getIt<DatabaseService>(),
-        super(
-          CollarsState(
-            collars:
-                (localStorage ?? getIt<LocalStorageService>()).getCollars(),
-          ),
-        ) {
+  }) : _localStorage = localStorage ?? getIt<LocalStorageService>(),
+       _databaseService = databaseService ?? getIt<DatabaseService>(),
+       super(
+         CollarsState(
+           collars: (localStorage ?? getIt<LocalStorageService>()).getCollars(),
+         ),
+       ) {
     _collarsSubscription = _localStorage.getCollarsStream().listen(
       _onCollarsChanged,
     );
@@ -34,7 +33,12 @@ class CollarsCubit extends Cubit<CollarsState> {
   void addCollar({required String deviceId, String? name, CatBreed? breed}) {
     if (state.collars.contains(deviceId)) return;
 
+    final isFirstCollar = state.collars.isEmpty;
     _localStorage.saveCollars(collars: [...state.collars, deviceId]);
+
+    if (isFirstCollar) {
+      _localStorage.saveSelectedCollarId(collarId: deviceId);
+    }
   }
 
   void updateCollar({
@@ -42,11 +46,7 @@ class CollarsCubit extends Cubit<CollarsState> {
     required String name,
     required CatBreed breed,
   }) {
-    _databaseService.updateCollar(
-      collarId: collarId,
-      name: name,
-      breed: breed,
-    );
+    _databaseService.updateCollar(collarId: collarId, name: name, breed: breed);
   }
 
   void removeCollar(String deviceId) {

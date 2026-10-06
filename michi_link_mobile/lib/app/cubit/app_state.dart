@@ -15,27 +15,23 @@ class AppState extends Equatable {
   final String fontFamily;
   final String? selectedCollarId;
 
+  static const Object _sentinel = Object();
+
   AppState copyWith({
     Locale? language,
     ThemeMode? theme,
     Color? baseColor,
     String? fontFamily,
+    Object? selectedCollarId = _sentinel,
   }) {
     return AppState(
       language: language ?? this.language,
       theme: theme ?? this.theme,
       baseColor: baseColor ?? this.baseColor,
       fontFamily: fontFamily ?? this.fontFamily,
-    );
-  }
-
-  AppState setSelectedCollarId(String? collarId) {
-    return AppState(
-      language: language,
-      theme: theme,
-      baseColor: baseColor,
-      fontFamily: fontFamily,
-      selectedCollarId: collarId,
+      selectedCollarId: identical(selectedCollarId, _sentinel)
+          ? this.selectedCollarId
+          : selectedCollarId as String?,
     );
   }
 

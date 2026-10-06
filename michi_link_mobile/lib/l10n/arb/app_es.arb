@@ -88,11 +88,13 @@
     "@catBreedSphynx": {},
     "homeStatusOnline": "En línea",
     "@homeStatusOnline": {},
-    "homeTimeAgo": "hace {time}",
+    "homeStatusOffline": "Desconectado",
+    "@homeStatusOffline": {},
+    "homeTimeAgo": "{seconds, plural, =0{Ahora} other{hace {seconds}s}}",
     "@homeTimeAgo": {
         "placeholders": {
-            "time": {
-                "type": "String"
+            "seconds": {
+                "type": "int"
             }
         }
     },
@@ -148,14 +150,6 @@
     "@collarsPetNameHint": {},
     "collarsChooseCatBreed": "ELIGE LA RAZA DE TU GATO",
     "@collarsChooseCatBreed": {},
-    "collarsBreedsSvgCount": "{count} Razas SVG",
-    "@collarsBreedsSvgCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "collarsDefaultPetName": "Nuevo Michi",
     "@collarsDefaultPetName": {},
     "collarsLinkedSuccess": "Collar \"{name}\" vinculado con éxito",
@@ -314,5 +308,45 @@
     "collarsLocationHistoryTooltip": "Historial de ubicaciones",
     "@collarsLocationHistoryTooltip": {},
     "collarsEditTooltip": "Editar",
-    "@collarsEditTooltip": {}
+    "@collarsEditTooltip": {},
+    "collarsSelectedTooltip": "Collar seleccionado",
+    "@collarsSelectedTooltip": {},
+    "collarsSelectTooltip": "Seleccionar collar",
+    "@collarsSelectTooltip": {},
+    "collarConfigTitle": "Configurar: {name}",
+    "@collarConfigTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarConfigSubtitle": "Parámetros y límites del collar",
+    "@collarConfigSubtitle": {},
+    "collarConfigMaxDistanceLabel": "DISTANCIA MÁXIMA",
+    "@collarConfigMaxDistanceLabel": {},
+    "collarConfigMaxDistanceSubtitle": "Radio permitido desde la base",
+    "@collarConfigMaxDistanceSubtitle": {},
+    "collarConfigMinBatteryLabel": "BATERÍA MÍNIMA",
+    "@collarConfigMinBatteryLabel": {},
+    "collarConfigMinBatterySubtitle": "Umbral de alerta por batería baja",
+    "@collarConfigMinBatterySubtitle": {},
+    "collarConfigRequireGpsFixLabel": "FIJACIÓN GPS",
+    "@collarConfigRequireGpsFixLabel": {},
+    "collarConfigRequireGpsFixTitle": "Requerir GPS Fix",
+    "@collarConfigRequireGpsFixTitle": {},
+    "collarConfigRequireGpsFixSubtitle": "Exigir fijación satelital precisa para telemetría",
+    "@collarConfigRequireGpsFixSubtitle": {},
+    "collarConfigSave": "Guardar configuración",
+    "@collarConfigSave": {},
+    "collarConfigCancel": "Cancelar",
+    "@collarConfigCancel": {},
+    "collarConfigSavedSuccess": "Configuración de \"{name}\" actualizada",
+    "@collarConfigSavedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    }
 }

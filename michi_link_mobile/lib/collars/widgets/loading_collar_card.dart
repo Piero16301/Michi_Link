@@ -118,11 +118,23 @@ class LoadingCollarCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _shimmerBox(
-                    context,
-                    width: 32,
-                    height: 32,
-                    shape: BoxShape.circle,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _shimmerBox(
+                        context,
+                        width: 32,
+                        height: 32,
+                        shape: BoxShape.circle,
+                      ),
+                      const SizedBox(width: 6),
+                      _shimmerBox(
+                        context,
+                        width: 32,
+                        height: 32,
+                        shape: BoxShape.circle,
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   Row(

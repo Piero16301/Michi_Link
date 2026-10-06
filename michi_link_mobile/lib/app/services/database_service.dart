@@ -22,4 +22,11 @@ class DatabaseService {
       breed: breed,
     );
   }
+
+  void updateCollarConfig({
+    required String collarId,
+    required CollarConfig config,
+  }) {
+    _databaseRepository.updateCollarConfig(collarId: collarId, config: config);
+  }
 }
