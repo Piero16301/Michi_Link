@@ -232,14 +232,19 @@ void loop() {
     lowBatCount = 0;
   }
 
-  // 2. Ventana GPS adaptativa (normal / larga para recuperar efemérides)
+  // 2. Ventana GPS adaptativa (normal / larga para recuperar efemérides / corta de sondeo)
   uint32_t window = GPS_WINDOW_MS;
   bool refreshing = false;
-  if (gpsMissStreak >= GPS_MISSES_BEFORE_REFRESH &&
-      cyclesSinceRefresh >= refreshCooldown) {
-    window = GPS_REFRESH_WINDOW_MS;
-    refreshing = true;
-    cyclesSinceRefresh = 0;
+  
+  if (gpsMissStreak >= GPS_MISSES_BEFORE_REFRESH) {
+    if (cyclesSinceRefresh >= refreshCooldown) {
+      window = GPS_REFRESH_WINDOW_MS;
+      refreshing = true;
+      cyclesSinceRefresh = 0;
+    } else {
+      window = GPS_PROBE_WINDOW_MS; // En estado de backoff, solo asomamos la cabeza 5s
+      if (cyclesSinceRefresh < 0xFFFF) cyclesSinceRefresh++;
+    }
   } else if (cyclesSinceRefresh < 0xFFFF) {
     cyclesSinceRefresh++;
   }
