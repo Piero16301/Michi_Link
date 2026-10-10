@@ -43,11 +43,12 @@ class EditCollarBottomSheetState extends State<EditCollarBottomSheet> {
     final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context);
     final isNameValid = _nameController.text.trim().isNotEmpty;
+    final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
 
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.only(top: 20, bottom: 20 + viewInsetsBottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

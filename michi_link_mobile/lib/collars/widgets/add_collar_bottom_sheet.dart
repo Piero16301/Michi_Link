@@ -39,11 +39,12 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
 
     final rawId = _idController.text.trim();
     final isValid = rawId.length == 16;
+    final viewInsetsBottom = MediaQuery.viewInsetsOf(context).bottom;
 
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        padding: EdgeInsets.only(top: 20, bottom: 20 + viewInsetsBottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

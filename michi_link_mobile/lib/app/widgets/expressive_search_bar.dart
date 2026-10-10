@@ -12,9 +12,7 @@ class ExpressiveSearchBar extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.onTap,
-    this.leading = const HugeIcon(
-      icon: HugeIcons.strokeRoundedSearch01,
-    ),
+    this.leading = const HugeIcon(icon: HugeIcons.strokeRoundedSearch01),
     this.trailing,
     this.height = 56,
     this.backgroundColor,

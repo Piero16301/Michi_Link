@@ -222,9 +222,7 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
   @override
   void saveSelectedCollarId({String? collarId}) {
     if (collarId == null) {
-      _propertiesBox
-          .delete(LocalStorageRepository.kSelectedCollarId)
-          .ignore();
+      _propertiesBox.delete(LocalStorageRepository.kSelectedCollarId).ignore();
     } else {
       _propertiesBox
           .put(LocalStorageRepository.kSelectedCollarId, collarId)
