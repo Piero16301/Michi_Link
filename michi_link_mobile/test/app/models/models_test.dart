@@ -48,7 +48,6 @@ void main() {
         'packets_lost_gap': 0,
         'rssi': -43,
         'snr': 13.3,
-        'seq': 272,
       };
 
       final radio = CollarRadio.fromJson(json);
@@ -102,9 +101,10 @@ void main() {
         'is_online': false,
         'has_active_alert': false,
         'last_seen': timestamp,
-        'packet_loss_pct': '14.43%',
+        'packet_loss_pct': 14.43,
         'packets_lost': 71,
         'packets_received': 421,
+        'seq': 272,
         'config': {
           'max_distance_m': 500,
           'min_battery_pct': 20,
@@ -122,7 +122,6 @@ void main() {
           'packets_lost_gap': 0,
           'rssi': -43,
           'snr': 13.3,
-          'seq': 272,
         },
         'status': {
           'battery_pct': 91,
@@ -137,8 +136,10 @@ void main() {
       expect(collar.name, 'Mi Mascota');
       expect(collar.isOnline, isFalse);
       expect(collar.hasActiveAlert, isFalse);
+      expect(collar.packetLossPct, 14.43);
       expect(collar.packetsLost, 71);
       expect(collar.packetsReceived, 421);
+      expect(collar.seq, 272);
       expect(collar.config.maxDistanceM, 500);
       expect(collar.coords.lat, -8.0666408);
       expect(collar.lastAlert?.type, AlertType.signalNormal);
@@ -159,8 +160,8 @@ void main() {
           'packets_lost_gap': 0,
           'rssi': -19,
           'snr': 13.0,
-          'seq': 178,
         },
+        'seq': 178,
         'status': {
           'battery_pct': 95,
           'battery_v': 4.01,
@@ -174,6 +175,7 @@ void main() {
       expect(history.id, '0FTQ4hUaqlvgDTWJDycW');
       expect(history.coords.altM, 82.0);
       expect(history.radio.distanceHomeM, 11.0);
+      expect(history.seq, 178);
       expect(history.status.batteryV, 4.01);
       expect(history.timestamp, now.toLocal());
       expect(history.expireAt, now.toLocal());

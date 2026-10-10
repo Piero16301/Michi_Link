@@ -68,9 +68,7 @@ class ExpressiveTopAppBar extends StatelessWidget
       effectiveLeading = Padding(
         padding: const EdgeInsets.all(8),
         child: ExpressiveIconButton.circle(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedArrowLeft01,
-          ),
+          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01),
           onPressed: onBack ?? () => Navigator.of(context).maybePop(),
         ),
       );

@@ -22,6 +22,7 @@ class AppVariables {
   static const webChartMaxHeight = 480.0;
   static const paginationSize = 10;
   static const modalBottomSheetMaxHeightPct = 0.72;
+  static const modalBottomSheetKeyboardMaxHeightPct = 0.85;
   static const mapFocusZoom = 19.0;
 
   static const animationDuration = Duration(milliseconds: 400);

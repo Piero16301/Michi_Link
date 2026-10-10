@@ -50,14 +50,16 @@ constexpr uint32_t GPS_BOOT_SETTLE_MS =
 constexpr uint32_t GPS_WINDOW_MS = 35000;
 constexpr uint32_t GPS_REFRESH_WINDOW_MS =
     90000; // Ventana larga para recuperar efemérides
-constexpr uint32_t GPS_PROBE_WINDOW_MS = 
-    5000;  // Ventana muy corta (5s) para comprobar si salimos al exterior durante el backoff
+constexpr uint32_t GPS_PROBE_WINDOW_MS =
+    5000; // Ventana muy corta (5s) para comprobar si salimos al exterior
+          // durante el backoff
 constexpr uint8_t GPS_MISSES_BEFORE_REFRESH =
-    2; // Fallos seguidos antes de ventana larga (reducido)
+    2; // Fallos seguidos antes de ventana larga
 constexpr uint16_t GPS_REFRESH_COOLDOWN_MIN =
-    2; // Ciclos mínimos entre ventanas largas (muy reducido)
+    5; // Ciclos mínimos entre ventanas largas
 constexpr uint16_t GPS_REFRESH_COOLDOWN_MAX =
-    5; // Backoff máximo en interiores (muy reducido)
+    60; // Backoff máximo en interiores (hasta 60 minutos para no drenar
+        // batería)
 constexpr uint16_t GPS_EPH_MAINT_CYCLES =
     60; // Mantenimiento cada ~1 h (reducido)
 constexpr uint32_t GPS_EPH_MAINT_EXTRA_MS =

@@ -104,21 +104,28 @@ class CollarsView extends StatelessWidget {
 
   static void _showAddCollarModal(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final maxHeight =
-        MediaQuery.of(context).size.height *
-        AppVariables.modalBottomSheetMaxHeightPct;
 
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: colorScheme.surfaceContainer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (modalContext) => ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: maxHeight),
-        child: AddCollarBottomSheet(parentContext: context),
-      ),
+      builder: (modalContext) {
+        final mediaQuery = MediaQuery.of(modalContext);
+        final maxHeight = mediaQuery.viewInsets.bottom > 0
+            ? mediaQuery.size.height *
+                  AppVariables.modalBottomSheetKeyboardMaxHeightPct
+            : mediaQuery.size.height *
+                  AppVariables.modalBottomSheetMaxHeightPct;
+
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: AddCollarBottomSheet(parentContext: context),
+        );
+      },
     );
   }
 }

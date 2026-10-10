@@ -49,6 +49,7 @@ class _HomeMapViewState extends State<HomeMapView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final brightness = Theme.of(context).brightness;
+    // Carga los marcadores personalizados si cambia el brillo o la raza
     if (_lastBrightness != brightness || _lastBreed != widget.collar.breed) {
       _lastBrightness = brightness;
       _lastBreed = widget.collar.breed;
@@ -111,6 +112,7 @@ class _HomeMapViewState extends State<HomeMapView> {
     return buffer.toString();
   }
 
+  // Construye un marcador SVG personalizado
   Future<BitmapDescriptor> _createSvgMarker({
     required BytesLoader loader,
     required Color borderColor,
