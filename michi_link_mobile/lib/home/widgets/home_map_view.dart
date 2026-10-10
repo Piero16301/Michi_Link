@@ -112,6 +112,7 @@ class _HomeMapViewState extends State<HomeMapView> {
     return buffer.toString();
   }
 
+  // Construye un marcador SVG personalizado
   Future<BitmapDescriptor> _createSvgMarker({
     required BytesLoader loader,
     required Color borderColor,
