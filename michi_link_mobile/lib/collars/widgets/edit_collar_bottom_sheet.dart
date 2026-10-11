@@ -47,8 +47,10 @@ class EditCollarBottomSheetState extends State<EditCollarBottomSheet> {
 
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: EdgeInsets.only(top: 20, bottom: 20 + viewInsetsBottom),
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.only(top: 20, bottom: viewInsetsBottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -63,7 +65,7 @@ class EditCollarBottomSheetState extends State<EditCollarBottomSheet> {
             const SizedBox(height: 16),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

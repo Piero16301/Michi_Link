@@ -278,16 +278,8 @@
     },
     "collarsPacketsLabel": "PAQUETES",
     "@collarsPacketsLabel": {},
-    "collarsPacketsLostCount": "• {count} perdidos",
+    "collarsPacketsLostCount": "{count} perdidos",
     "@collarsPacketsLostCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "collarsPacketsReceivedCount": "{count} rx",
-    "@collarsPacketsReceivedCount": {
         "placeholders": {
             "count": {
                 "type": "int"

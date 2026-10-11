@@ -121,7 +121,9 @@ class CollarsView extends StatelessWidget {
             : mediaQuery.size.height *
                   AppVariables.modalBottomSheetMaxHeightPct;
 
-        return ConstrainedBox(
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: AddCollarBottomSheet(parentContext: context),
         );

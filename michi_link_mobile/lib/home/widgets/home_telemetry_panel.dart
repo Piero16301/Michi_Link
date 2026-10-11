@@ -295,30 +295,14 @@ class HomeTelemetryPanel extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: 6),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                l10n.collarsPacketsReceivedCount(
-                                  collar.packetsReceived,
-                                ),
-                                style: textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                l10n.collarsPacketsLostCount(
-                                  collar.packetsLost,
-                                ),
-                                style: textTheme.bodySmall?.copyWith(
-                                  fontSize: 10,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            l10n.collarsPacketsLostCount(collar.packetsLost),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
                         ],
                       ),
