@@ -48,8 +48,8 @@ class EditCollarBottomSheetState extends State<EditCollarBottomSheet> {
     return SafeArea(
       top: false,
       child: AnimatedPadding(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
+        duration: AppVariables.modalBottomSheetAnimationDuration,
+        curve: AppVariables.modalBottomSheetAnimationCurve,
         padding: EdgeInsets.only(top: 20, bottom: viewInsetsBottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,

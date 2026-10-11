@@ -23,6 +23,10 @@ class AppVariables {
   static const paginationSize = 10;
   static const modalBottomSheetMaxHeightPct = 0.72;
   static const modalBottomSheetKeyboardMaxHeightPct = 0.85;
+  static const Duration modalBottomSheetAnimationDuration = Duration(
+    milliseconds: 350,
+  );
+  static const Curve modalBottomSheetAnimationCurve = Curves.easeInOutCubic;
   static const mapFocusZoom = 19.0;
 
   static const animationDuration = Duration(milliseconds: 400);
