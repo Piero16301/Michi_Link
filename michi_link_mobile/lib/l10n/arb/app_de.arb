@@ -1,0 +1,330 @@
+{
+    "@@locale": "de",
+    "selectLanguage": "Sprache wählen",
+    "@selectLanguage": {},
+    "settingsAppBarTitle": "Einstellungen",
+    "@settingsAppBarTitle": {},
+    "settingsLanguageTitle": "Sprache",
+    "@settingsLanguageTitle": {},
+    "settingsAppearanceTitle": "Erscheinungsbild",
+    "@settingsAppearanceTitle": {},
+    "settingsThemeTitle": "Design",
+    "@settingsThemeTitle": {},
+    "settingsBaseColorTitle": "Basisfarbe",
+    "@settingsBaseColorTitle": {},
+    "settingsFontTitle": "Schriftart",
+    "@settingsFontTitle": {},
+    "settingsVersionTitle": "Version",
+    "@settingsVersionTitle": {},
+    "settingsUpdateDateTitle": "Letzte Aktualisierung",
+    "@settingsUpdateDateTitle": {},
+    "catBreedDefault": "Standard",
+    "@catBreedDefault": {},
+    "catBreedEuropeanOrangeWhite": "Europäisch Kurzhaar",
+    "@catBreedEuropeanOrangeWhite": {},
+    "catBreedPersian": "Perser",
+    "@catBreedPersian": {},
+    "catBreedSiamese": "Siamesisch",
+    "@catBreedSiamese": {},
+    "catBreedMaineCoon": "Maine Coon",
+    "@catBreedMaineCoon": {},
+    "catBreedRagdoll": "Ragdoll",
+    "@catBreedRagdoll": {},
+    "catBreedBritishShorthair": "Britisch Kurzhaar",
+    "@catBreedBritishShorthair": {},
+    "catBreedBengal": "Bengalkatze",
+    "@catBreedBengal": {},
+    "catBreedRussianBlue": "Russisch Blau",
+    "@catBreedRussianBlue": {},
+    "catBreedSphynx": "Sphynx",
+    "@catBreedSphynx": {},
+    "homeStatusOnline": "Online",
+    "@homeStatusOnline": {},
+    "homeStatusOffline": "Offline",
+    "@homeStatusOffline": {},
+    "homeTimeAgo": "{seconds, plural, =0{Jetzt} other{Vor {seconds}s}}",
+    "@homeTimeAgo": {
+        "placeholders": {
+            "seconds": {
+                "type": "int"
+            }
+        }
+    },
+    "homePetsTooltip": "Haustiere",
+    "@homePetsTooltip": {},
+    "homeDistance": "ENTFERNUNG",
+    "@homeDistance": {},
+    "homeSafeZone": "SICHERHEITSZONE",
+    "@homeSafeZone": {},
+    "homeMetersFromHome": "m von zu Hause",
+    "@homeMetersFromHome": {},
+    "homeCollarBattery": "HALSBAND-AKKU",
+    "@homeCollarBattery": {},
+    "homePositioning": "POSITIONIERUNG",
+    "@homePositioning": {},
+    "homeActiveSatellites": "{count} Aktive Satelliten",
+    "@homeActiveSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "homeLoraLink": "LORA-VERBINDUNG",
+    "@homeLoraLink": {},
+    "homeSignalOptimal": "Optimal",
+    "@homeSignalOptimal": {},
+    "homeConfigCollar": "Halsband konfigurieren",
+    "@homeConfigCollar": {},
+    "homeNoCollarTitle": "Noch kein Halsband hinzugefügt",
+    "@homeNoCollarTitle": {},
+    "homeNoCollarDescription": "Um deine Katze in Echtzeit zu orten, musst du zuerst ein Halsband registrieren oder verknüpfen.",
+    "@homeNoCollarDescription": {},
+    "homeGoToPets": "Zu Haustieren",
+    "@homeGoToPets": {},
+    "collarsTitle": "Meine Haustiere",
+    "@collarsTitle": {},
+    "collarsEmptyTitle": "Noch keine Halsbänder verknüpft",
+    "@collarsEmptyTitle": {},
+    "collarsLinkNew": "Neues Halsband verknüpfen",
+    "@collarsLinkNew": {},
+    "collarsAddDeviceTitle": "Gerät verknüpfen",
+    "@collarsAddDeviceTitle": {},
+    "collarsAddDeviceSubtitle": "LoRa Mesh Node & GPS Tracker",
+    "@collarsAddDeviceSubtitle": {},
+    "collarsAddDeviceDescription": "Gib die Seriennummer ein, die auf dem Halsband eingraviert ist, um es deinem Haustier zuzuweisen.",
+    "@collarsAddDeviceDescription": {},
+    "collarsHardwareId": "HARDWARE-KENNUNG",
+    "@collarsHardwareId": {},
+    "collarsPetName": "NAME DES HAUSTIERS",
+    "@collarsPetName": {},
+    "collarsPetNameHint": "z. B. Michin, Kira, Oliver",
+    "@collarsPetNameHint": {},
+    "collarsChooseCatBreed": "WÄHLE DIE KATZENRASSE",
+    "@collarsChooseCatBreed": {},
+    "collarsDefaultPetName": "Neuer Michi",
+    "@collarsDefaultPetName": {},
+    "collarsLinkedSuccess": "Halsband \"{name}\" erfolgreich verknüpft",
+    "@collarsLinkedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsSaveAndLink": "Speichern & Verknüpfen",
+    "@collarsSaveAndLink": {},
+    "collarsEditCardTitle": "Karte bearbeiten: {name}",
+    "@collarsEditCardTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsSettingsSubtitle": "Halsband-Einstellungen",
+    "@collarsSettingsSubtitle": {},
+    "collarsStatusLinked": "Verknüpft",
+    "@collarsStatusLinked": {},
+    "collarsStatusDisconnected": "Getrennt",
+    "@collarsStatusDisconnected": {},
+    "collarsHardwareIdImmutable": "HARDWARE-ID (UNVERÄNDERLICH)",
+    "@collarsHardwareIdImmutable": {},
+    "collarsCryptographicallySigned": "Kryptografisch signiert auf LoRa-Knoten",
+    "@collarsCryptographicallySigned": {},
+    "collarsPublicAliasOnMap": "ÖFFENTLICHER ALIAS",
+    "@collarsPublicAliasOnMap": {},
+    "collarsLowBatteryAlert": "Warnung bei schwachem Akku (<20%)",
+    "@collarsLowBatteryAlert": {},
+    "collarsPriorityNotificationMobile": "Priorisierte Benachrichtigung",
+    "@collarsPriorityNotificationMobile": {},
+    "collarsUpdateData": "Daten aktualisieren",
+    "@collarsUpdateData": {},
+    "collarsCardUpdated": "Karte für \"{name}\" aktualisiert",
+    "@collarsCardUpdated": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkAndClear": "Halsband trennen",
+    "@collarsUnlinkAndClear": {},
+    "collarsUnlinkedSuccess": "Halsband \"{name}\" getrennt",
+    "@collarsUnlinkedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkDialogTitle": "Halsband trennen?",
+    "@collarsUnlinkDialogTitle": {},
+    "collarsUnlinkDialogMessage": "Möchtest du \"{name}\" wirklich trennen? Es wird aus deiner Geräteliste entfernt.",
+    "@collarsUnlinkDialogMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarsUnlinkDialogCancel": "Abbrechen",
+    "@collarsUnlinkDialogCancel": {},
+    "collarsUnlinkDialogConfirm": "Trennen",
+    "@collarsUnlinkDialogConfirm": {},
+    "collarsStatusActiveRealtime": "Online",
+    "@collarsStatusActiveRealtime": {},
+    "collarsBatteryLabel": "AKKU",
+    "@collarsBatteryLabel": {},
+    "collarsBatteryVoltage": "• {voltage} V",
+    "@collarsBatteryVoltage": {
+        "placeholders": {
+            "voltage": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 2
+                }
+            }
+        }
+    },
+    "collarsConstellationLabel": "KONSTELLATION",
+    "@collarsConstellationLabel": {},
+    "collarsSatellitesCount": "{count} Satelliten",
+    "@collarsSatellitesCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsNoGpsFix": "Kein GPS-Signal",
+    "@collarsNoGpsFix": {},
+    "collarsGpsFix": "GPS-Signal",
+    "@collarsGpsFix": {},
+    "collarsSignalLabel": "LORA-SIGNAL",
+    "@collarsSignalLabel": {},
+    "collarsSignalSnr": "• SNR {snr} dB",
+    "@collarsSignalSnr": {
+        "placeholders": {
+            "snr": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 1
+                }
+            }
+        }
+    },
+    "collarsDistanceHome": "Nach Hause: {distance} m",
+    "@collarsDistanceHome": {
+        "placeholders": {
+            "distance": {
+                "type": "double",
+                "format": "decimalPatternDigits",
+                "optionalParameters": {
+                    "decimalDigits": 1
+                }
+            }
+        }
+    },
+    "collarsPacketsLabel": "PAKETE",
+    "@collarsPacketsLabel": {},
+    "collarsPacketsLostCount": "{count} verloren",
+    "@collarsPacketsLostCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "collarsLossRate": "{pct}% Verlust",
+    "@collarsLossRate": {
+        "placeholders": {
+            "pct": {
+                "type": "double",
+                "format": "decimalPattern"
+            }
+        }
+    },
+    "collarsNotificationsTooltip": "Benachrichtigungen",
+    "@collarsNotificationsTooltip": {},
+    "collarsLocationHistoryTooltip": "Standortverlauf",
+    "@collarsLocationHistoryTooltip": {},
+    "collarsEditTooltip": "Bearbeiten",
+    "@collarsEditTooltip": {},
+    "collarsSelectedTooltip": "Ausgewähltes Halsband",
+    "@collarsSelectedTooltip": {},
+    "collarsSelectTooltip": "Halsband auswählen",
+    "@collarsSelectTooltip": {},
+    "collarConfigTitle": "Konfigurieren: {name}",
+    "@collarConfigTitle": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "collarConfigSubtitle": "Halsband-Parameter und Grenzwerte",
+    "@collarConfigSubtitle": {},
+    "collarConfigMaxDistanceLabel": "MAXIMALE ENTFERNUNG",
+    "@collarConfigMaxDistanceLabel": {},
+    "collarConfigMaxDistanceSubtitle": "Zulässiger Radius von Basisstation",
+    "@collarConfigMaxDistanceSubtitle": {},
+    "collarConfigMinBatteryLabel": "MINIMALER AKKU",
+    "@collarConfigMinBatteryLabel": {},
+    "collarConfigMinBatterySubtitle": "Schwellenwert für Akkuwarnung",
+    "@collarConfigMinBatterySubtitle": {},
+    "collarConfigRequireGpsFixLabel": "GPS-SIGNAL",
+    "@collarConfigRequireGpsFixLabel": {},
+    "collarConfigRequireGpsFixTitle": "GPS-Signal erforderlich",
+    "@collarConfigRequireGpsFixTitle": {},
+    "collarConfigRequireGpsFixSubtitle": "Erfordert genaue Satellitenortung für Telemetrie",
+    "@collarConfigRequireGpsFixSubtitle": {},
+    "collarConfigSave": "Konfiguration speichern",
+    "@collarConfigSave": {},
+    "collarConfigCancel": "Abbrechen",
+    "@collarConfigCancel": {},
+    "collarConfigSavedSuccess": "Konfiguration für \"{name}\" aktualisiert",
+    "@collarConfigSavedSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "homeZoomInTooltip": "Vergrößern",
+    "@homeZoomInTooltip": {},
+    "homeZoomOutTooltip": "Verkleinern",
+    "@homeZoomOutTooltip": {},
+    "homeMyLocationTooltip": "Mein Standort (Basis)",
+    "@homeMyLocationTooltip": {},
+    "homeCatLocationTooltip": "Standort der Katze",
+    "@homeCatLocationTooltip": {},
+    "homeFitRangeTooltip": "Auf maximale Reichweite einpassen",
+    "@homeFitRangeTooltip": {},
+    "homeLocationHistoryTooltip": "Standortverlauf",
+    "@homeLocationHistoryTooltip": {},
+    "homeDistanceToPet": "{distance} m von dir entfernt",
+    "@homeDistanceToPet": {
+        "placeholders": {
+            "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "homeLocationServiceDisabled": "GPS ist deaktiviert. Bitte aktivieren, um Standort zu sehen",
+    "@homeLocationServiceDisabled": {},
+    "homeOpenSettingsPrompt": "Standortberechtigungen sind deaktiviert. Bitte in Einstellungen aktivieren",
+    "@homeOpenSettingsPrompt": {},
+    "homeSettingsAction": "Einstellungen",
+    "@homeSettingsAction": {},
+    "homeSafeZoneRadius": "Sicherheitszone: {distance} m",
+    "@homeSafeZoneRadius": {
+        "placeholders": {
+            "distance": {
+                "type": "int"
+            }
+        }
+    }
+}

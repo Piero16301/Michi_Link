@@ -1,3 +1,4 @@
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
@@ -171,7 +172,7 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
     _settingsBox
         .put(
           LocalStorageRepository.kUserBaseColor,
-          ColorHelper.getColorName(baseColor),
+          ExpressiveColors.toKey(baseColor),
         )
         .ignore();
   }
@@ -184,7 +185,7 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
     if (baseColorString == null) {
       return null;
     }
-    return ColorHelper.getColorByName(baseColorString);
+    return ExpressiveColors.fromKey(baseColorString);
   }
 
   @override
