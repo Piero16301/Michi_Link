@@ -24,8 +24,8 @@ import (
 
 // Constantes globales de configuración
 const (
-	RetentionDays     = 15 // TTL para histórico y alertas en Firestore (días)
-	CollarIntervalSec = 60 // Intervalo de transmisión predeterminado (segundos)
+	RetentionDays     = 15  // TTL para histórico y alertas en Firestore (días)
+	CollarIntervalSec = 120 // Intervalo de transmisión predeterminado (segundos)
 
 	// Parámetros oficiales del elipsoide de referencia WGS-84
 	wgs84A = 6378137.0           // Semieje mayor (metros)

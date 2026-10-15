@@ -1,3 +1,4 @@
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -43,8 +44,10 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
 
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: EdgeInsets.only(top: 20, bottom: 20 + viewInsetsBottom),
+      child: AnimatedPadding(
+        duration: AppVariables.modalBottomSheetAnimationDuration,
+        curve: AppVariables.modalBottomSheetAnimationCurve,
+        padding: EdgeInsets.only(top: 20, bottom: viewInsetsBottom),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -59,7 +62,7 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
             const SizedBox(height: 16),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,

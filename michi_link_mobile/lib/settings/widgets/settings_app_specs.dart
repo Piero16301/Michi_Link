@@ -1,7 +1,7 @@
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/l10n/l10n.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 

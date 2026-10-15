@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -34,6 +35,7 @@ class _HomeMapViewState extends State<HomeMapView> {
   BitmapDescriptor? _baseMarkerIcon;
   Brightness? _lastBrightness;
   CatBreed? _lastBreed;
+  double? _lastPixelRatio;
 
   _SelectedMarkerType _selectedMarker = _SelectedMarkerType.none;
   double _infoWindowX = 0;
@@ -49,10 +51,17 @@ class _HomeMapViewState extends State<HomeMapView> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final brightness = Theme.of(context).brightness;
-    // Carga los marcadores personalizados si cambia el brillo o la raza
-    if (_lastBrightness != brightness || _lastBreed != widget.collar.breed) {
+    final pixelRatio =
+        MediaQuery.maybeDevicePixelRatioOf(context) ??
+        View.of(context).devicePixelRatio;
+    // Carga los marcadores personalizados si cambia el brillo, la raza o
+    // la resolución
+    if (_lastBrightness != brightness ||
+        _lastBreed != widget.collar.breed ||
+        _lastPixelRatio != pixelRatio) {
       _lastBrightness = brightness;
       _lastBreed = widget.collar.breed;
+      _lastPixelRatio = pixelRatio;
       unawaited(_loadCustomMarkers());
     }
   }
@@ -112,7 +121,7 @@ class _HomeMapViewState extends State<HomeMapView> {
     return buffer.toString();
   }
 
-  // Construye un marcador SVG personalizado
+  // Construye un marcador SVG personalizado con soporte para alta resolución
   Future<BitmapDescriptor> _createSvgMarker({
     required BytesLoader loader,
     required Color borderColor,
@@ -120,10 +129,11 @@ class _HomeMapViewState extends State<HomeMapView> {
     required double markerSize,
     required double contentSize,
     double borderWidth = 2.5,
+    double pixelRatio = 1.0,
   }) async {
     final pictureInfo = await vg.loadPicture(loader, null);
     final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder);
+    final canvas = ui.Canvas(recorder)..scale(pixelRatio);
 
     final center = Offset(markerSize / 2, markerSize / 2);
     final radius = (markerSize / 2) - 4;
@@ -161,9 +171,13 @@ class _HomeMapViewState extends State<HomeMapView> {
       ..restore();
 
     final picture = recorder.endRecording();
-    final img = await picture.toImage(markerSize.toInt(), markerSize.toInt());
+    final targetSize = (markerSize * pixelRatio).round();
+    final img = await picture.toImage(targetSize, targetSize);
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.bytes(byteData!.buffer.asUint8List());
+    return BitmapDescriptor.bytes(
+      byteData!.buffer.asUint8List(),
+      imagePixelRatio: pixelRatio,
+    );
   }
 
   Future<void> _loadCustomMarkers() async {
@@ -171,6 +185,9 @@ class _HomeMapViewState extends State<HomeMapView> {
       final theme = Theme.of(context);
       final colorScheme = theme.colorScheme;
       final isDark = theme.brightness == Brightness.dark;
+      final pixelRatio =
+          MediaQuery.maybeDevicePixelRatioOf(context) ??
+          View.of(context).devicePixelRatio;
 
       final catIcon = await _createSvgMarker(
         loader: SvgAssetLoader(widget.collar.breed.assetPath),
@@ -179,6 +196,7 @@ class _HomeMapViewState extends State<HomeMapView> {
         markerSize: 48,
         contentSize: 30,
         borderWidth: 2.2,
+        pixelRatio: pixelRatio,
       );
 
       final baseSvg = _buildHugeIconSvg(
@@ -192,6 +210,7 @@ class _HomeMapViewState extends State<HomeMapView> {
         markerSize: 62,
         contentSize: 38,
         borderWidth: 2.8,
+        pixelRatio: pixelRatio,
       );
 
       if (mounted) {
@@ -567,7 +586,6 @@ class _HomeMapViewState extends State<HomeMapView> {
           onCameraMove: (position) {
             if (position.zoom != _currentZoom) {
               _currentZoom = position.zoom;
-              debugPrint('Zoom: $_currentZoom');
             }
             if (_selectedMarker != _SelectedMarkerType.none) {
               unawaited(_updateInfoWindowPosition());
@@ -577,55 +595,64 @@ class _HomeMapViewState extends State<HomeMapView> {
 
         if (_distanceToCatM != null)
           Positioned(
-            top: topPadding + 4,
-            left: 72,
-            right: 72,
+            bottom: bottomPadding + 10,
+            left: 16,
+            right: 16,
             child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(
-                    alpha: 0.94,
-                  ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                  onTap: _goToCatLocation,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedRoute01,
-                      color: colorScheme.primary,
-                      size: 16,
-                      strokeWidth: 2,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        l10n.homeDistanceToPet(
-                          _formatDistance(_distanceToCatM!),
-                        ),
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHigh.withValues(
+                        alpha: 0.94,
                       ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedRoute01,
+                          color: colorScheme.primary,
+                          size: 16,
+                          strokeWidth: 2,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            l10n.homeDistanceToPet(
+                              _formatDistance(_distanceToCatM!),
+                            ),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -732,7 +759,7 @@ class _HomeMapViewState extends State<HomeMapView> {
                   children: [
                     ExpressiveIconButton.circle(
                       icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedAdd01,
+                        icon: HugeIcons.strokeRoundedZoomIn,
                         color: colorScheme.onSurface,
                         strokeWidth: 2,
                       ),
@@ -747,7 +774,7 @@ class _HomeMapViewState extends State<HomeMapView> {
                     ),
                     ExpressiveIconButton.circle(
                       icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedMinusSign,
+                        icon: HugeIcons.strokeRoundedZoomOut,
                         color: colorScheme.onSurface,
                         strokeWidth: 2,
                       ),
@@ -807,16 +834,6 @@ class _HomeMapViewState extends State<HomeMapView> {
                       ),
                       tooltip: l10n.homeFitRangeTooltip,
                       onPressed: _fitMaxDistanceRange,
-                    ),
-                    const SizedBox(height: 2),
-                    ExpressiveIconButton.circle(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedClock01,
-                        color: colorScheme.onSurfaceVariant,
-                        strokeWidth: 2,
-                      ),
-                      tooltip: l10n.homeLocationHistoryTooltip,
-                      onPressed: widget.onHistoryPressed ?? () {},
                     ),
                   ],
                 ),

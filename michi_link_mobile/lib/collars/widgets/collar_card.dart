@@ -53,7 +53,9 @@ class CollarCard extends StatelessWidget {
             : mediaQuery.size.height *
                   AppVariables.modalBottomSheetMaxHeightPct;
 
-        return ConstrainedBox(
+        return AnimatedContainer(
+          duration: AppVariables.modalBottomSheetAnimationDuration,
+          curve: AppVariables.modalBottomSheetAnimationCurve,
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: EditCollarBottomSheet(parentContext: context, collar: collar),
         );

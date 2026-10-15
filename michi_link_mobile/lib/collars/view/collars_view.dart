@@ -1,3 +1,4 @@
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -121,7 +122,9 @@ class CollarsView extends StatelessWidget {
             : mediaQuery.size.height *
                   AppVariables.modalBottomSheetMaxHeightPct;
 
-        return ConstrainedBox(
+        return AnimatedContainer(
+          duration: AppVariables.modalBottomSheetAnimationDuration,
+          curve: AppVariables.modalBottomSheetAnimationCurve,
           constraints: BoxConstraints(maxHeight: maxHeight),
           child: AddCollarBottomSheet(parentContext: context),
         );

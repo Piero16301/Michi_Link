@@ -9,9 +9,6 @@ class AppVariables {
   @visibleForTesting
   static bool useTestFonts = false;
 
-  static const Color defaultBaseColor = Colors.green;
-  static const String defaultFontFamily = 'GoogleSansFlex';
-
   static const logoNoBgDark = 'assets/images/logo-no-bg-dark.png';
   static const logoNoBgLight = 'assets/images/logo-no-bg-light.png';
 
@@ -23,6 +20,10 @@ class AppVariables {
   static const paginationSize = 10;
   static const modalBottomSheetMaxHeightPct = 0.72;
   static const modalBottomSheetKeyboardMaxHeightPct = 0.85;
+  static const Duration modalBottomSheetAnimationDuration = Duration(
+    milliseconds: 350,
+  );
+  static const Curve modalBottomSheetAnimationCurve = Curves.easeInOutCubic;
   static const mapFocusZoom = 19.0;
 
   static const animationDuration = Duration(milliseconds: 400);
@@ -32,28 +33,7 @@ class AppVariables {
   static const String nameRegExp =
       r'^(?=.{2,}$)[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+)*$';
 
-  static Map<String, String> availableFonts = getAvailableFonts();
-
-  static Map<String, String> getAvailableFonts() {
-    return {
-      'Google Sans Flex': 'GoogleSansFlex',
-      'Merriweather': 'Merriweather',
-      'Montserrat': 'Montserrat',
-      'Nunito': 'Nunito',
-      'Open Sans': 'OpenSans',
-      'Orbitron': 'Orbitron',
-      'Playfair Display': 'PlayfairDisplay',
-      'Roboto': 'Roboto',
-      'Source Code Pro': 'SourceCodePro',
-    };
-  }
-
   static const collarsCollection = 'categories';
-
-  static const List<Locale> supportedLocales = [
-    Locale('en', 'US'),
-    Locale('es', 'ES'),
-  ];
 }
 
 enum SnackBarType {

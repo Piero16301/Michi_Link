@@ -1,4 +1,5 @@
 import 'package:country_flags/country_flags.dart';
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -18,10 +19,9 @@ class SettingsView extends StatelessWidget {
 
     return BlocBuilder<AppCubit, AppState>(
       builder: (context, state) {
-        final currentColorKey = ColorHelper.getColorName(state.baseColor);
-        final currentColorName = _getColorName(currentColorKey, l10n);
-        final currentThemeName = _getThemeName(state.theme, l10n);
-        final currentLanguageName = _getLanguageName(state.language, l10n);
+        final currentColorName = state.baseColor.localizedName(context);
+        final currentThemeName = state.theme.localizedName(context);
+        final currentLanguageName = state.language.localizedName(context);
 
         return Scaffold(
           appBar: ExpressiveTopAppBar(
@@ -121,7 +121,13 @@ class SettingsView extends StatelessWidget {
                     ),
                     title: Text(l10n.settingsFontTitle),
                     subtitle: Text(
-                      state.fontFamily,
+                      ExpressiveFonts.availableFonts.entries
+                          .firstWhere(
+                            (entry) => entry.value == state.fontFamily,
+                            orElse: () =>
+                                MapEntry(state.fontFamily, state.fontFamily),
+                          )
+                          .key,
                       style: TextStyle(fontFamily: state.fontFamily),
                     ),
                     trailing: Row(
@@ -273,13 +279,9 @@ class SettingsView extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final options = [
-      (ThemeMode.light, l10n.settingsThemeLight, HugeIcons.strokeRoundedSun03),
-      (ThemeMode.dark, l10n.settingsThemeDark, HugeIcons.strokeRoundedMoon02),
-      (
-        ThemeMode.system,
-        l10n.settingsThemeSystem,
-        HugeIcons.strokeRoundedComputerPhoneSync,
-      ),
+      (ThemeMode.light, HugeIcons.strokeRoundedSun03),
+      (ThemeMode.dark, HugeIcons.strokeRoundedMoon02),
+      (ThemeMode.system, HugeIcons.strokeRoundedComputerPhoneSync),
     ];
 
     _showSettingsModal(
@@ -287,8 +289,8 @@ class SettingsView extends StatelessWidget {
       title: l10n.settingsThemeTitle,
       itemsBuilder: (modalContext) => options.map((option) {
         final mode = option.$1;
-        final title = option.$2;
-        final icon = option.$3;
+        final title = mode.localizedName(modalContext);
+        final icon = option.$2;
         final isSelected = state.theme == mode;
 
         return ListTile(
@@ -329,8 +331,10 @@ class SettingsView extends StatelessWidget {
     _showSettingsModal(
       context: context,
       title: l10n.settingsBaseColorTitle,
-      itemsBuilder: (modalContext) => ColorHelper.colorMap.entries.map((entry) {
-        final isSelected = entry.value == state.baseColor;
+      itemsBuilder: (modalContext) => ExpressiveColors.palette.entries.map((
+        entry,
+      ) {
+        final isSelected = entry.value.toARGB32() == state.baseColor.toARGB32();
         return ListTile(
           leading: Container(
             width: 28,
@@ -340,7 +344,7 @@ class SettingsView extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          title: Text(_getColorName(entry.key, l10n)),
+          title: Text(entry.value.localizedName(modalContext)),
           trailing: isSelected
               ? HugeIcon(
                   icon: HugeIcons.strokeRoundedCheckmarkCircle02,
@@ -364,53 +368,54 @@ class SettingsView extends StatelessWidget {
     _showSettingsModal(
       context: context,
       title: l10n.settingsFontTitle,
-      itemsBuilder: (modalContext) => AppVariables.availableFonts.entries.map((
-        entry,
-      ) {
-        final isSelected = entry.value == state.fontFamily;
-        return ListTile(
-          leading: Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? colorScheme.primaryContainer
-                  : colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              'Aa',
-              style: TextStyle(
-                fontFamily: entry.value,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: isSelected
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.onSurfaceVariant,
+      itemsBuilder: (modalContext) =>
+          ExpressiveFonts.availableFonts.entries.map((entry) {
+            final isSelected = entry.value == state.fontFamily;
+            return ListTile(
+              leading: Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? colorScheme.primaryContainer
+                      : colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'Aa',
+                  style: TextStyle(
+                    fontFamily: entry.value,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isSelected
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-            ),
-          ),
-          title: Text(
-            entry.key,
-            style: TextStyle(
-              fontFamily: entry.value,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            ),
-          ),
-          trailing: isSelected
-              ? HugeIcon(
-                  icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-                  color: colorScheme.primary,
-                  strokeWidth: 2,
-                )
-              : null,
-          onTap: () {
-            context.read<AppCubit>().changeFontFamily(fontFamily: entry.value);
-            Navigator.pop(modalContext);
-          },
-        );
-      }).toList(),
+              title: Text(
+                entry.key,
+                style: TextStyle(
+                  fontFamily: entry.value,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+              trailing: isSelected
+                  ? HugeIcon(
+                      icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                      color: colorScheme.primary,
+                      strokeWidth: 2,
+                    )
+                  : null,
+              onTap: () {
+                context.read<AppCubit>().changeFontFamily(
+                  fontFamily: entry.value,
+                );
+                Navigator.pop(modalContext);
+              },
+            );
+          }).toList(),
     );
   }
 
@@ -421,7 +426,7 @@ class SettingsView extends StatelessWidget {
     _showSettingsModal(
       context: context,
       title: l10n.selectLanguage,
-      itemsBuilder: (modalContext) => AppVariables.supportedLocales.map((
+      itemsBuilder: (modalContext) => ExpressiveLanguages.supportedLocales.map((
         locale,
       ) {
         final isSelected = locale.languageCode == state.language.languageCode;
@@ -434,7 +439,7 @@ class SettingsView extends StatelessWidget {
               shape: RoundedRectangle(6),
             ),
           ),
-          title: Text(_getLanguageName(locale, l10n)),
+          title: Text(locale.localizedName(modalContext)),
           trailing: isSelected
               ? HugeIcon(
                   icon: HugeIcons.strokeRoundedCheckmarkCircle02,
@@ -451,28 +456,6 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  String _getLanguageName(Locale locale, AppLocalizations l10n) {
-    if (locale.languageCode ==
-        AppVariables.supportedLocales.first.languageCode) {
-      return l10n.settingsLanguageEnglish;
-    } else if (locale.languageCode ==
-        AppVariables.supportedLocales.last.languageCode) {
-      return l10n.settingsLanguageSpanish;
-    }
-    return locale.languageCode;
-  }
-
-  String _getThemeName(ThemeMode themeMode, AppLocalizations l10n) {
-    switch (themeMode) {
-      case ThemeMode.light:
-        return l10n.settingsThemeLight;
-      case ThemeMode.dark:
-        return l10n.settingsThemeDark;
-      case ThemeMode.system:
-        return l10n.settingsThemeSystem;
-    }
-  }
-
   List<List<dynamic>> _getThemeIcon(ThemeMode themeMode) {
     switch (themeMode) {
       case ThemeMode.light:
@@ -481,51 +464,6 @@ class SettingsView extends StatelessWidget {
         return HugeIcons.strokeRoundedMoon02;
       case ThemeMode.system:
         return HugeIcons.strokeRoundedComputerPhoneSync;
-    }
-  }
-
-  String _getColorName(String colorKey, AppLocalizations l10n) {
-    switch (colorKey) {
-      case 'RED':
-        return l10n.settingsColorRed;
-      case 'PINK':
-        return l10n.settingsColorPink;
-      case 'PURPLE':
-        return l10n.settingsColorPurple;
-      case 'DEEP_PURPLE':
-        return l10n.settingsColorDeepPurple;
-      case 'INDIGO':
-        return l10n.settingsColorIndigo;
-      case 'BLUE':
-        return l10n.settingsColorBlue;
-      case 'LIGHT_BLUE':
-        return l10n.settingsColorLightBlue;
-      case 'CYAN':
-        return l10n.settingsColorCyan;
-      case 'TEAL':
-        return l10n.settingsColorTeal;
-      case 'GREEN':
-        return l10n.settingsColorGreen;
-      case 'LIGHT_GREEN':
-        return l10n.settingsColorLightGreen;
-      case 'LIME':
-        return l10n.settingsColorLime;
-      case 'YELLOW':
-        return l10n.settingsColorYellow;
-      case 'AMBER':
-        return l10n.settingsColorAmber;
-      case 'ORANGE':
-        return l10n.settingsColorOrange;
-      case 'DEEP_ORANGE':
-        return l10n.settingsColorDeepOrange;
-      case 'BROWN':
-        return l10n.settingsColorBrown;
-      case 'GREY':
-        return l10n.settingsColorGrey;
-      case 'BLUE_GREY':
-        return l10n.settingsColorBlueGrey;
-      default:
-        return colorKey;
     }
   }
 }
