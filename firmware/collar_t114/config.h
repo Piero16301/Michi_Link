@@ -62,7 +62,7 @@ constexpr uint16_t GPS_REFRESH_COOLDOWN_MAX =
     60; // Backoff máximo en interiores (hasta 60 minutos para no drenar
         // batería)
 constexpr uint16_t GPS_EPH_MAINT_CYCLES =
-    60; // Mantenimiento cada ~1 h (reducido)
+    90; // Mantenimiento cada ~3 h a 120 s (efemérides duran ~4 h)
 constexpr uint32_t GPS_EPH_MAINT_EXTRA_MS =
     45000; // 45 s extra para asegurar descarga completa
 constexpr float GPS_MAX_HDOP =

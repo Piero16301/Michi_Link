@@ -174,7 +174,7 @@ jobs:
           serviceAccountJson: ${{ env.SERVICE_ACCOUNT_PATH }}
           packageName: ${{ env.APP_PACKAGE_NAME }}
           releaseFiles: ./downloaded/app-production-release.aab
-          track: beta
+          tracks: beta
           whatsNewDirectory: michi_link_mobile/whatsnew
 
       - name: 🗑️ Delete Artifact
