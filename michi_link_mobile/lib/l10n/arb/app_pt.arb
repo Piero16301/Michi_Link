@@ -74,7 +74,7 @@
     "@homeLoraLink": {},
     "homeSignalOptimal": "Ideal",
     "@homeSignalOptimal": {},
-    "homeConfigCollar": "Configurar coleira",
+    "homeConfigCollar": "Configurar",
     "@homeConfigCollar": {},
     "homeNoCollarTitle": "Nenhuma coleira adicionada",
     "@homeNoCollarTitle": {},
@@ -297,7 +297,9 @@
     "@homeZoomInTooltip": {},
     "homeZoomOutTooltip": "Afastar",
     "@homeZoomOutTooltip": {},
-    "homeMyLocationTooltip": "Minha localização (Base)",
+    "homeResetNorthTooltip": "Orientar para o norte",
+    "@homeResetNorthTooltip": {},
+    "homeMyLocationTooltip": "Minha localização",
     "@homeMyLocationTooltip": {},
     "homeCatLocationTooltip": "Localização do gato",
     "@homeCatLocationTooltip": {},
@@ -323,6 +325,92 @@
     "@homeSafeZoneRadius": {
         "placeholders": {
             "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationsEmptyTitle": "Sem notificações",
+    "@notificationsEmptyTitle": {},
+    "notificationsEmptyDescription": "Os alertas e eventos registados para esta coleira aparecerão aqui",
+    "@notificationsEmptyDescription": {},
+    "alertSeverityCritical": "CRÍTICO",
+    "@alertSeverityCritical": {},
+    "alertSeverityWarning": "AVISO",
+    "@alertSeverityWarning": {},
+    "alertSeverityInfo": "INFO",
+    "@alertSeverityInfo": {},
+    "alertSeverityNormal": "NORMAL",
+    "@alertSeverityNormal": {},
+    "alertSeverityUnknown": "ALERTA",
+    "@alertSeverityUnknown": {},
+    "alertGeofenceBreachTitle": "Zona segura ultrapassada",
+    "@alertGeofenceBreachTitle": {},
+    "alertGeofenceRestoredTitle": "Zona segura restaurada",
+    "@alertGeofenceRestoredTitle": {},
+    "alertLowBatteryTitle": "Bateria fraca",
+    "@alertLowBatteryTitle": {},
+    "alertBatteryCriticalTitle": "Bateria crítica",
+    "@alertBatteryCriticalTitle": {},
+    "alertBatteryNormalTitle": "Bateria restaurada",
+    "@alertBatteryNormalTitle": {},
+    "alertNoGpsFixTitle": "Sinal de GPS perdido",
+    "@alertNoGpsFixTitle": {},
+    "alertGpsFixRestoredTitle": "Sinal de GPS recuperado",
+    "@alertGpsFixRestoredTitle": {},
+    "alertWeakSignalTitle": "Sinal LoRa fraco",
+    "@alertWeakSignalTitle": {},
+    "alertSignalNormalTitle": "Sinal LoRa normalizado",
+    "@alertSignalNormalTitle": {},
+    "alertUnknownTitle": "Alerta do sistema",
+    "@alertUnknownTitle": {},
+    "alertGeofenceBreachDesc": "Animal fora do raio permitido",
+    "@alertGeofenceBreachDesc": {},
+    "alertGeofenceRestoredDesc": "Animal dentro do alcance seguro",
+    "@alertGeofenceRestoredDesc": {},
+    "alertLowBatteryDesc": "Nivel de carga baixo",
+    "@alertLowBatteryDesc": {},
+    "alertBatteryCriticalDesc": "Carga em nível crítico",
+    "@alertBatteryCriticalDesc": {},
+    "alertBatteryNormalDesc": "Carga em nível adequado",
+    "@alertBatteryNormalDesc": {},
+    "alertNoGpsFixDesc": "Sem fixação de satélite",
+    "@alertNoGpsFixDesc": {},
+    "alertGpsFixRestoredDesc": "Fixação de satélite restaurada",
+    "@alertGpsFixRestoredDesc": {},
+    "alertWeakSignalDesc": "Potência do enlace de rádio baixa",
+    "@alertWeakSignalDesc": {},
+    "alertSignalNormalDesc": "Potência ideal do enlace de rádio",
+    "@alertSignalNormalDesc": {},
+    "alertUnknownDesc": "Evento registado na coleira",
+    "@alertUnknownDesc": {},
+    "alertValueDistance": "{distance} m",
+    "@alertValueDistance": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "alertValueSatellites": "{count} sats",
+    "@alertValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueBattery": "{pct}%",
+    "@alertValueBattery": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueSignal": "{rssi} dBm",
+    "@alertValueSignal": {
+        "placeholders": {
+            "rssi": {
                 "type": "int"
             }
         }

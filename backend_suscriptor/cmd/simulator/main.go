@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -21,10 +22,10 @@ import (
 // CONFIGURACIÓN DE ORIGEN Y SIMULACIÓN
 // ==========================================
 const (
-	DeviceID    = "COLLAR_01"
+	DeviceID    = "COLLAR_9E2B4A1F8C3D2E5A"
 	PetName     = "Michin"
-	MaxRadiusM  = 1000.0
-	IntervalSec = 10 // Intervalo de prueba (ajustable a 60 en producción)
+	MaxRadiusM  = 150.0
+	IntervalSec = 120 // Intervalo de prueba (ajustable a 60 en producción)
 )
 
 // Coordenadas base del hogar
@@ -43,6 +44,8 @@ func main() {
 	hivemqBroker := getEnv("HIVEMQ_BROKER", "")
 	hivemqUser := getEnv("HIVEMQ_USER", "")
 	hivemqPass := getEnv("HIVEMQ_PASS", "")
+	simulateCoordinates := getEnvBool("SIMULATE_COORDINATES", true)
+	simulateNotifications := getEnvBool("SIMULATE_NOTIFICATIONS", true)
 
 	// Configuración de cliente MQTT con LWT (Last Will & Testament)
 	opts := mqtt.NewClientOptions()
@@ -75,14 +78,26 @@ func main() {
 	batteryV := 4.15
 	var seq uint32 = 1
 
-	ticker := time.NewTicker(time.Duration(IntervalSec) * time.Second)
-	defer ticker.Stop()
-
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	// Ejecutar primer ciclo inmediatamente
-	simularPaso(client, &seq, &currLat, &currLon, &batteryPct, &batteryV)
+	if simulateCoordinates {
+		// Ejecutar primer ciclo inmediatamente
+		simularPaso(client, &seq, &currLat, &currLon, &batteryPct, &batteryV)
+	}
+
+	if simulateNotifications {
+		enviarTodasLasAlertas(client, currLat, currLon, batteryPct)
+	}
+
+	if !simulateCoordinates {
+		log.Println("[SIMULADOR] Coordenadas desactivadas.")
+		publishStatus(client, DeviceID, "offline")
+		return
+	}
+
+	ticker := time.NewTicker(time.Duration(IntervalSec) * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {
@@ -169,21 +184,17 @@ func simularPaso(
 	log.Printf("[Pkt #%03d] Dist: %6.1fm | Bat: %d%% | Fix: %-5t | RSSI: %d dBm",
 		*seq, distHome, *batteryPct, hasGpsFix, rssi)
 
-	// D. Publicar alerta rotativa con hardware real
-	enviarAlertaPeriodica(client, distHome, *batteryPct, rssi)
-
 	*seq++
 }
 
-var alertIndex int
-
 // Catálogo de alertas soportadas por el hardware disponible
-func enviarAlertaPeriodica(client mqtt.Client, distHome float64, batPct int, rssi int) {
+func enviarTodasLasAlertas(client mqtt.Client, lat, lon float64, batPct int) {
+	distHome := haversineDistance(HomeLat, HomeLon, lat, lon)
+	rssi := int(-60.0 - (distHome/MaxRadiusM)*55.0)
 	type AlertOption struct {
-		Type        string
-		Severity    string
-		Value       float64
-		Description string
+		Type     string
+		Severity string
+		Value    float64
 	}
 
 	distRedondeada := math.Round(distHome*10) / 10
@@ -191,75 +202,67 @@ func enviarAlertaPeriodica(client mqtt.Client, distHome float64, batPct int, rss
 	catalogo := []AlertOption{
 		// --- 1. GEOVALLA ---
 		{
-			Type:        "GEOFENCE_BREACH",
-			Severity:    models.SeverityCritical,
-			Value:       distRedondeada,
-			Description: "Michin cruzó el perímetro de seguridad",
+			Type:     "GEOFENCE_BREACH",
+			Severity: models.SeverityCritical,
+			Value:    distRedondeada,
 		},
 		{
-			Type:        "GEOFENCE_RESTORED",
-			Severity:    models.SeverityInfo,
-			Value:       distRedondeada,
-			Description: "Michin regresó a la zona segura",
+			Type:     "GEOFENCE_RESTORED",
+			Severity: models.SeverityInfo,
+			Value:    distRedondeada,
 		},
 
 		// --- 2. BATERÍA ---
 		{
-			Type:        "LOW_BATTERY",
-			Severity:    models.SeverityWarning,
-			Value:       float64(batPct),
-			Description: "Batería por debajo del umbral preventivo",
+			Type:     "LOW_BATTERY",
+			Severity: models.SeverityWarning,
+			Value:    float64(batPct),
 		},
 		{
-			Type:        "BATTERY_CRITICAL",
-			Severity:    models.SeverityCritical,
-			Value:       float64(int(math.Max(5, float64(batPct-15)))),
-			Description: "Batería en estado crítico inminente a apagado",
+			Type:     "BATTERY_CRITICAL",
+			Severity: models.SeverityCritical,
+			Value:    float64(int(math.Max(5, float64(batPct-15)))),
 		},
 		{
-			Type:        "BATTERY_NORMAL",
-			Severity:    models.SeverityInfo,
-			Value:       90.0,
-			Description: "Collar cargado o conectado a energía",
+			Type:     "BATTERY_NORMAL",
+			Severity: models.SeverityInfo,
+			Value:    90.0,
 		},
 
 		// --- 3. SATÉLITES (GPS) ---
 		{
-			Type:        "NO_GPS_FIX",
-			Severity:    models.SeverityWarning,
-			Value:       0,
-			Description: "Pérdida de señal satelital / Modo radiobaliza",
+			Type:     "NO_GPS_FIX",
+			Severity: models.SeverityWarning,
+			Value:    0,
 		},
 		{
-			Type:        "GPS_FIX_RESTORED",
-			Severity:    models.SeverityInfo,
-			Value:       8,
-			Description: "Enlace satelital GPS restablecido con satélites",
+			Type:     "GPS_FIX_RESTORED",
+			Severity: models.SeverityInfo,
+			Value:    8,
 		},
 
 		// --- 4. RADIOENLACE LORA ---
 		{
-			Type:        "WEAK_SIGNAL",
-			Severity:    models.SeverityWarning,
-			Value:       float64(rssi),
-			Description: "Atenuación severa de enlace LoRa con la base",
+			Type:     "WEAK_SIGNAL",
+			Severity: models.SeverityWarning,
+			Value:    float64(rssi),
 		},
 		{
-			Type:        "SIGNAL_NORMAL",
-			Severity:    models.SeverityInfo,
-			Value:       -65.0,
-			Description: "Señal LoRa restablecida a niveles óptimos",
+			Type:     "SIGNAL_NORMAL",
+			Severity: models.SeverityInfo,
+			Value:    -65.0,
 		},
 	}
 
-	// Rotación secuencial
-	seleccionada := catalogo[alertIndex]
-	alertIndex = (alertIndex + 1) % len(catalogo)
-
-	dispararAlerta(client, seleccionada.Type, seleccionada.Severity, seleccionada.Value, seleccionada.Description)
+	for index, alerta := range catalogo {
+		if index > 0 {
+			time.Sleep(time.Second)
+		}
+		dispararAlerta(client, alerta.Type, alerta.Severity, alerta.Value)
+	}
 }
 
-func dispararAlerta(client mqtt.Client, alertType, severity string, val float64, desc string) {
+func dispararAlerta(client mqtt.Client, alertType, severity string, val float64) {
 	alert := models.AlertPayload{
 		DeviceID:  DeviceID,
 		Type:      alertType,
@@ -270,7 +273,7 @@ func dispararAlerta(client mqtt.Client, alertType, severity string, val float64,
 	payloadBytes, _ := json.Marshal(alert)
 	topic := fmt.Sprintf("mascotas/%s/alertas", DeviceID)
 	client.Publish(topic, 1, false, payloadBytes)
-	log.Printf(" ⚠️ [ALERTA ENVIADA] [%s] Sev: %-8s | Val: %.1f | (%s)", alertType, severity, val, desc)
+	log.Printf(" ⚠️ [ALERTA ENVIADA] [%s] Sev: %-8s | Val: %.1f", alertType, severity, val)
 }
 
 func publishStatus(client mqtt.Client, devID, status string) {
@@ -300,4 +303,18 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return fallback
+	}
+
+	parsed, err := strconv.ParseBool(value)
+	if err != nil {
+		log.Printf("[WARN] %s=%q no es válido; usando %t.", key, value, fallback)
+		return fallback
+	}
+	return parsed
 }

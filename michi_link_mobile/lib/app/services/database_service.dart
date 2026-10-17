@@ -29,4 +29,8 @@ class DatabaseService {
   }) {
     _databaseRepository.updateCollarConfig(collarId: collarId, config: config);
   }
+
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId}) {
+    return _databaseRepository.getAlertRecordsStream(collarId: collarId);
+  }
 }

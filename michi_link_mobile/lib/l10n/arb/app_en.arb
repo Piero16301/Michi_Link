@@ -74,7 +74,7 @@
     "@homeLoraLink": {},
     "homeSignalOptimal": "Optimal",
     "@homeSignalOptimal": {},
-    "homeConfigCollar": "Configure collar",
+    "homeConfigCollar": "Configure",
     "@homeConfigCollar": {},
     "homeNoCollarTitle": "No collar added yet",
     "@homeNoCollarTitle": {},
@@ -297,7 +297,9 @@
     "@homeZoomInTooltip": {},
     "homeZoomOutTooltip": "Zoom out",
     "@homeZoomOutTooltip": {},
-    "homeMyLocationTooltip": "My location (Base)",
+    "homeResetNorthTooltip": "Orient to north",
+    "@homeResetNorthTooltip": {},
+    "homeMyLocationTooltip": "My location",
     "@homeMyLocationTooltip": {},
     "homeCatLocationTooltip": "Cat's location",
     "@homeCatLocationTooltip": {},
@@ -323,6 +325,92 @@
     "@homeSafeZoneRadius": {
         "placeholders": {
             "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationsEmptyTitle": "No notifications",
+    "@notificationsEmptyTitle": {},
+    "notificationsEmptyDescription": "Alerts and events registered for this collar will appear here",
+    "@notificationsEmptyDescription": {},
+    "alertSeverityCritical": "CRITICAL",
+    "@alertSeverityCritical": {},
+    "alertSeverityWarning": "WARNING",
+    "@alertSeverityWarning": {},
+    "alertSeverityInfo": "INFO",
+    "@alertSeverityInfo": {},
+    "alertSeverityNormal": "NORMAL",
+    "@alertSeverityNormal": {},
+    "alertSeverityUnknown": "ALERT",
+    "@alertSeverityUnknown": {},
+    "alertGeofenceBreachTitle": "Safe zone breached",
+    "@alertGeofenceBreachTitle": {},
+    "alertGeofenceRestoredTitle": "Safe zone restored",
+    "@alertGeofenceRestoredTitle": {},
+    "alertLowBatteryTitle": "Low battery",
+    "@alertLowBatteryTitle": {},
+    "alertBatteryCriticalTitle": "Critical battery",
+    "@alertBatteryCriticalTitle": {},
+    "alertBatteryNormalTitle": "Battery restored",
+    "@alertBatteryNormalTitle": {},
+    "alertNoGpsFixTitle": "GPS signal lost",
+    "@alertNoGpsFixTitle": {},
+    "alertGpsFixRestoredTitle": "GPS signal restored",
+    "@alertGpsFixRestoredTitle": {},
+    "alertWeakSignalTitle": "Weak LoRa signal",
+    "@alertWeakSignalTitle": {},
+    "alertSignalNormalTitle": "LoRa signal normalized",
+    "@alertSignalNormalTitle": {},
+    "alertUnknownTitle": "System alert",
+    "@alertUnknownTitle": {},
+    "alertGeofenceBreachDesc": "Pet outside the allowed radius",
+    "@alertGeofenceBreachDesc": {},
+    "alertGeofenceRestoredDesc": "Pet within the safe range",
+    "@alertGeofenceRestoredDesc": {},
+    "alertLowBatteryDesc": "Low charge level",
+    "@alertLowBatteryDesc": {},
+    "alertBatteryCriticalDesc": "Charge at critical level",
+    "@alertBatteryCriticalDesc": {},
+    "alertBatteryNormalDesc": "Charge at adequate level",
+    "@alertBatteryNormalDesc": {},
+    "alertNoGpsFixDesc": "No satellite fix",
+    "@alertNoGpsFixDesc": {},
+    "alertGpsFixRestoredDesc": "Satellite fix restored",
+    "@alertGpsFixRestoredDesc": {},
+    "alertWeakSignalDesc": "Low radio link power",
+    "@alertWeakSignalDesc": {},
+    "alertSignalNormalDesc": "Optimal radio link power",
+    "@alertSignalNormalDesc": {},
+    "alertUnknownDesc": "Event recorded on the collar",
+    "@alertUnknownDesc": {},
+    "alertValueDistance": "{distance} m",
+    "@alertValueDistance": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "alertValueSatellites": "{count} sats",
+    "@alertValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueBattery": "{pct}%",
+    "@alertValueBattery": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueSignal": "{rssi} dBm",
+    "@alertValueSignal": {
+        "placeholders": {
+            "rssi": {
                 "type": "int"
             }
         }
