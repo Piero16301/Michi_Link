@@ -74,7 +74,7 @@
     "@homeLoraLink": {},
     "homeSignalOptimal": "Optimal",
     "@homeSignalOptimal": {},
-    "homeConfigCollar": "Configurer le collier",
+    "homeConfigCollar": "Configurer",
     "@homeConfigCollar": {},
     "homeNoCollarTitle": "Aucun collier ajouté",
     "@homeNoCollarTitle": {},
@@ -297,7 +297,9 @@
     "@homeZoomInTooltip": {},
     "homeZoomOutTooltip": "Zoom arrière",
     "@homeZoomOutTooltip": {},
-    "homeMyLocationTooltip": "Ma position (Base)",
+    "homeResetNorthTooltip": "Orienter vers le nord",
+    "@homeResetNorthTooltip": {},
+    "homeMyLocationTooltip": "Ma position",
     "@homeMyLocationTooltip": {},
     "homeCatLocationTooltip": "Position du chat",
     "@homeCatLocationTooltip": {},
@@ -323,6 +325,92 @@
     "@homeSafeZoneRadius": {
         "placeholders": {
             "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationsEmptyTitle": "Aucune notification",
+    "@notificationsEmptyTitle": {},
+    "notificationsEmptyDescription": "Les alertes et événements enregistrés pour ce collier apparaîtront ici",
+    "@notificationsEmptyDescription": {},
+    "alertSeverityCritical": "CRITIQUE",
+    "@alertSeverityCritical": {},
+    "alertSeverityWarning": "AVERTISSEMENT",
+    "@alertSeverityWarning": {},
+    "alertSeverityInfo": "INFO",
+    "@alertSeverityInfo": {},
+    "alertSeverityNormal": "NORMAL",
+    "@alertSeverityNormal": {},
+    "alertSeverityUnknown": "ALERTE",
+    "@alertSeverityUnknown": {},
+    "alertGeofenceBreachTitle": "Zone de sécurité franchie",
+    "@alertGeofenceBreachTitle": {},
+    "alertGeofenceRestoredTitle": "Zone de sécurité rétablie",
+    "@alertGeofenceRestoredTitle": {},
+    "alertLowBatteryTitle": "Batterie faible",
+    "@alertLowBatteryTitle": {},
+    "alertBatteryCriticalTitle": "Batterie critique",
+    "@alertBatteryCriticalTitle": {},
+    "alertBatteryNormalTitle": "Batterie rétablie",
+    "@alertBatteryNormalTitle": {},
+    "alertNoGpsFixTitle": "Signal GPS perdu",
+    "@alertNoGpsFixTitle": {},
+    "alertGpsFixRestoredTitle": "Signal GPS rétabli",
+    "@alertGpsFixRestoredTitle": {},
+    "alertWeakSignalTitle": "Signal LoRa faible",
+    "@alertWeakSignalTitle": {},
+    "alertSignalNormalTitle": "Signal LoRa normalisé",
+    "@alertSignalNormalTitle": {},
+    "alertUnknownTitle": "Alerte système",
+    "@alertUnknownTitle": {},
+    "alertGeofenceBreachDesc": "Animal en dehors du rayon autorisé",
+    "@alertGeofenceBreachDesc": {},
+    "alertGeofenceRestoredDesc": "Animal dans la zone sécurisée",
+    "@alertGeofenceRestoredDesc": {},
+    "alertLowBatteryDesc": "Niveau de charge faible",
+    "@alertLowBatteryDesc": {},
+    "alertBatteryCriticalDesc": "Charge à un niveau critique",
+    "@alertBatteryCriticalDesc": {},
+    "alertBatteryNormalDesc": "Charge à un niveau adéquat",
+    "@alertBatteryNormalDesc": {},
+    "alertNoGpsFixDesc": "Pas de synchronisation satellite",
+    "@alertNoGpsFixDesc": {},
+    "alertGpsFixRestoredDesc": "Synchronisation satellite rétablie",
+    "@alertGpsFixRestoredDesc": {},
+    "alertWeakSignalDesc": "Faible puissance de liaison radio",
+    "@alertWeakSignalDesc": {},
+    "alertSignalNormalDesc": "Puissance de liaison radio optimale",
+    "@alertSignalNormalDesc": {},
+    "alertUnknownDesc": "Événement enregistré sur le collier",
+    "@alertUnknownDesc": {},
+    "alertValueDistance": "{distance} m",
+    "@alertValueDistance": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "alertValueSatellites": "{count} sats",
+    "@alertValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueBattery": "{pct}%",
+    "@alertValueBattery": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueSignal": "{rssi} dBm",
+    "@alertValueSignal": {
+        "placeholders": {
+            "rssi": {
                 "type": "int"
             }
         }

@@ -74,7 +74,7 @@
     "@homeLoraLink": {},
     "homeSignalOptimal": "Ottimale",
     "@homeSignalOptimal": {},
-    "homeConfigCollar": "Configura collare",
+    "homeConfigCollar": "Configura",
     "@homeConfigCollar": {},
     "homeNoCollarTitle": "Nessun collare collegato",
     "@homeNoCollarTitle": {},
@@ -297,7 +297,9 @@
     "@homeZoomInTooltip": {},
     "homeZoomOutTooltip": "Rimpicciolisci",
     "@homeZoomOutTooltip": {},
-    "homeMyLocationTooltip": "La mia posizione (Base)",
+    "homeResetNorthTooltip": "Orienta verso nord",
+    "@homeResetNorthTooltip": {},
+    "homeMyLocationTooltip": "La mia posizione",
     "@homeMyLocationTooltip": {},
     "homeCatLocationTooltip": "Posizione del gatto",
     "@homeCatLocationTooltip": {},
@@ -323,6 +325,92 @@
     "@homeSafeZoneRadius": {
         "placeholders": {
             "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationsEmptyTitle": "Nessuna notifica",
+    "@notificationsEmptyTitle": {},
+    "notificationsEmptyDescription": "Gli avvisi e gli eventi registrati per questo collare appariranno qui",
+    "@notificationsEmptyDescription": {},
+    "alertSeverityCritical": "CRITICO",
+    "@alertSeverityCritical": {},
+    "alertSeverityWarning": "AVVISO",
+    "@alertSeverityWarning": {},
+    "alertSeverityInfo": "INFO",
+    "@alertSeverityInfo": {},
+    "alertSeverityNormal": "NORMALE",
+    "@alertSeverityNormal": {},
+    "alertSeverityUnknown": "ALLERTA",
+    "@alertSeverityUnknown": {},
+    "alertGeofenceBreachTitle": "Zona sicura superata",
+    "@alertGeofenceBreachTitle": {},
+    "alertGeofenceRestoredTitle": "Zona sicura ripristinata",
+    "@alertGeofenceRestoredTitle": {},
+    "alertLowBatteryTitle": "Batteria scarica",
+    "@alertLowBatteryTitle": {},
+    "alertBatteryCriticalTitle": "Batteria critica",
+    "@alertBatteryCriticalTitle": {},
+    "alertBatteryNormalTitle": "Batteria ripristinata",
+    "@alertBatteryNormalTitle": {},
+    "alertNoGpsFixTitle": "Segnale GPS perso",
+    "@alertNoGpsFixTitle": {},
+    "alertGpsFixRestoredTitle": "Segnale GPS recuperato",
+    "@alertGpsFixRestoredTitle": {},
+    "alertWeakSignalTitle": "Segnale LoRa debole",
+    "@alertWeakSignalTitle": {},
+    "alertSignalNormalTitle": "Segnale LoRa normalizzato",
+    "@alertSignalNormalTitle": {},
+    "alertUnknownTitle": "Avviso di sistema",
+    "@alertUnknownTitle": {},
+    "alertGeofenceBreachDesc": "Animale fuori dal raggio consentito",
+    "@alertGeofenceBreachDesc": {},
+    "alertGeofenceRestoredDesc": "Animale all'interno dell'area sicura",
+    "@alertGeofenceRestoredDesc": {},
+    "alertLowBatteryDesc": "Livello di carica basso",
+    "@alertLowBatteryDesc": {},
+    "alertBatteryCriticalDesc": "Carica a livello critico",
+    "@alertBatteryCriticalDesc": {},
+    "alertBatteryNormalDesc": "Carica a livello adeguato",
+    "@alertBatteryNormalDesc": {},
+    "alertNoGpsFixDesc": "Nessun aggancio satellitare",
+    "@alertNoGpsFixDesc": {},
+    "alertGpsFixRestoredDesc": "Aggancio satellitare ripristinato",
+    "@alertGpsFixRestoredDesc": {},
+    "alertWeakSignalDesc": "Bassa potenza del collegamento radio",
+    "@alertWeakSignalDesc": {},
+    "alertSignalNormalDesc": "Potenza del collegamento radio ottimale",
+    "@alertSignalNormalDesc": {},
+    "alertUnknownDesc": "Evento registrato sul collare",
+    "@alertUnknownDesc": {},
+    "alertValueDistance": "{distance} m",
+    "@alertValueDistance": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "alertValueSatellites": "{count} sats",
+    "@alertValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueBattery": "{pct}%",
+    "@alertValueBattery": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueSignal": "{rssi} dBm",
+    "@alertValueSignal": {
+        "placeholders": {
+            "rssi": {
                 "type": "int"
             }
         }

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:expressive_kit/expressive_kit.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
@@ -349,14 +352,50 @@ class HomeTelemetryPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ExpressiveButton.filled(
-            onPressed: () => _showConfigCollarModal(context, collar),
-            label: l10n.homeConfigCollar,
-            size: ExpressiveButtonSize.large,
-            isExpanded: true,
-            trailingIcon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedSettings02,
-            ),
+          Row(
+            children: [
+              ExpressiveIconButton.circle(
+                size: ExpressiveIconButtonSize.large,
+                variant: ExpressiveIconButtonVariant.tonal,
+                tooltip: l10n.collarsNotificationsTooltip,
+                showBadgeDot: collar.hasActiveAlert,
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedNotification01,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                onPressed: () => unawaited(
+                  context.pushNamed(
+                    AppRoute.collarNotifications.name,
+                    pathParameters: {'collarId': collar.deviceId},
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ExpressiveButton.filled(
+                  onPressed: () => _showConfigCollarModal(context, collar),
+                  label: l10n.homeConfigCollar,
+                  size: ExpressiveButtonSize.large,
+                  isExpanded: true,
+                  trailingIcon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedSettings02,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ExpressiveIconButton.circle(
+                size: ExpressiveIconButtonSize.large,
+                variant: ExpressiveIconButtonVariant.tonal,
+                tooltip: l10n.collarsLocationHistoryTooltip,
+                icon: HugeIcon(
+                  icon: HugeIcons.strokeRoundedRoute01,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                onPressed: () {},
+              ),
+            ],
           ),
         ],
       ),

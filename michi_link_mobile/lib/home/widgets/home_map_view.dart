@@ -26,6 +26,8 @@ class HomeMapView extends StatefulWidget {
 
 class _HomeMapViewState extends State<HomeMapView> {
   GoogleMapController? _mapController;
+  CameraPosition? _currentCameraPosition;
+  final ValueNotifier<double> _bearingNotifier = ValueNotifier<double>(0);
   double _currentZoom = 17;
   bool _hasLocationPermission = false;
   Position? _userPosition;
@@ -45,6 +47,12 @@ class _HomeMapViewState extends State<HomeMapView> {
   void initState() {
     super.initState();
     unawaited(_checkInitialLocation());
+  }
+
+  @override
+  void dispose() {
+    _bearingNotifier.dispose();
+    super.dispose();
   }
 
   @override
@@ -340,6 +348,31 @@ class _HomeMapViewState extends State<HomeMapView> {
     unawaited(_mapController?.animateCamera(CameraUpdate.zoomIn()));
   }
 
+  void _resetNorth() {
+    final controller = _mapController;
+    if (controller == null) return;
+    final currentPos =
+        _currentCameraPosition ??
+        CameraPosition(
+          target: LatLng(
+            widget.collar.baseCoords.lat,
+            widget.collar.baseCoords.lon,
+          ),
+          zoom: _currentZoom,
+        );
+    unawaited(
+      controller.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: currentPos.target,
+            zoom: currentPos.zoom,
+            tilt: currentPos.tilt,
+          ),
+        ),
+      ),
+    );
+  }
+
   void _zoomOut() {
     unawaited(_mapController?.animateCamera(CameraUpdate.zoomOut()));
   }
@@ -579,11 +612,19 @@ class _HomeMapViewState extends State<HomeMapView> {
           },
           onMapCreated: (controller) {
             _mapController = controller;
+            _currentCameraPosition = CameraPosition(
+              target: LatLng(baseCoords.lat, baseCoords.lon),
+              zoom: initialZoom,
+            );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               _fitMaxDistanceRange(animate: false);
             });
           },
           onCameraMove: (position) {
+            _currentCameraPosition = position;
+            if (_bearingNotifier.value != position.bearing) {
+              _bearingNotifier.value = position.bearing;
+            }
             if (position.zoom != _currentZoom) {
               _currentZoom = position.zoom;
             }
@@ -765,6 +806,30 @@ class _HomeMapViewState extends State<HomeMapView> {
                       ),
                       tooltip: l10n.homeZoomInTooltip,
                       onPressed: _zoomIn,
+                    ),
+                    Divider(
+                      height: 6,
+                      indent: 6,
+                      endIndent: 6,
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                    ),
+                    ExpressiveIconButton.circle(
+                      icon: ValueListenableBuilder<double>(
+                        valueListenable: _bearingNotifier,
+                        builder: (context, bearing, child) {
+                          return Transform.rotate(
+                            angle: -bearing * (math.pi / 180),
+                            child: child,
+                          );
+                        },
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowUp04,
+                          color: colorScheme.onSurface,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      tooltip: l10n.homeResetNorthTooltip,
+                      onPressed: _resetNorth,
                     ),
                     Divider(
                       height: 6,

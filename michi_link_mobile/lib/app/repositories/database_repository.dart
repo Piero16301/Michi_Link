@@ -14,6 +14,7 @@ abstract class DatabaseRepository {
     required String collarId,
     required CollarConfig config,
   });
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId});
 }
 
 class MockDatabaseRepository implements DatabaseRepository {
@@ -65,6 +66,28 @@ class MockDatabaseRepository implements DatabaseRepository {
     required String collarId,
     required CollarConfig config,
   }) {}
+
+  @override
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId}) {
+    return Stream.value([
+      AlertRecord(
+        id: '1',
+        severity: AlertSeverity.critical,
+        type: AlertType.batteryCritical,
+        value: 10,
+        expireAt: DateTime.now().add(const Duration(hours: 1)),
+        timestamp: DateTime.now(),
+      ),
+      AlertRecord(
+        id: '2',
+        severity: AlertSeverity.warning,
+        type: AlertType.geofenceRestored,
+        value: 5,
+        expireAt: DateTime.now().add(const Duration(hours: 1)),
+        timestamp: DateTime.now(),
+      ),
+    ]);
+  }
 }
 
 class FirestoreDatabaseRepository implements DatabaseRepository {
@@ -106,5 +129,20 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
         'config': config.toJson(),
       }),
     );
+  }
+
+  @override
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId}) {
+    return _firestore
+        .collection('collars')
+        .doc(collarId)
+        .collection('alerts')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => AlertRecord.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
   }
 }

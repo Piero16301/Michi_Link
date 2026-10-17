@@ -74,7 +74,7 @@
     "@homeLoraLink": {},
     "homeSignalOptimal": "Optimal",
     "@homeSignalOptimal": {},
-    "homeConfigCollar": "Halsband konfigurieren",
+    "homeConfigCollar": "Konfigurieren",
     "@homeConfigCollar": {},
     "homeNoCollarTitle": "Noch kein Halsband hinzugefügt",
     "@homeNoCollarTitle": {},
@@ -297,7 +297,9 @@
     "@homeZoomInTooltip": {},
     "homeZoomOutTooltip": "Verkleinern",
     "@homeZoomOutTooltip": {},
-    "homeMyLocationTooltip": "Mein Standort (Basis)",
+    "homeResetNorthTooltip": "Nach Norden ausrichten",
+    "@homeResetNorthTooltip": {},
+    "homeMyLocationTooltip": "Mein Standort",
     "@homeMyLocationTooltip": {},
     "homeCatLocationTooltip": "Standort der Katze",
     "@homeCatLocationTooltip": {},
@@ -323,6 +325,92 @@
     "@homeSafeZoneRadius": {
         "placeholders": {
             "distance": {
+                "type": "int"
+            }
+        }
+    },
+    "notificationsEmptyTitle": "Keine Benachrichtigungen",
+    "@notificationsEmptyTitle": {},
+    "notificationsEmptyDescription": "Warnungen und Ereignisse für dieses Halsband werden hier angezeigt",
+    "@notificationsEmptyDescription": {},
+    "alertSeverityCritical": "KRITISCH",
+    "@alertSeverityCritical": {},
+    "alertSeverityWarning": "WARNUNG",
+    "@alertSeverityWarning": {},
+    "alertSeverityInfo": "INFO",
+    "@alertSeverityInfo": {},
+    "alertSeverityNormal": "NORMAL",
+    "@alertSeverityNormal": {},
+    "alertSeverityUnknown": "ALARM",
+    "@alertSeverityUnknown": {},
+    "alertGeofenceBreachTitle": "Sicherheitszone verlassen",
+    "@alertGeofenceBreachTitle": {},
+    "alertGeofenceRestoredTitle": "Sicherheitszone wiederhergestellt",
+    "@alertGeofenceRestoredTitle": {},
+    "alertLowBatteryTitle": "Niedriger Akkustand",
+    "@alertLowBatteryTitle": {},
+    "alertBatteryCriticalTitle": "Kritischer Akkustand",
+    "@alertBatteryCriticalTitle": {},
+    "alertBatteryNormalTitle": "Akku normalisiert",
+    "@alertBatteryNormalTitle": {},
+    "alertNoGpsFixTitle": "GPS-Signal verloren",
+    "@alertNoGpsFixTitle": {},
+    "alertGpsFixRestoredTitle": "GPS-Signal wiederhergestellt",
+    "@alertGpsFixRestoredTitle": {},
+    "alertWeakSignalTitle": "Schwaches LoRa-Signal",
+    "@alertWeakSignalTitle": {},
+    "alertSignalNormalTitle": "LoRa-Signal normalisiert",
+    "@alertSignalNormalTitle": {},
+    "alertUnknownTitle": "Systemwarnung",
+    "@alertUnknownTitle": {},
+    "alertGeofenceBreachDesc": "Haustier außerhalb des erlaubten Radius",
+    "@alertGeofenceBreachDesc": {},
+    "alertGeofenceRestoredDesc": "Haustier innerhalb des sicheren Bereichs",
+    "@alertGeofenceRestoredDesc": {},
+    "alertLowBatteryDesc": "Niedriger Ladestand",
+    "@alertLowBatteryDesc": {},
+    "alertBatteryCriticalDesc": "Ladung auf kritischem Stand",
+    "@alertBatteryCriticalDesc": {},
+    "alertBatteryNormalDesc": "Ladung im normalen Bereich",
+    "@alertBatteryNormalDesc": {},
+    "alertNoGpsFixDesc": "Keine Satellitenverbindung",
+    "@alertNoGpsFixDesc": {},
+    "alertGpsFixRestoredDesc": "Satellitenverbindung wiederhergestellt",
+    "@alertGpsFixRestoredDesc": {},
+    "alertWeakSignalDesc": "Geringe Funkverbindungsstärke",
+    "@alertWeakSignalDesc": {},
+    "alertSignalNormalDesc": "Optimale Funkverbindungsstärke",
+    "@alertSignalNormalDesc": {},
+    "alertUnknownDesc": "Ereignis auf dem Halsband aufgezeichnet",
+    "@alertUnknownDesc": {},
+    "alertValueDistance": "{distance} m",
+    "@alertValueDistance": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "alertValueSatellites": "{count} sats",
+    "@alertValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueBattery": "{pct}%",
+    "@alertValueBattery": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            }
+        }
+    },
+    "alertValueSignal": "{rssi} dBm",
+    "@alertValueSignal": {
+        "placeholders": {
+            "rssi": {
                 "type": "int"
             }
         }
