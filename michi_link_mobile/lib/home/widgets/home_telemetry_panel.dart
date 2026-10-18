@@ -93,10 +93,7 @@ class HomeTelemetryPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       ExpressiveLinearProgressIndicator(
-                        value: (collar.status.batteryPct / 100).clamp(
-                          0.0,
-                          1.0,
-                        ),
+                        value: (collar.status.batteryPct / 100).clamp(0.0, 1.0),
                         height: 12,
                         strokeWidth: 6,
                         backgroundColor: colorScheme.surfaceContainerHighest,

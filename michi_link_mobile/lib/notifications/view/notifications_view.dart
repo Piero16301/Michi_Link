@@ -129,8 +129,9 @@ class NotificationsView extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return switch (item) {
-                _DateHeaderItem(:final date) =>
-                  _NotificationDateHeader(date: date),
+                _DateHeaderItem(:final date) => _NotificationDateHeader(
+                  date: date,
+                ),
                 _AlertCardItem(:final alert) => NotificationCard(alert: alert),
               };
             },

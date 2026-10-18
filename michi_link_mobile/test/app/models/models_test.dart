@@ -63,7 +63,7 @@ void main() {
         'max_distance_m': 500,
         'min_battery_pct': 20,
         'require_gps_fix': true,
-        'language_code': 'en',
+        'notif_language': 'en',
       };
 
       final config = CollarConfig.fromJson(json);

@@ -324,8 +324,7 @@ class SuccessCollarCard extends StatelessWidget {
                           ),
                           height: 12,
                           strokeWidth: 6,
-                          backgroundColor:
-                              colorScheme.surfaceContainerHighest,
+                          backgroundColor: colorScheme.surfaceContainerHighest,
                           color: collar.status.batteryPct > 20
                               ? colorScheme.primary
                               : colorScheme.error,
@@ -551,10 +550,7 @@ class SuccessCollarCard extends StatelessWidget {
                           children: [
                             Expanded(
                               child: ExpressiveLinearProgressIndicator(
-                                value: (lossPct / 100).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
+                                value: (lossPct / 100).clamp(0.0, 1.0),
                                 height: 12,
                                 strokeWidth: 6,
                                 backgroundColor:
