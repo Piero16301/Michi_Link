@@ -286,6 +286,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 				MaxDistanceM:  150.0,
 				MinBatteryPct: 10,
 				RequireGpsFix: true,
+				NotifLanguage: "en",
 			}
 			latestData["config"] = defaultConfig
 		}

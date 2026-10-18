@@ -6,9 +6,14 @@ import 'package:michi_link_mobile/l10n/l10n.dart';
 
 /// Card widget to display an [AlertRecord] notification item
 class NotificationCard extends StatelessWidget {
-  const NotificationCard({required this.alert, super.key});
+  const NotificationCard({
+    required this.alert,
+    this.showFullDate = false,
+    super.key,
+  });
 
   final AlertRecord alert;
+  final bool showFullDate;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +32,9 @@ class NotificationCard extends StatelessWidget {
     final severityLabel = isRecovery
         ? l10n.alertSeverityNormal
         : _getSeverityLabel(l10n, alert.severity);
-    final dateStr = DateFormat('dd/MM/yyyy • HH:mm').format(alert.timestamp);
+    final dateStr = showFullDate
+        ? DateFormat('dd/MM/yyyy • HH:mm').format(alert.timestamp)
+        : DateFormat('HH:mm').format(alert.timestamp);
 
     return Container(
       padding: const EdgeInsets.all(16),

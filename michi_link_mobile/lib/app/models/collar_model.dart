@@ -50,6 +50,7 @@ class CollarModel extends Equatable {
               maxDistanceM: 0,
               minBatteryPct: 0,
               requireGpsFix: false,
+              notifLanguage: 'en',
             ),
       coords: json['coords'] != null
           ? CollarCoords.fromJson(json['coords'] as Map<String, dynamic>)

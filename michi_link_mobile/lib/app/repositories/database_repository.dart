@@ -33,6 +33,7 @@ class MockDatabaseRepository implements DatabaseRepository {
           maxDistanceM: 10,
           minBatteryPct: 10,
           requireGpsFix: true,
+          notifLanguage: 'en',
         ),
         coords: const CollarCoords(lat: 0, lon: 0, altM: 0),
         radio: const CollarRadio(

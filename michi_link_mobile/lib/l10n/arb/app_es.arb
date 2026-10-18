@@ -238,7 +238,7 @@
             }
         }
     },
-    "collarsLossRate": "{pct}% pérdida",
+    "collarsLossRate": "{pct}%",
     "@collarsLossRate": {
         "placeholders": {
             "pct": {
@@ -281,6 +281,12 @@
     "@collarConfigRequireGpsFixTitle": {},
     "collarConfigRequireGpsFixSubtitle": "Exigir fijación satelital precisa para telemetría",
     "@collarConfigRequireGpsFixSubtitle": {},
+    "collarConfigLanguageLabel": "IDIOMA DE ALERTAS",
+    "@collarConfigLanguageLabel": {},
+    "collarConfigLanguageTitle": "Idioma de notificaciones",
+    "@collarConfigLanguageTitle": {},
+    "collarConfigLanguageSubtitle": "Idioma en el que se recibirán las alertas",
+    "@collarConfigLanguageSubtitle": {},
     "collarConfigSave": "Guardar configuración",
     "@collarConfigSave": {},
     "collarConfigCancel": "Cancelar",
@@ -333,6 +339,10 @@
     "@notificationsEmptyTitle": {},
     "notificationsEmptyDescription": "Las alertas y eventos registrados para este collar aparecerán aquí",
     "@notificationsEmptyDescription": {},
+    "notificationsToday": "Hoy",
+    "@notificationsToday": {},
+    "notificationsYesterday": "Ayer",
+    "@notificationsYesterday": {},
     "alertSeverityCritical": "CRÍTICO",
     "@alertSeverityCritical": {},
     "alertSeverityWarning": "AVISO",

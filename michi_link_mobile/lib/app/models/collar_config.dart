@@ -9,6 +9,7 @@ class CollarConfig extends Equatable {
     required this.maxDistanceM,
     required this.minBatteryPct,
     required this.requireGpsFix,
+    required this.notifLanguage,
   });
 
   /// Creates an instance of [CollarConfig] from a [Map]
@@ -17,6 +18,7 @@ class CollarConfig extends Equatable {
       maxDistanceM: (json['max_distance_m'] as num?)?.toInt() ?? 0,
       minBatteryPct: (json['min_battery_pct'] as num?)?.toInt() ?? 0,
       requireGpsFix: json['require_gps_fix'] as bool? ?? false,
+      notifLanguage: json['notif_language'] as String? ?? 'en',
     );
   }
 
@@ -26,6 +28,7 @@ class CollarConfig extends Equatable {
       'max_distance_m': maxDistanceM,
       'min_battery_pct': minBatteryPct,
       'require_gps_fix': requireGpsFix,
+      'notif_language': notifLanguage,
     };
   }
 
@@ -38,6 +41,14 @@ class CollarConfig extends Equatable {
   /// Whether a valid GPS fix is required
   final bool requireGpsFix;
 
+  /// Language code for notifications (e.g. 'en', 'es', etc.)
+  final String notifLanguage;
+
   @override
-  List<Object?> get props => [maxDistanceM, minBatteryPct, requireGpsFix];
+  List<Object?> get props => [
+    maxDistanceM,
+    minBatteryPct,
+    requireGpsFix,
+    notifLanguage,
+  ];
 }

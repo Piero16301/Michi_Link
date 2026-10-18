@@ -238,7 +238,7 @@
             }
         }
     },
-    "collarsLossRate": "{pct}% Verlust",
+    "collarsLossRate": "{pct}%",
     "@collarsLossRate": {
         "placeholders": {
             "pct": {
@@ -281,6 +281,12 @@
     "@collarConfigRequireGpsFixTitle": {},
     "collarConfigRequireGpsFixSubtitle": "Erfordert genaue Satellitenortung für Telemetrie",
     "@collarConfigRequireGpsFixSubtitle": {},
+    "collarConfigLanguageLabel": "BENACHRICHTIGUNGSSPRACHE",
+    "@collarConfigLanguageLabel": {},
+    "collarConfigLanguageTitle": "Benachrichtigungssprache",
+    "@collarConfigLanguageTitle": {},
+    "collarConfigLanguageSubtitle": "Sprache, in der Warnungen empfangen werden",
+    "@collarConfigLanguageSubtitle": {},
     "collarConfigSave": "Konfiguration speichern",
     "@collarConfigSave": {},
     "collarConfigCancel": "Abbrechen",
@@ -333,6 +339,10 @@
     "@notificationsEmptyTitle": {},
     "notificationsEmptyDescription": "Warnungen und Ereignisse für dieses Halsband werden hier angezeigt",
     "@notificationsEmptyDescription": {},
+    "notificationsToday": "Heute",
+    "@notificationsToday": {},
+    "notificationsYesterday": "Gestern",
+    "@notificationsYesterday": {},
     "alertSeverityCritical": "KRITISCH",
     "@alertSeverityCritical": {},
     "alertSeverityWarning": "WARNUNG",

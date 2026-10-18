@@ -85,4 +85,5 @@ type CollarConfig struct {
 	MaxDistanceM  float64 `firestore:"max_distance_m" json:"max_dist_m"`
 	MinBatteryPct int     `firestore:"min_battery_pct" json:"min_bat_pct"`
 	RequireGpsFix bool    `firestore:"require_gps_fix" json:"require_gps_fix"`
+	NotifLanguage string  `firestore:"notif_language" json:"notif_language"`
 }

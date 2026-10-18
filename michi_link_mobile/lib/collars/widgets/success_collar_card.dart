@@ -317,22 +317,21 @@ class SuccessCollarCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: (collar.status.batteryPct / 100).clamp(
-                              0.0,
-                              1.0,
-                            ),
-                            minHeight: 7,
-                            backgroundColor:
-                                colorScheme.surfaceContainerHighest,
-                            valueColor: AlwaysStoppedAnimation(
-                              collar.status.batteryPct > 20
-                                  ? colorScheme.primary
-                                  : colorScheme.error,
-                            ),
+                        ExpressiveLinearProgressIndicator(
+                          value: (collar.status.batteryPct / 100).clamp(
+                            0.0,
+                            1.0,
                           ),
+                          height: 12,
+                          strokeWidth: 6,
+                          backgroundColor:
+                              colorScheme.surfaceContainerHighest,
+                          color: collar.status.batteryPct > 20
+                              ? colorScheme.primary
+                              : colorScheme.error,
+                          stopDotColor: collar.status.batteryPct > 20
+                              ? colorScheme.primary
+                              : colorScheme.error,
                         ),
                       ],
                     ),
@@ -551,25 +550,25 @@ class SuccessCollarCard extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: (1.0 - (lossPct / 100)).clamp(
-                                    0.0,
-                                    1.0,
-                                  ),
-                                  minHeight: 7,
-                                  backgroundColor: colorScheme.error.withValues(
-                                    alpha: 0.25,
-                                  ),
-                                  valueColor: AlwaysStoppedAnimation(
-                                    lossPct <= 5
-                                        ? colorScheme.primary
-                                        : (lossPct <= 15
-                                              ? colorScheme.tertiary
-                                              : colorScheme.error),
-                                  ),
+                              child: ExpressiveLinearProgressIndicator(
+                                value: (lossPct / 100).clamp(
+                                  0.0,
+                                  1.0,
                                 ),
+                                height: 12,
+                                strokeWidth: 6,
+                                backgroundColor:
+                                    colorScheme.surfaceContainerHighest,
+                                color: lossPct <= 5
+                                    ? colorScheme.primary
+                                    : (lossPct <= 15
+                                          ? colorScheme.tertiary
+                                          : colorScheme.error),
+                                stopDotColor: lossPct <= 5
+                                    ? colorScheme.primary
+                                    : (lossPct <= 15
+                                          ? colorScheme.tertiary
+                                          : colorScheme.error),
                               ),
                             ),
                             const SizedBox(width: 6),
