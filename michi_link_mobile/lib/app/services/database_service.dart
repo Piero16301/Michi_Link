@@ -33,4 +33,16 @@ class DatabaseService {
   Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId}) {
     return _databaseRepository.getAlertRecordsStream(collarId: collarId);
   }
+
+  Stream<List<HistoryRecord>> getHistoryRecordsStream({
+    required String collarId,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _databaseRepository.getHistoryRecordsStream(
+      collarId: collarId,
+      start: start,
+      end: end,
+    );
+  }
 }

@@ -362,7 +362,7 @@ class HomeTelemetryPanel extends StatelessWidget {
                 ),
                 onPressed: () => unawaited(
                   context.pushNamed(
-                    AppRoute.collarNotifications.name,
+                    AppRoute.notifications.name,
                     pathParameters: {'collarId': collar.deviceId},
                   ),
                 ),
@@ -389,7 +389,12 @@ class HomeTelemetryPanel extends StatelessWidget {
                   size: 20,
                   color: colorScheme.onSurfaceVariant,
                 ),
-                onPressed: () {},
+                onPressed: () => unawaited(
+                  context.pushNamed(
+                    AppRoute.history.name,
+                    pathParameters: {'collarId': collar.deviceId},
+                  ),
+                ),
               ),
             ],
           ),

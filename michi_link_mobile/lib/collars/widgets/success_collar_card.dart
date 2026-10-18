@@ -230,7 +230,7 @@ class SuccessCollarCard extends StatelessWidget {
                         ),
                         onPressed: () => unawaited(
                           context.pushNamed(
-                            AppRoute.collarNotifications.name,
+                            AppRoute.notifications.name,
                             pathParameters: {'collarId': collar.deviceId},
                           ),
                         ),
@@ -245,7 +245,12 @@ class SuccessCollarCard extends StatelessWidget {
                           size: 16,
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        onPressed: () {},
+                        onPressed: () => unawaited(
+                          context.pushNamed(
+                            AppRoute.history.name,
+                            pathParameters: {'collarId': collar.deviceId},
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -424,5 +424,144 @@
                 "type": "int"
             }
         }
+    },
+    "historyTitle": "Historique des localisations",
+    "@historyTitle": {},
+    "historyEmptyTitle": "Aucun enregistrement d'historique",
+    "@historyEmptyTitle": {},
+    "historyEmptyDescription": "Aucun enregistrement de localisation trouvé pour la date et la plage horaire sélectionnées.",
+    "@historyEmptyDescription": {},
+    "historySelectDate": "Sélectionner la date",
+    "@historySelectDate": {},
+    "historyTimeRange": "Plage horaire",
+    "@historyTimeRange": {},
+    "historyAllDay": "Toute la journée",
+    "@historyAllDay": {},
+    "historyViewMap": "Carte",
+    "@historyViewMap": {},
+    "historyViewList": "Enregistrements",
+    "@historyViewList": {},
+    "historyPointsCount": "{count, plural, =0{0 enregistrement} =1{1 enregistrement} other{{count} enregistrements}}",
+    "@historyPointsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "historyRouteStart": "Début",
+    "@historyRouteStart": {},
+    "historyRouteEnd": "Fin",
+    "@historyRouteEnd": {},
+    "historyRecordSeq": "Paquet #{seq}",
+    "@historyRecordSeq": {
+        "placeholders": {
+            "seq": {
+                "type": "int"
+            }
+        }
+    },
+    "historyAltitude": "Altitude : {alt} m",
+    "@historyAltitude": {
+        "placeholders": {
+            "alt": {
+                "type": "String"
+            }
+        }
+    },
+    "historyDistanceHome": "Distance : {dist} m",
+    "@historyDistanceHome": {
+        "placeholders": {
+            "dist": {
+                "type": "int"
+            }
+        }
+    },
+    "historyLoraSnr": "SNR : {snr} dB",
+    "@historyLoraSnr": {
+        "placeholders": {
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "historyLostPackets": "Perdus : {count}",
+    "@historyLostPackets": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "historyGpsFixOk": "GPS Fixé",
+    "@historyGpsFixOk": {},
+    "historyGpsNoFix": "Pas de signal GPS",
+    "@historyGpsNoFix": {},
+    "historyCoordinates": "Coordonnées",
+    "@historyCoordinates": {},
+    "historyValueSatellites": "{count} sats",
+    "@historyValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "historyValueAltitude": "{alt} m",
+    "@historyValueAltitude": {
+        "placeholders": {
+            "alt": {
+                "type": "String"
+            }
+        }
+    },
+    "historyValueDistance": "{dist} m",
+    "@historyValueDistance": {
+        "placeholders": {
+            "dist": {
+                "type": "String"
+            }
+        }
+    },
+    "historyValueSignal": "{rssi} dBm",
+    "@historyValueSignal": {
+        "placeholders": {
+            "rssi": {
+                "type": "int"
+            }
+        }
+    },
+    "historyValueSignalWithSnr": "{rssi} dBm • {snr} dB",
+    "@historyValueSignalWithSnr": {
+        "placeholders": {
+            "rssi": {
+                "type": "int"
+            },
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "historyValueBatteryVoltage": "{pct}% ({voltage}V)",
+    "@historyValueBatteryVoltage": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            },
+            "voltage": {
+                "type": "String"
+            }
+        }
+    },
+    "historyCarouselIndex": "{current}/{total}",
+    "@historyCarouselIndex": {
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
     }
 }
