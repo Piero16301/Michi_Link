@@ -6,6 +6,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 
 class HomeMarkerBuilder {
+  static final Map<String, BitmapDescriptor> _markerCache = {};
+
+  static void clearCache() {
+    _markerCache.clear();
+  }
+
   static String buildHugeIconSvg(
     List<List<dynamic>> iconData,
     Color color, {
@@ -51,7 +57,17 @@ class HomeMarkerBuilder {
     required double contentSize,
     double borderWidth = 2.5,
     double pixelRatio = 1.0,
+    String? cacheKey,
   }) async {
+    final key = cacheKey != null
+        ? '${cacheKey}_${borderColor.toARGB32()}_${bgColor.toARGB32()}_'
+              '${markerSize}_${contentSize}_${borderWidth}_$pixelRatio'
+        : null;
+
+    if (key != null && _markerCache.containsKey(key)) {
+      return _markerCache[key]!;
+    }
+
     final pictureInfo = await vg.loadPicture(loader, null);
     final recorder = ui.PictureRecorder();
     final canvas = ui.Canvas(recorder)..scale(pixelRatio);
@@ -95,9 +111,68 @@ class HomeMarkerBuilder {
     final targetSize = (markerSize * pixelRatio).round();
     final img = await picture.toImage(targetSize, targetSize);
     final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.bytes(
+    final descriptor = BitmapDescriptor.bytes(
       byteData!.buffer.asUint8List(),
       imagePixelRatio: pixelRatio,
     );
+    if (key != null) {
+      _markerCache[key] = descriptor;
+    }
+    return descriptor;
+  }
+
+  static Future<BitmapDescriptor> createDotMarker({
+    required Color fillColor,
+    required Color strokeColor,
+    required double dotDiameter,
+    double canvasSize = 32.0,
+    double strokeWidth = 2.0,
+    double pixelRatio = 1.0,
+    String? cacheKey,
+  }) async {
+    final key = cacheKey != null
+        ? '${cacheKey}_${fillColor.toARGB32()}_${strokeColor.toARGB32()}_'
+              '${dotDiameter}_${canvasSize}_${strokeWidth}_$pixelRatio'
+        : null;
+
+    if (key != null && _markerCache.containsKey(key)) {
+      return _markerCache[key]!;
+    }
+
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder)..scale(pixelRatio);
+
+    final center = Offset(canvasSize / 2, canvasSize / 2);
+    final radius = dotDiameter / 2;
+
+    final shadowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+    final strokePaint = Paint()
+      ..color = strokeColor
+      ..style = PaintingStyle.fill;
+
+    final fillPaint = Paint()
+      ..color = fillColor
+      ..style = PaintingStyle.fill;
+
+    canvas
+      ..drawCircle(center.translate(0, 1), radius + strokeWidth, shadowPaint)
+      ..drawCircle(center, radius + strokeWidth, strokePaint)
+      ..drawCircle(center, radius, fillPaint);
+
+    final picture = recorder.endRecording();
+    final targetSize = (canvasSize * pixelRatio).round();
+    final img = await picture.toImage(targetSize, targetSize);
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    final descriptor = BitmapDescriptor.bytes(
+      byteData!.buffer.asUint8List(),
+      imagePixelRatio: pixelRatio,
+    );
+    if (key != null) {
+      _markerCache[key] = descriptor;
+    }
+    return descriptor;
   }
 }

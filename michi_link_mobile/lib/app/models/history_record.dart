@@ -23,14 +23,18 @@ class HistoryRecord extends Equatable {
   factory HistoryRecord.fromJson(Map<String, dynamic> json, {String? id}) {
     return HistoryRecord(
       id: id ?? '',
-      coords: json['coords'] != null
-          ? CollarCoords.fromJson(json['coords'] as Map<String, dynamic>)
+      coords: json['coords'] is Map
+          ? CollarCoords.fromJson(
+              Map<String, dynamic>.from(json['coords'] as Map),
+            )
           : const CollarCoords(altM: 0, lat: 0, lon: 0),
       expireAt: (json['expire_at'] as Timestamp? ?? Timestamp.now())
           .toDate()
           .toLocal(),
-      radio: json['radio'] != null
-          ? CollarRadio.fromJson(json['radio'] as Map<String, dynamic>)
+      radio: json['radio'] is Map
+          ? CollarRadio.fromJson(
+              Map<String, dynamic>.from(json['radio'] as Map),
+            )
           : const CollarRadio(
               distanceHomeM: 0,
               packetsLostGap: 0,
@@ -38,8 +42,10 @@ class HistoryRecord extends Equatable {
               snr: 0,
             ),
       seq: (json['seq'] as num?)?.toInt() ?? 0,
-      status: json['status'] != null
-          ? CollarStatus.fromJson(json['status'] as Map<String, dynamic>)
+      status: json['status'] is Map
+          ? CollarStatus.fromJson(
+              Map<String, dynamic>.from(json['status'] as Map),
+            )
           : const CollarStatus(
               batteryPct: 0,
               batteryV: 0,

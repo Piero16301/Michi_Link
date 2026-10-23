@@ -33,6 +33,11 @@ class SuccessCollarCard extends StatelessWidget {
     final isOnline = collar.isOnline;
     final statusColor = isOnline ? colorScheme.primary : colorScheme.error;
     final lossPct = collar.packetLossPct;
+    final lossColor = switch (lossPct) {
+      <= 5 => colorScheme.primary,
+      <= 15 => colorScheme.tertiary,
+      _ => colorScheme.error,
+    };
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -560,16 +565,8 @@ class SuccessCollarCard extends StatelessWidget {
                                 strokeWidth: 6,
                                 backgroundColor:
                                     colorScheme.surfaceContainerHighest,
-                                color: lossPct <= 5
-                                    ? colorScheme.primary
-                                    : (lossPct <= 15
-                                          ? colorScheme.tertiary
-                                          : colorScheme.error),
-                                stopDotColor: lossPct <= 5
-                                    ? colorScheme.primary
-                                    : (lossPct <= 15
-                                          ? colorScheme.tertiary
-                                          : colorScheme.error),
+                                color: lossColor,
+                                stopDotColor: lossColor,
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -598,23 +595,19 @@ class SuccessCollarCard extends StatelessWidget {
   }
 
   String _getShortId(String deviceId) {
-    if (deviceId.contains('_')) {
-      final parts = deviceId.split('_');
-      final raw = parts.last;
-      return raw.length >= 4
-          ? raw.substring(raw.length - 4).toUpperCase()
-          : raw;
-    }
-    return deviceId.length >= 4
-        ? deviceId.substring(deviceId.length - 4).toUpperCase()
-        : deviceId;
+    final raw = deviceId.contains('_') ? deviceId.split('_').last : deviceId;
+    return raw.length >= 4 ? raw.substring(raw.length - 4).toUpperCase() : raw;
   }
 
   static Widget _signalBars(BuildContext context, int rssi) {
     final colorScheme = Theme.of(context).colorScheme;
-    final activeBars = rssi >= -75
-        ? 4
-        : (rssi >= -95 ? 3 : (rssi >= -110 ? 2 : (rssi >= -125 ? 1 : 0)));
+    final activeBars = switch (rssi) {
+      >= -75 => 4,
+      >= -95 => 3,
+      >= -110 => 2,
+      >= -125 => 1,
+      _ => 0,
+    };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [

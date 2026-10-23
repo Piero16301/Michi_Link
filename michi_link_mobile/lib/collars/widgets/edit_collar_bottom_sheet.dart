@@ -1,4 +1,5 @@
 import 'package:expressive_kit/expressive_kit.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
@@ -217,6 +218,9 @@ class EditCollarBottomSheetState extends State<EditCollarBottomSheet> {
                           Expanded(
                             child: TextField(
                               controller: _nameController,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(30),
+                              ],
                               onChanged: (_) => setState(() {}),
                               style: textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w700,

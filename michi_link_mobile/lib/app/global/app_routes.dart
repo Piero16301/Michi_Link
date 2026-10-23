@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/collars/collars.dart';
@@ -33,7 +34,7 @@ class AppRoutes {
               name: AppRoute.notifications.name,
               path: AppRoute.notifications.path,
               builder: (context, state) {
-                final collarId = state.pathParameters['collarId']!;
+                final collarId = state.pathParameters['collarId'] ?? '';
                 return NotificationsPage(collarId: collarId);
               },
             ),
@@ -41,14 +42,14 @@ class AppRoutes {
               name: AppRoute.history.name,
               path: AppRoute.history.path,
               builder: (context, state) {
-                final collarId = state.pathParameters['collarId']!;
+                final collarId = state.pathParameters['collarId'] ?? '';
                 return HistoryPage(collarId: collarId);
               },
             ),
           ],
         ),
       ],
-      debugLogDiagnostics: true,
+      debugLogDiagnostics: kDebugMode,
     );
   }
 }

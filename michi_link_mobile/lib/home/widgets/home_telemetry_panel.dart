@@ -21,6 +21,11 @@ class HomeTelemetryPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     final lossPct = collar.packetLossPct;
+    final lossColor = switch (lossPct) {
+      <= 5 => colorScheme.primary,
+      <= 15 => colorScheme.tertiary,
+      _ => colorScheme.error,
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -316,16 +321,8 @@ class HomeTelemetryPanel extends StatelessWidget {
                               strokeWidth: 6,
                               backgroundColor:
                                   colorScheme.surfaceContainerHighest,
-                              color: lossPct <= 5
-                                  ? colorScheme.primary
-                                  : (lossPct <= 15
-                                        ? colorScheme.tertiary
-                                        : colorScheme.error),
-                              stopDotColor: lossPct <= 5
-                                  ? colorScheme.primary
-                                  : (lossPct <= 15
-                                        ? colorScheme.tertiary
-                                        : colorScheme.error),
+                              color: lossColor,
+                              stopDotColor: lossColor,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -425,9 +422,13 @@ class HomeTelemetryPanel extends StatelessWidget {
 
   static Widget _signalBars(BuildContext context, int rssi) {
     final colorScheme = Theme.of(context).colorScheme;
-    final activeBars = rssi >= -75
-        ? 4
-        : (rssi >= -95 ? 3 : (rssi >= -110 ? 2 : (rssi >= -125 ? 1 : 0)));
+    final activeBars = switch (rssi) {
+      >= -75 => 4,
+      >= -95 => 3,
+      >= -110 => 2,
+      >= -125 => 1,
+      _ => 0,
+    };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [

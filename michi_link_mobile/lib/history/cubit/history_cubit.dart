@@ -13,26 +13,22 @@ class HistoryCubit extends Cubit<HistoryState> {
   }) : super(
          HistoryState(
            collarId: collarId,
-           selectedDate:
-               initialDate ??
-               () {
-                 final now = DateTime.now();
-                 return DateTime(now.year, now.month, now.day);
-               }(),
-           startHour:
-               initialStartHour ??
-               () {
-                 final now = DateTime.now();
-                 return now.hour.toDouble().clamp(0.0, 23.0);
-               }(),
-           endHour:
-               initialEndHour ??
-               () {
-                 final now = DateTime.now();
-                 return (now.hour + 1).toDouble().clamp(1.0, 24.0);
-               }(),
+           selectedDate: initialDate ?? _defaultDate(),
+           startHour: initialStartHour ?? _defaultStartHour(),
+           endHour: initialEndHour ?? _defaultEndHour(),
          ),
        );
+
+  static DateTime _defaultDate() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  static double _defaultStartHour() =>
+      DateTime.now().hour.toDouble().clamp(0.0, 23.0);
+
+  static double _defaultEndHour() =>
+      (DateTime.now().hour + 1).toDouble().clamp(1.0, 24.0);
 
   void selectDate(DateTime date) {
     final cleanDate = DateTime(date.year, date.month, date.day);

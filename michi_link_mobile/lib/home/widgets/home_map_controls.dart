@@ -38,131 +38,133 @@ class HomeMapControls extends StatelessWidget {
       left: 16,
       right: 16,
       top: topPadding,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+      child: RepaintBoundary(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedZoomIn,
-                    color: colorScheme.onSurface,
-                    strokeWidth: 2,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  tooltip: l10n.homeZoomInTooltip,
-                  onPressed: onZoomIn,
-                ),
-                Divider(
-                  height: 6,
-                  indent: 6,
-                  endIndent: 6,
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                ),
-                ExpressiveIconButton.circle(
-                  icon: ValueListenableBuilder<double>(
-                    valueListenable: bearingNotifier,
-                    builder: (context, bearing, child) {
-                      return Transform.rotate(
-                        angle: -bearing * (math.pi / 180),
-                        child: child,
-                      );
-                    },
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowUp04,
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedZoomIn,
                       color: colorScheme.onSurface,
                       strokeWidth: 2,
                     ),
+                    tooltip: l10n.homeZoomInTooltip,
+                    onPressed: onZoomIn,
                   ),
-                  tooltip: l10n.homeResetNorthTooltip,
-                  onPressed: onResetNorth,
-                ),
-                Divider(
-                  height: 6,
-                  indent: 6,
-                  endIndent: 6,
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                ),
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedZoomOut,
-                    color: colorScheme.onSurface,
-                    strokeWidth: 2,
+                  Divider(
+                    height: 6,
+                    indent: 6,
+                    endIndent: 6,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                   ),
-                  tooltip: l10n.homeZoomOutTooltip,
-                  onPressed: onZoomOut,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ExpressiveIconButton.circle(
+                    icon: ValueListenableBuilder<double>(
+                      valueListenable: bearingNotifier,
+                      builder: (context, bearing, child) {
+                        return Transform.rotate(
+                          angle: -bearing * (math.pi / 180),
+                          child: child,
+                        );
+                      },
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowUp04,
+                        color: colorScheme.onSurface,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    tooltip: l10n.homeResetNorthTooltip,
+                    onPressed: onResetNorth,
+                  ),
+                  Divider(
+                    height: 6,
+                    indent: 6,
+                    endIndent: 6,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedZoomOut,
+                      color: colorScheme.onSurface,
+                      strokeWidth: 2,
+                    ),
+                    tooltip: l10n.homeZoomOutTooltip,
+                    onPressed: onZoomOut,
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedNavigation03,
-                    color: colorScheme.onSurface,
-                    strokeWidth: 2,
-                  ),
-                  tooltip: l10n.homeMyLocationTooltip,
-                  onPressed: onMyLocation,
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
-                const SizedBox(height: 2),
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedPawPrint,
-                    color: colorScheme.primary,
-                    strokeWidth: 2,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  tooltip: l10n.homeCatLocationTooltip,
-                  onPressed: onCatLocation,
-                ),
-                const SizedBox(height: 2),
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedTarget02,
-                    color: colorScheme.onSurface,
-                    strokeWidth: 2,
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedNavigation03,
+                      color: colorScheme.onSurface,
+                      strokeWidth: 2,
+                    ),
+                    tooltip: l10n.homeMyLocationTooltip,
+                    onPressed: onMyLocation,
                   ),
-                  tooltip: l10n.homeFitRangeTooltip,
-                  onPressed: onFitRange,
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedPawPrint,
+                      color: colorScheme.primary,
+                      strokeWidth: 2,
+                    ),
+                    tooltip: l10n.homeCatLocationTooltip,
+                    onPressed: onCatLocation,
+                  ),
+                  const SizedBox(height: 2),
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedTarget02,
+                      color: colorScheme.onSurface,
+                      strokeWidth: 2,
+                    ),
+                    tooltip: l10n.homeFitRangeTooltip,
+                    onPressed: onFitRange,
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

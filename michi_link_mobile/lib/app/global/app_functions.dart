@@ -8,17 +8,19 @@ class AppFunctions {
     String? message,
     SnackBarType type = SnackBarType.info,
   }) {
-    List<List<dynamic>> icon;
-    switch (type) {
-      case SnackBarType.success:
-        icon = HugeIcons.strokeRoundedCheckmarkCircle02;
-      case SnackBarType.error:
-        icon = HugeIcons.strokeRoundedAlertCircle;
-      case SnackBarType.warning:
-        icon = HugeIcons.strokeRoundedAlert02;
-      case SnackBarType.info:
-        icon = HugeIcons.strokeRoundedInformationCircle;
-    }
+    final icon = switch (type) {
+      SnackBarType.success => HugeIcons.strokeRoundedCheckmarkCircle02,
+      SnackBarType.error => HugeIcons.strokeRoundedAlertCircle,
+      SnackBarType.warning => HugeIcons.strokeRoundedAlert02,
+      SnackBarType.info => HugeIcons.strokeRoundedInformationCircle,
+    };
+
+    final backgroundColor = switch (type) {
+      SnackBarType.success => Colors.green,
+      SnackBarType.error => Colors.red,
+      SnackBarType.warning => Colors.orange,
+      SnackBarType.info => Colors.blue,
+    };
 
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
@@ -46,13 +48,7 @@ class AppFunctions {
           ],
         ),
         closeIconColor: Colors.white,
-        backgroundColor: type.isSuccess
-            ? Colors.green
-            : type.isError
-            ? Colors.red
-            : type.isWarning
-            ? Colors.orange
-            : Colors.blue,
+        backgroundColor: backgroundColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),

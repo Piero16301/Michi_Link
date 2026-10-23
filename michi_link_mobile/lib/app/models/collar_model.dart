@@ -44,25 +44,35 @@ class CollarModel extends Equatable {
       packetLossPct: (json['packet_loss_pct'] as num?)?.toDouble() ?? 0,
       packetsLost: (json['packets_lost'] as num?)?.toInt() ?? 0,
       packetsReceived: (json['packets_received'] as num?)?.toInt() ?? 0,
-      config: json['config'] != null
-          ? CollarConfig.fromJson(json['config'] as Map<String, dynamic>)
+      config: json['config'] is Map
+          ? CollarConfig.fromJson(
+              Map<String, dynamic>.from(json['config'] as Map),
+            )
           : const CollarConfig(
               maxDistanceM: 0,
               minBatteryPct: 0,
               requireGpsFix: false,
               notifLanguage: 'en',
             ),
-      coords: json['coords'] != null
-          ? CollarCoords.fromJson(json['coords'] as Map<String, dynamic>)
+      coords: json['coords'] is Map
+          ? CollarCoords.fromJson(
+              Map<String, dynamic>.from(json['coords'] as Map),
+            )
           : const CollarCoords(altM: 0, lat: 0, lon: 0),
-      baseCoords: json['base_coords'] != null
-          ? CollarCoords.fromJson(json['base_coords'] as Map<String, dynamic>)
+      baseCoords: json['base_coords'] is Map
+          ? CollarCoords.fromJson(
+              Map<String, dynamic>.from(json['base_coords'] as Map),
+            )
           : const CollarCoords(altM: 0, lat: 0, lon: 0),
-      lastAlert: json['last_alert'] != null
-          ? CollarLastAlert.fromJson(json['last_alert'] as Map<String, dynamic>)
+      lastAlert: json['last_alert'] is Map
+          ? CollarLastAlert.fromJson(
+              Map<String, dynamic>.from(json['last_alert'] as Map),
+            )
           : null,
-      radio: json['radio'] != null
-          ? CollarRadio.fromJson(json['radio'] as Map<String, dynamic>)
+      radio: json['radio'] is Map
+          ? CollarRadio.fromJson(
+              Map<String, dynamic>.from(json['radio'] as Map),
+            )
           : const CollarRadio(
               distanceHomeM: 0,
               packetsLostGap: 0,
@@ -70,8 +80,10 @@ class CollarModel extends Equatable {
               snr: 0,
             ),
       seq: (json['seq'] as num?)?.toInt() ?? 0,
-      status: json['status'] != null
-          ? CollarStatus.fromJson(json['status'] as Map<String, dynamic>)
+      status: json['status'] is Map
+          ? CollarStatus.fromJson(
+              Map<String, dynamic>.from(json['status'] as Map),
+            )
           : const CollarStatus(
               batteryPct: 0,
               batteryV: 0,
