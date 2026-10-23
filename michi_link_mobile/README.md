@@ -5,7 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Analysis](https://img.shields.io/badge/Style-Very%20Good%20Analysis-blueviolet.svg)](https://pub.dev/packages/very_good_analysis)
 
-A Flutter mobile application designed for locating, tracking, and monitoring pets (specifically cats) using long-range **LoRa** radiofrequency technology and **GPS** positioning. It provides real-time cartographic tracking, virtual geofencing perimeters, advanced radio link telemetry (RSSI, SNR, packet loss), battery status monitoring, instant security alerts, and historical route playback.
+A Flutter mobile application designed for locating, tracking, and monitoring pets (specifically cats) using long-range **LoRa** radio frequency technology and **GPS** positioning. It provides real-time cartographic tracking, virtual geofencing perimeters, advanced radio link telemetry (RSSI, SNR, packet loss), battery status monitoring, instant security alerts, and historical route playback.
 
 ---
 

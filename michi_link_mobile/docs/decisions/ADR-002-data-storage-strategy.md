@@ -31,7 +31,7 @@ Adopt a hybrid storage model abstracted behind repository contracts (`DatabaseRe
 - **Rejected**: Hive offers superior synchronous in-memory read performance and reactive box listeners.
 
 ### Supabase / PostgreSQL with WebSockets
-- **Pros**: Relational capabilities and open-source foundation.
+- **Pros**: Relational capabilities and open source foundation.
 - **Cons**: Higher initial operational overhead and custom connection management compared to Firebase, which is already integrated with the LoRa gateway infrastructure.
 - **Rejected**: The LoRa gateway and backend functions write directly to Firestore collections.
 
