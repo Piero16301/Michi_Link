@@ -12,7 +12,6 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -32,20 +31,10 @@ const (
 	wgs84A = 6378137.0           // Semieje mayor (metros)
 	wgs84F = 1.0 / 298.257223563 // Achatamiento polar
 
-	// LoraWeakRssiThreshold Umbrales de enlace
+	// LoraWeakRssiThreshold Umbrales de enlace y batería
 	LoraWeakRssiThreshold = -115 // dBm
 	BatteryCriticalPct    = 10   // %
 )
-
-// CollarState Estado interno en memoria para suprimir spam de alertas
-type CollarState struct {
-	InGeofenceBreach bool
-	InLowBattery     bool
-	InCriticalBat    bool
-	InNoGpsFix       bool
-	InWeakSignal     bool
-	Initialized      bool
-}
 
 // IngestService Estructura de manejo de clientes y lógica para el servicio de ingesta
 type IngestService struct {
@@ -53,8 +42,6 @@ type IngestService struct {
 	fcmClient         *messaging.Client
 	projectID         string
 	collarIntervalSec int
-	stateMu           sync.Mutex
-	alertStates       map[string]*CollarState
 }
 
 func main() {
@@ -105,7 +92,6 @@ func main() {
 		fcmClient:         fcmClient,
 		projectID:         projectID,
 		collarIntervalSec: intervalSec,
-		alertStates:       make(map[string]*CollarState),
 	}
 
 	// 4. Configuración del cliente MQTT Paho
@@ -155,7 +141,7 @@ func main() {
 }
 
 // ----------------------------------------------------------------------------
-// HANDLER 1: TELEMETRÍA, CÁLCULO WGS-84 Y MOTOR DE ALERTAS EN LA NUBE
+// HANDLER 1: TELEMETRÍA, WGS-84 Y MOTOR DE ALERTAS EN SERVIDOR
 // ----------------------------------------------------------------------------
 func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	var payload models.TelemetryPayload
@@ -177,15 +163,9 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 	collarDocRef := s.firestoreClient.Collection("collars").Doc(payload.DeviceID)
 	historyDocRef := collarDocRef.Collection("history").NewDoc()
 
-	petName := "Mi Mascota"
-	collarConfig := models.CollarConfig{
-		MaxDistanceM:  150.0,
-		MinBatteryPct: 10,
-		RequireGpsFix: true,
-		NotifLanguage: "es",
-	}
-
-	var generatedAlerts []models.AlertPayload
+	var alertsToTrigger []models.AlertPayload
+	petNameToNotify := "Mi Mascota"
+	langToNotify := "es"
 
 	err := s.firestoreClient.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		docSnapshot, err := tx.Get(collarDocRef)
@@ -196,14 +176,25 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		hasConfig := false
 		hasValidBaseCoords := false
 
-		// Coordenadas base de respaldo (hogar)
+		// Coordenadas base por defecto
 		baseLat := -8.066663
 		baseLon := -79.062807
+
+		// Configuración predeterminada
+		collarConfig := models.CollarConfig{
+			MaxDistanceM:  150.0,
+			MinBatteryPct: 10,
+			RequireGpsFix: true,
+			NotifLanguage: "es",
+		}
+
+		// Estado previo de alertas almacenado en Firestore (No en memoria volátil)
+		var lastAlert models.LastAlertInfo
+		hasActiveAlert := false
 
 		if err == nil && docSnapshot.Exists() {
 			if existingName, err := docSnapshot.DataAt("name"); err == nil {
 				nameToKeep = fmt.Sprintf("%v", existingName)
-				petName = nameToKeep
 			}
 			if seqVal, err := docSnapshot.DataAt("seq"); err == nil {
 				if v, ok := seqVal.(int64); ok {
@@ -221,7 +212,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 				}
 			}
 
-			// 1. LEER CONFIGURACIÓN (Límites e idioma de notificación)
+			// 1. LEER CONFIGURACIÓN DEL COLLAR
 			if cfgVal, err := docSnapshot.DataAt("config"); err == nil {
 				if cfgMap, ok := cfgVal.(map[string]any); ok {
 					hasConfig = true
@@ -240,7 +231,24 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 				}
 			}
 
-			// 2. LEER base_coords DE FIRESTORE (Sin sobrescribir)
+			// 2. LEER ESTADO PREVIO DE ALERTAS DE FIRESTORE
+			if haVal, err := docSnapshot.DataAt("has_active_alert"); err == nil {
+				if b, ok := haVal.(bool); ok {
+					hasActiveAlert = b
+				}
+			}
+			if laVal, err := docSnapshot.DataAt("last_alert"); err == nil {
+				if laMap, ok := laVal.(map[string]any); ok {
+					if t, ok := laMap["type"].(string); ok {
+						lastAlert.Type = t
+					}
+					if s, ok := laMap["severity"].(string); ok {
+						lastAlert.Severity = s
+					}
+				}
+			}
+
+			// 3. LEER base_coords DE FIRESTORE (Sin sobrescribir)
 			if bcVal, err := docSnapshot.DataAt("base_coords"); err == nil {
 				if bcMap, ok := bcVal.(map[string]any); ok {
 					latVal, okLat := parseCoordinate(bcMap["lat"])
@@ -257,11 +265,12 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		if nameToKeep == "" {
 			if payload.PetName != "" {
 				nameToKeep = payload.PetName
-				petName = nameToKeep
 			} else {
 				nameToKeep = "Mi Mascota"
 			}
 		}
+		petNameToNotify = nameToKeep
+		langToNotify = collarConfig.NotifLanguage
 
 		// Cálculo de paquetes perdidos
 		var lostInGap int64 = 0
@@ -282,7 +291,7 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		}
 		payload.Radio.PacketsLostGap = int(lostInGap)
 
-		// 3. CÁLCULO DE DISTANCIA GEODÉSICA WGS-84
+		// 4. CÁLCULO DE DISTANCIA GEODÉSICA WGS-84
 		var distHomeM = 0.0
 		if payload.Status.GpsFix && payload.Coords.Lat != 0 && payload.Coords.Lon != 0 && baseLat != 0 && baseLon != 0 {
 			rawDist := GeodesicDistanceWGS84(payload.Coords.Lat, payload.Coords.Lon, baseLat, baseLon)
@@ -290,14 +299,35 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		}
 		payload.Radio.DistanceHomeM = distHomeM
 
-		// 4. MOTOR DE EVALUACIÓN DE ALERTAS EN LA NUBE
-		generatedAlerts = s.evaluateAlerts(payload.DeviceID, payload.Status.GpsFix, uint8(payload.Status.Sats),
-			distHomeM, payload.Status.BatteryPct, float32(payload.Radio.RSSI), collarConfig, now)
+		// 5. MOTOR DE EVALUACIÓN BASADO EN EL ESTADO REAL DE FIRESTORE
+		alertsToTrigger = evaluateAlertTransitions(payload.DeviceID, payload.Status.GpsFix, uint8(payload.Status.Sats),
+			distHomeM, payload.Status.BatteryPct, float64(payload.Radio.RSSI), collarConfig, lastAlert, now)
 
-		// 5. REGISTRAR ALERTAS EN FIRESTORE DENTRO DE LA TRANSACCIÓN
-		hasActiveAlert := false
-		var lastAlert models.LastAlertInfo
-		for _, alert := range generatedAlerts {
+		historyRecord := models.HistoryRecord{
+			Timestamp: now,
+			ExpireAt:  expireAt,
+			Seq:       payload.Seq,
+			Coords:    payload.Coords,
+			Status:    payload.Status,
+			Radio:     payload.Radio,
+		}
+
+		latestData := map[string]any{
+			"device_id":        payload.DeviceID,
+			"name":             nameToKeep,
+			"last_seen":        now,
+			"is_online":        true,
+			"seq":              payload.Seq,
+			"coords":           payload.Coords,
+			"status":           payload.Status,
+			"radio":            payload.Radio,
+			"packets_received": totalReceived,
+			"packets_lost":     totalLost,
+			"packet_loss_pct":  math.Round(lossPct*100.0) / 100.0,
+		}
+
+		// 6. PERSISTENCIA DE ALERTAS EN LA COLECCIÓN 'alerts'
+		for _, alert := range alertsToTrigger {
 			alertDocRef := collarDocRef.Collection("alerts").NewDoc()
 			alertRecord := models.AlertRecord{
 				Timestamp: alert.Timestamp,
@@ -324,33 +354,8 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 			}
 		}
 
-		historyRecord := models.HistoryRecord{
-			Timestamp: now,
-			ExpireAt:  expireAt,
-			Seq:       payload.Seq,
-			Coords:    payload.Coords,
-			Status:    payload.Status,
-			Radio:     payload.Radio,
-		}
-
-		latestData := map[string]any{
-			"device_id":        payload.DeviceID,
-			"name":             nameToKeep,
-			"last_seen":        now,
-			"is_online":        true,
-			"seq":              payload.Seq,
-			"coords":           payload.Coords,
-			"status":           payload.Status,
-			"radio":            payload.Radio,
-			"packets_received": totalReceived,
-			"packets_lost":     totalLost,
-			"packet_loss_pct":  math.Round(lossPct*100.0) / 100.0,
-		}
-
-		if len(generatedAlerts) > 0 {
-			latestData["has_active_alert"] = hasActiveAlert
-			latestData["last_alert"] = lastAlert
-		}
+		latestData["has_active_alert"] = hasActiveAlert
+		latestData["last_alert"] = lastAlert
 
 		if !hasValidBaseCoords {
 			latestData["base_coords"] = models.BaseCoords{
@@ -374,48 +379,28 @@ func (s *IngestService) handleTelemetry(_ mqtt.Client, msg mqtt.Message) {
 		return
 	}
 
-	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Dist WGS-84: %.1fm",
-		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Radio.DistanceHomeM)
+	log.Printf("📍 [TELEMETRIA] %s (#%d) | Lat: %.6f, Lon: %.6f | Dist WGS-84: %.1fm | Fix: %t (%dS)",
+		payload.DeviceID, payload.Seq, payload.Coords.Lat, payload.Coords.Lon, payload.Radio.DistanceHomeM, payload.Status.GpsFix, payload.Status.Sats)
 
-	// 6. ENVIAR NOTIFICACIONES PUSH MULTI-IDIOMA FUERA DE LA TRANSACCIÓN
-	for _, alert := range generatedAlerts {
+	// 7. DISPARAR PUSH NOTIFICATIONS
+	for _, alert := range alertsToTrigger {
 		log.Printf("🚨 [ALERTA GENERADA] %s -> [%s] (%s): %.1f", alert.DeviceID, alert.Type, alert.Severity, alert.Value)
-		s.sendPushNotification(context.Background(), alert, petName, collarConfig.NotifLanguage)
+		s.sendPushNotification(context.Background(), alert, petNameToNotify, langToNotify)
 	}
 }
 
 // ----------------------------------------------------------------------------
-// MOTOR DE EVALUACIÓN DE ALERTAS EN MEMORIA
+// EVALUACIÓN DE TRANSICIONES CONTRA EL ÚLTIMO ESTADO DE FIRESTORE
 // ----------------------------------------------------------------------------
-func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
-	distM float64, batPct int, rssi float32, limits models.CollarConfig, now time.Time) []models.AlertPayload {
-
-	s.stateMu.Lock()
-	defer s.stateMu.Unlock()
-
-	state, exists := s.alertStates[devID]
-	if !exists {
-		state = &CollarState{}
-		s.alertStates[devID] = state
-	}
-
-	// Primer paquete: inicializar estado para evitar falsos positivos
-	if !state.Initialized {
-		state.InGeofenceBreach = hasFix && distM > limits.MaxDistanceM
-		state.InCriticalBat = batPct <= BatteryCriticalPct
-		state.InLowBattery = batPct <= limits.MinBatteryPct && !state.InCriticalBat
-		state.InNoGpsFix = !hasFix && limits.RequireGpsFix
-		state.InWeakSignal = rssi < LoraWeakRssiThreshold
-		state.Initialized = true
-		return nil
-	}
+func evaluateAlertTransitions(devID string, hasFix bool, sats uint8,
+	distM float64, batPct int, rssi float64, cfg models.CollarConfig,
+	lastAlert models.LastAlertInfo, now time.Time) []models.AlertPayload {
 
 	var alerts []models.AlertPayload
 
 	// --- 1. GEOVALLA ---
 	if hasFix {
-		if distM > limits.MaxDistanceM && !state.InGeofenceBreach {
-			state.InGeofenceBreach = true
+		if distM > cfg.MaxDistanceM && lastAlert.Type != "GEOFENCE_BREACH" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "GEOFENCE_BREACH",
@@ -423,8 +408,7 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 				Value:     distM,
 				Timestamp: now,
 			})
-		} else if distM <= limits.MaxDistanceM && state.InGeofenceBreach {
-			state.InGeofenceBreach = false
+		} else if distM <= cfg.MaxDistanceM && lastAlert.Type == "GEOFENCE_BREACH" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "GEOFENCE_RESTORED",
@@ -437,9 +421,7 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 
 	// --- 2. BATERÍA ---
 	if batPct <= BatteryCriticalPct {
-		if !state.InCriticalBat {
-			state.InCriticalBat = true
-			state.InLowBattery = true
+		if lastAlert.Type != "BATTERY_CRITICAL" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "BATTERY_CRITICAL",
@@ -448,10 +430,8 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 				Timestamp: now,
 			})
 		}
-	} else if batPct <= limits.MinBatteryPct {
-		state.InCriticalBat = false
-		if !state.InLowBattery {
-			state.InLowBattery = true
+	} else if batPct <= cfg.MinBatteryPct {
+		if lastAlert.Type != "LOW_BATTERY" && lastAlert.Type != "BATTERY_CRITICAL" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "LOW_BATTERY",
@@ -461,9 +441,7 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 			})
 		}
 	} else {
-		if state.InLowBattery || state.InCriticalBat {
-			state.InLowBattery = false
-			state.InCriticalBat = false
+		if lastAlert.Type == "LOW_BATTERY" || lastAlert.Type == "BATTERY_CRITICAL" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "BATTERY_NORMAL",
@@ -475,9 +453,9 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 	}
 
 	// --- 3. FIX SATELITAL (GPS) ---
-	if limits.RequireGpsFix {
-		if !hasFix && !state.InNoGpsFix {
-			state.InNoGpsFix = true
+	if cfg.RequireGpsFix {
+		// Se dispara cuando no hay fix y la última alerta registrada no fue NO_GPS_FIX
+		if !hasFix && lastAlert.Type != "NO_GPS_FIX" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "NO_GPS_FIX",
@@ -485,8 +463,7 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 				Value:     0,
 				Timestamp: now,
 			})
-		} else if hasFix && state.InNoGpsFix {
-			state.InNoGpsFix = false
+		} else if hasFix && lastAlert.Type == "NO_GPS_FIX" {
 			alerts = append(alerts, models.AlertPayload{
 				DeviceID:  devID,
 				Type:      "GPS_FIX_RESTORED",
@@ -497,23 +474,21 @@ func (s *IngestService) evaluateAlerts(devID string, hasFix bool, sats uint8,
 		}
 	}
 
-	// --- 4. RADIOENLACE LORA ---
-	if rssi < LoraWeakRssiThreshold && !state.InWeakSignal {
-		state.InWeakSignal = true
+	// --- 4. SEÑAL LORA ---
+	if rssi < LoraWeakRssiThreshold && lastAlert.Type != "WEAK_SIGNAL" {
 		alerts = append(alerts, models.AlertPayload{
 			DeviceID:  devID,
 			Type:      "WEAK_SIGNAL",
 			Severity:  models.SeverityWarning,
-			Value:     float64(rssi),
+			Value:     rssi,
 			Timestamp: now,
 		})
-	} else if rssi >= LoraWeakRssiThreshold+10 && state.InWeakSignal {
-		state.InWeakSignal = false
+	} else if rssi >= LoraWeakRssiThreshold+10 && lastAlert.Type == "WEAK_SIGNAL" {
 		alerts = append(alerts, models.AlertPayload{
 			DeviceID:  devID,
 			Type:      "SIGNAL_NORMAL",
 			Severity:  models.SeverityInfo,
-			Value:     float64(rssi),
+			Value:     rssi,
 			Timestamp: now,
 		})
 	}
@@ -561,13 +536,13 @@ func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 }
 
 // ----------------------------------------------------------------------------
-// ENVÍO DE PUSH NOTIFICATIONS MULTI-IDIOMA
+// NOTIFICACIONES PUSH MULTI-IDIOMA
 // ----------------------------------------------------------------------------
 func (s *IngestService) sendPushNotification(ctx context.Context, alert models.AlertPayload, petName string, lang string) {
 	topic := fmt.Sprintf("collar_%s", alert.DeviceID)
+	valStr := fmt.Sprintf("%.1f", alert.Value)
 
 	title, body := buildLocalizedNotification(lang, alert.Severity, alert.Type, petName, alert.Value)
-	valStr := fmt.Sprintf("%.1f", alert.Value)
 
 	channelID := "michi_info_channel"
 	if alert.Severity == models.SeverityCritical {
@@ -794,7 +769,7 @@ func buildLocalizedNotification(lang, severity, alertType, petName string, val f
 			body = fmt.Sprintf("Evento %s para %s", alertType, petName)
 		}
 
-	default: // "es" por defecto
+	default: // "es"
 		switch severity {
 		case models.SeverityCritical:
 			title = "🚨 Alerta Crítica"
