@@ -63,12 +63,14 @@ void main() {
         'max_distance_m': 500,
         'min_battery_pct': 20,
         'require_gps_fix': true,
+        'notif_language': 'en',
       };
 
       final config = CollarConfig.fromJson(json);
       expect(config.maxDistanceM, 500);
       expect(config.minBatteryPct, 20);
       expect(config.requireGpsFix, isTrue);
+      expect(config.notifLanguage, 'en');
       expect(config.toJson(), json);
     });
 

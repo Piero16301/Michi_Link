@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/collars/collars.dart';
+import 'package:michi_link_mobile/history/history.dart';
 import 'package:michi_link_mobile/home/home.dart';
 import 'package:michi_link_mobile/notifications/notifications.dart';
 import 'package:michi_link_mobile/settings/settings.dart';
@@ -29,11 +30,19 @@ class AppRoutes {
               builder: (context, state) => const CollarsPage(),
             ),
             GoRoute(
-              name: AppRoute.collarNotifications.name,
-              path: AppRoute.collarNotifications.path,
+              name: AppRoute.notifications.name,
+              path: AppRoute.notifications.path,
               builder: (context, state) {
                 final collarId = state.pathParameters['collarId']!;
                 return NotificationsPage(collarId: collarId);
+              },
+            ),
+            GoRoute(
+              name: AppRoute.history.name,
+              path: AppRoute.history.path,
+              builder: (context, state) {
+                final collarId = state.pathParameters['collarId']!;
+                return HistoryPage(collarId: collarId);
               },
             ),
           ],
@@ -48,8 +57,8 @@ enum AppRoute {
   home('/', 'home'),
   settings('settings', 'settings'),
   collars('collars', 'collars'),
-  collarNotifications('collar-notifications/:collarId', 'collar-notifications'),
-  collarHistory('collar-history/:collarId', 'collar-history');
+  notifications('notifications/:collarId', 'notifications'),
+  history('history/:collarId', 'history');
 
   const AppRoute(this.path, this.name);
   final String path;

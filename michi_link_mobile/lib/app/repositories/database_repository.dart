@@ -15,6 +15,11 @@ abstract class DatabaseRepository {
     required CollarConfig config,
   });
   Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId});
+  Stream<List<HistoryRecord>> getHistoryRecordsStream({
+    required String collarId,
+    required DateTime start,
+    required DateTime end,
+  });
 }
 
 class MockDatabaseRepository implements DatabaseRepository {
@@ -33,6 +38,7 @@ class MockDatabaseRepository implements DatabaseRepository {
           maxDistanceM: 10,
           minBatteryPct: 10,
           requireGpsFix: true,
+          notifLanguage: 'en',
         ),
         coords: const CollarCoords(lat: 0, lon: 0, altM: 0),
         radio: const CollarRadio(
@@ -85,6 +91,54 @@ class MockDatabaseRepository implements DatabaseRepository {
         value: 5,
         expireAt: DateTime.now().add(const Duration(hours: 1)),
         timestamp: DateTime.now(),
+      ),
+    ]);
+  }
+
+  @override
+  Stream<List<HistoryRecord>> getHistoryRecordsStream({
+    required String collarId,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return Stream.value([
+      HistoryRecord(
+        id: '1',
+        coords: const CollarCoords(lat: 40.6892, lon: -74.0445, altM: 0),
+        timestamp: DateTime.now(),
+        radio: const CollarRadio(
+          distanceHomeM: 10,
+          packetsLostGap: 10,
+          rssi: 10,
+          snr: 10,
+        ),
+        seq: 10,
+        status: const CollarStatus(
+          batteryPct: 40,
+          batteryV: 3.7,
+          gpsFix: true,
+          sats: 10,
+        ),
+        expireAt: DateTime.now().add(const Duration(hours: 1)),
+      ),
+      HistoryRecord(
+        id: '2',
+        coords: const CollarCoords(lat: 34.0522, lon: -118.2437, altM: 0),
+        timestamp: DateTime.now().add(const Duration(hours: 1)),
+        radio: const CollarRadio(
+          distanceHomeM: 10,
+          packetsLostGap: 10,
+          rssi: 10,
+          snr: 10,
+        ),
+        seq: 10,
+        status: const CollarStatus(
+          batteryPct: 100,
+          batteryV: 4.2,
+          gpsFix: true,
+          sats: 12,
+        ),
+        expireAt: DateTime.now().add(const Duration(hours: 1)),
       ),
     ]);
   }
@@ -142,6 +196,27 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
         .map(
           (snapshot) => snapshot.docs
               .map((doc) => AlertRecord.fromJson(doc.data(), id: doc.id))
+              .toList(),
+        );
+  }
+
+  @override
+  Stream<List<HistoryRecord>> getHistoryRecordsStream({
+    required String collarId,
+    required DateTime start,
+    required DateTime end,
+  }) {
+    return _firestore
+        .collection('collars')
+        .doc(collarId)
+        .collection('history')
+        .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => HistoryRecord.fromJson(doc.data(), id: doc.id))
               .toList(),
         );
   }

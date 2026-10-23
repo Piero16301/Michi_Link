@@ -162,7 +162,8 @@ func TestCollarConfig_JSONTags(t *testing.T) {
 	rawJSON := []byte(`{
 		"max_dist_m": 150.5,
 		"min_bat_pct": 25,
-		"require_gps_fix": true
+		"require_gps_fix": true,
+		"notif_language": "en"
 	}`)
 
 	var cfg CollarConfig
@@ -178,6 +179,9 @@ func TestCollarConfig_JSONTags(t *testing.T) {
 	}
 	if !cfg.RequireGpsFix {
 		t.Errorf("RequireGpsFix: obtenido %v, esperado true", cfg.RequireGpsFix)
+	}
+	if cfg.NotifLanguage != "en" {
+		t.Errorf("NotifLanguage: obtenido %v, esperado 'en'", cfg.NotifLanguage)
 	}
 
 	encoded, err := json.Marshal(cfg)

@@ -238,7 +238,7 @@
             }
         }
     },
-    "collarsLossRate": "{pct}% de perda",
+    "collarsLossRate": "{pct}%",
     "@collarsLossRate": {
         "placeholders": {
             "pct": {
@@ -281,6 +281,12 @@
     "@collarConfigRequireGpsFixTitle": {},
     "collarConfigRequireGpsFixSubtitle": "Requer posição de satélite precisa para telemetria",
     "@collarConfigRequireGpsFixSubtitle": {},
+    "collarConfigLanguageLabel": "IDIOMA DOS ALERTAS",
+    "@collarConfigLanguageLabel": {},
+    "collarConfigLanguageTitle": "Idioma das notificações",
+    "@collarConfigLanguageTitle": {},
+    "collarConfigLanguageSubtitle": "Idioma no qual os alertas serão recebidos",
+    "@collarConfigLanguageSubtitle": {},
     "collarConfigSave": "Salvar configuração",
     "@collarConfigSave": {},
     "collarConfigCancel": "Cancelar",
@@ -333,6 +339,10 @@
     "@notificationsEmptyTitle": {},
     "notificationsEmptyDescription": "Os alertas e eventos registados para esta coleira aparecerão aqui",
     "@notificationsEmptyDescription": {},
+    "notificationsToday": "Hoje",
+    "@notificationsToday": {},
+    "notificationsYesterday": "Ontem",
+    "@notificationsYesterday": {},
     "alertSeverityCritical": "CRÍTICO",
     "@alertSeverityCritical": {},
     "alertSeverityWarning": "AVISO",
@@ -411,6 +421,145 @@
     "@alertValueSignal": {
         "placeholders": {
             "rssi": {
+                "type": "int"
+            }
+        }
+    },
+    "historyTitle": "Histórico de localizações",
+    "@historyTitle": {},
+    "historyEmptyTitle": "Sem registros de histórico",
+    "@historyEmptyTitle": {},
+    "historyEmptyDescription": "Nenhum registro de localização foi encontrado para a data e intervalo de tempo selecionados.",
+    "@historyEmptyDescription": {},
+    "historySelectDate": "Selecionar data",
+    "@historySelectDate": {},
+    "historyTimeRange": "Intervalo de horas",
+    "@historyTimeRange": {},
+    "historyAllDay": "O dia todo",
+    "@historyAllDay": {},
+    "historyViewMap": "Mapa",
+    "@historyViewMap": {},
+    "historyViewList": "Registros",
+    "@historyViewList": {},
+    "historyPointsCount": "{count, plural, =0{0 registros} =1{1 registro} other{{count} registros}}",
+    "@historyPointsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "historyRouteStart": "Início",
+    "@historyRouteStart": {},
+    "historyRouteEnd": "Fim",
+    "@historyRouteEnd": {},
+    "historyRecordSeq": "Pacote #{seq}",
+    "@historyRecordSeq": {
+        "placeholders": {
+            "seq": {
+                "type": "int"
+            }
+        }
+    },
+    "historyAltitude": "Altitude: {alt} m",
+    "@historyAltitude": {
+        "placeholders": {
+            "alt": {
+                "type": "String"
+            }
+        }
+    },
+    "historyDistanceHome": "Distância: {dist} m",
+    "@historyDistanceHome": {
+        "placeholders": {
+            "dist": {
+                "type": "int"
+            }
+        }
+    },
+    "historyLoraSnr": "SNR: {snr} dB",
+    "@historyLoraSnr": {
+        "placeholders": {
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "historyLostPackets": "Perdidos: {count}",
+    "@historyLostPackets": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "historyGpsFixOk": "GPS Fixado",
+    "@historyGpsFixOk": {},
+    "historyGpsNoFix": "Sem sinal GPS",
+    "@historyGpsNoFix": {},
+    "historyCoordinates": "Coordenadas",
+    "@historyCoordinates": {},
+    "historyValueSatellites": "{count} sats",
+    "@historyValueSatellites": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "historyValueAltitude": "{alt} m",
+    "@historyValueAltitude": {
+        "placeholders": {
+            "alt": {
+                "type": "String"
+            }
+        }
+    },
+    "historyValueDistance": "{dist} m",
+    "@historyValueDistance": {
+        "placeholders": {
+            "dist": {
+                "type": "String"
+            }
+        }
+    },
+    "historyValueSignal": "{rssi} dBm",
+    "@historyValueSignal": {
+        "placeholders": {
+            "rssi": {
+                "type": "int"
+            }
+        }
+    },
+    "historyValueSignalWithSnr": "{rssi} dBm • {snr} dB",
+    "@historyValueSignalWithSnr": {
+        "placeholders": {
+            "rssi": {
+                "type": "int"
+            },
+            "snr": {
+                "type": "String"
+            }
+        }
+    },
+    "historyValueBatteryVoltage": "{pct}% ({voltage}V)",
+    "@historyValueBatteryVoltage": {
+        "placeholders": {
+            "pct": {
+                "type": "int"
+            },
+            "voltage": {
+                "type": "String"
+            }
+        }
+    },
+    "historyCarouselIndex": "{current}/{total}",
+    "@historyCarouselIndex": {
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
                 "type": "int"
             }
         }

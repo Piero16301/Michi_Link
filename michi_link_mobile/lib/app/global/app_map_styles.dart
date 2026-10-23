@@ -1,5 +1,5 @@
 class AppMapStyles {
-  const AppMapStyles._();
+  const AppMapStyles();
 
   /// Estilo oscuro Material 3 Expressive para Google Maps.
   /// Diseñado con superficies tonales oscuras, agua azul-medianoche

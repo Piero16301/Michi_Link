@@ -1,3 +1,4 @@
+import 'package:country_flags/country_flags.dart';
 import 'package:expressive_kit/expressive_kit.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,6 +24,7 @@ class _CollarConfigBottomSheetState extends State<CollarConfigBottomSheet> {
   late double _maxDistance;
   late double _minBatteryPct;
   late bool _requireGpsFix;
+  late String _selectedNotifLanguage;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _CollarConfigBottomSheetState extends State<CollarConfigBottomSheet> {
     _minBatteryPct = initialBattery.clamp(5.0, 30.0);
 
     _requireGpsFix = widget.collar.config.requireGpsFix;
+    _selectedNotifLanguage = widget.collar.config.notifLanguage;
   }
 
   @override
@@ -356,6 +359,87 @@ class _CollarConfigBottomSheetState extends State<CollarConfigBottomSheet> {
                         ],
                       ),
                     ),
+                    const SizedBox(height: 18),
+
+                    // Parámetro 4: Idioma de alertas
+                    Row(
+                      children: [
+                        Text(
+                          l10n.collarConfigLanguageLabel,
+                          style: textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showLanguagePickerModal(context),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: 0.35,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              CountryFlag.fromLanguageCode(
+                                _selectedNotifLanguage,
+                                theme: const ImageTheme(
+                                  width: 28,
+                                  height: 28,
+                                  shape: RoundedRectangle(6),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.collarConfigLanguageTitle,
+                                      style: textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: colorScheme.onSurface,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      Locale(
+                                        _selectedNotifLanguage,
+                                      ).localizedName(context),
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowRight01,
+                                size: 20,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 24),
 
                     // Botón Guardar
@@ -365,6 +449,7 @@ class _CollarConfigBottomSheetState extends State<CollarConfigBottomSheet> {
                           maxDistanceM: _maxDistance.round(),
                           minBatteryPct: _minBatteryPct.round(),
                           requireGpsFix: _requireGpsFix,
+                          notifLanguage: _selectedNotifLanguage,
                         );
 
                         getIt<DatabaseService>().updateCollarConfig(
@@ -408,6 +493,95 @@ class _CollarConfigBottomSheetState extends State<CollarConfigBottomSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLanguagePickerModal(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colorScheme.surfaceContainer,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (modalContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.4,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    l10n.selectLanguage,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...ExpressiveLanguages.supportedLocales.map((locale) {
+                  final isSelected =
+                      locale.languageCode == _selectedNotifLanguage;
+                  return ListTile(
+                    leading: CountryFlag.fromLanguageCode(
+                      locale.languageCode,
+                      theme: const ImageTheme(
+                        width: 28,
+                        height: 28,
+                        shape: RoundedRectangle(6),
+                      ),
+                    ),
+                    title: Text(
+                      locale.localizedName(modalContext),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: isSelected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.onSurface,
+                      ),
+                    ),
+                    trailing: isSelected
+                        ? HugeIcon(
+                            icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                            color: colorScheme.primary,
+                            strokeWidth: 2,
+                          )
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        _selectedNotifLanguage = locale.languageCode;
+                      });
+                      Navigator.pop(modalContext);
+                    },
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

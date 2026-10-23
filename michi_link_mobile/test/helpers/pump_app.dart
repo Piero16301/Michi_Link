@@ -4,11 +4,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/l10n/l10n.dart';
 
 extension PumpApp on WidgetTester {
-  Future<void> pumpApp(Widget widget) {
+  Future<void> pumpApp(Widget widget, {Locale locale = const Locale('es')}) {
     return pumpWidget(
       MaterialApp(
+        locale: locale,
         localizationsDelegates: const [
-          ...AppLocalizations.localizationsDelegates,
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
           ...ExpressiveLocalizations.localizationsDelegates,
         ],
         supportedLocales: AppLocalizations.supportedLocales,
