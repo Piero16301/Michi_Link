@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
+import 'package:michi_link_mobile/home/home.dart';
 import 'package:michi_link_mobile/l10n/l10n.dart';
 
 class HistoryMapView extends StatefulWidget {
@@ -80,105 +80,6 @@ class _HistoryMapViewState extends State<HistoryMapView> {
     }
   }
 
-  Future<BitmapDescriptor> _createSvgMarker({
-    required BytesLoader loader,
-    required Color borderColor,
-    required Color bgColor,
-    required double markerSize,
-    required double contentSize,
-    double borderWidth = 2.5,
-    double pixelRatio = 1.0,
-  }) async {
-    final pictureInfo = await vg.loadPicture(loader, null);
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder)..scale(pixelRatio);
-
-    final center = Offset(markerSize / 2, markerSize / 2);
-    final radius = (markerSize / 2) - 4;
-
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.28)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-
-    final borderPaint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.fill;
-
-    final bgPaint = Paint()
-      ..color = bgColor
-      ..style = PaintingStyle.fill;
-
-    final clipPath = Path()
-      ..addOval(Rect.fromCircle(center: center, radius: radius - borderWidth));
-
-    final srcWidth = pictureInfo.size.width;
-    final srcHeight = pictureInfo.size.height;
-    final scale = contentSize / math.max(srcWidth, srcHeight);
-    final dx = center.dx - (srcWidth * scale) / 2;
-    final dy = center.dy - (srcHeight * scale) / 2;
-
-    canvas
-      ..drawCircle(center.translate(0, 2), radius, shadowPaint)
-      ..drawCircle(center, radius, borderPaint)
-      ..drawCircle(center, radius - borderWidth, bgPaint)
-      ..save()
-      ..clipPath(clipPath)
-      ..translate(dx, dy)
-      ..scale(scale, scale)
-      ..drawPicture(pictureInfo.picture)
-      ..restore();
-
-    final picture = recorder.endRecording();
-    final targetSize = (markerSize * pixelRatio).round();
-    final img = await picture.toImage(targetSize, targetSize);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.bytes(
-      byteData!.buffer.asUint8List(),
-      imagePixelRatio: pixelRatio,
-    );
-  }
-
-  Future<BitmapDescriptor> _createDotMarker({
-    required Color fillColor,
-    required Color strokeColor,
-    required double dotDiameter,
-    double canvasSize = 32.0,
-    double strokeWidth = 2.0,
-    double pixelRatio = 1.0,
-  }) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder)..scale(pixelRatio);
-
-    final center = Offset(canvasSize / 2, canvasSize / 2);
-    final radius = dotDiameter / 2;
-
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-
-    final strokePaint = Paint()
-      ..color = strokeColor
-      ..style = PaintingStyle.fill;
-
-    final fillPaint = Paint()
-      ..color = fillColor
-      ..style = PaintingStyle.fill;
-
-    canvas
-      ..drawCircle(center.translate(0, 1), radius + strokeWidth, shadowPaint)
-      ..drawCircle(center, radius + strokeWidth, strokePaint)
-      ..drawCircle(center, radius, fillPaint);
-
-    final picture = recorder.endRecording();
-    final targetSize = (canvasSize * pixelRatio).round();
-    final img = await picture.toImage(targetSize, targetSize);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.bytes(
-      byteData!.buffer.asUint8List(),
-      imagePixelRatio: pixelRatio,
-    );
-  }
-
   Future<void> _loadCustomMarkers() async {
     try {
       final theme = Theme.of(context);
@@ -188,7 +89,8 @@ class _HistoryMapViewState extends State<HistoryMapView> {
           MediaQuery.maybeDevicePixelRatioOf(context) ??
           View.of(context).devicePixelRatio;
 
-      final catIcon = await _createSvgMarker(
+      final catIcon = await HomeMarkerBuilder.createSvgMarker(
+        cacheKey: CatBreed.europeanOrangeWhite.name,
         loader: SvgAssetLoader(CatBreed.europeanOrangeWhite.assetPath),
         borderColor: colorScheme.primary,
         bgColor: isDark ? colorScheme.surfaceContainerHigh : Colors.white,
@@ -198,14 +100,16 @@ class _HistoryMapViewState extends State<HistoryMapView> {
         pixelRatio: pixelRatio,
       );
 
-      final dotIcon = await _createDotMarker(
+      final dotIcon = await HomeMarkerBuilder.createDotMarker(
+        cacheKey: 'history_dot',
         fillColor: colorScheme.primary,
         strokeColor: isDark ? const Color(0xFF1E2628) : Colors.white,
         dotDiameter: 10,
         pixelRatio: pixelRatio,
       );
 
-      final selectedDotIcon = await _createDotMarker(
+      final selectedDotIcon = await HomeMarkerBuilder.createDotMarker(
+        cacheKey: 'history_dot_selected',
         fillColor: Colors.white,
         strokeColor: colorScheme.primary,
         dotDiameter: 14,
@@ -280,12 +184,10 @@ class _HistoryMapViewState extends State<HistoryMapView> {
     var maxLon = validRecords.first.coords.lon;
 
     for (final r in validRecords) {
-      final lat = r.coords.lat;
-      final lon = r.coords.lon;
-      if (lat < minLat) minLat = lat;
-      if (lat > maxLat) maxLat = lat;
-      if (lon < minLon) minLon = lon;
-      if (lon > maxLon) maxLon = lon;
+      minLat = math.min(minLat, r.coords.lat);
+      maxLat = math.max(maxLat, r.coords.lat);
+      minLon = math.min(minLon, r.coords.lon);
+      maxLon = math.max(maxLon, r.coords.lon);
     }
 
     final bounds = LatLngBounds(
@@ -437,74 +339,76 @@ class _HistoryMapViewState extends State<HistoryMapView> {
         Positioned(
           top: topPadding,
           left: 16,
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          child: RepaintBoundary(
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedZoomIn,
-                    color: colorScheme.onSurface,
-                    strokeWidth: 2,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
-                  tooltip: l10n.homeZoomInTooltip,
-                  onPressed: _zoomIn,
-                ),
-                Divider(
-                  height: 6,
-                  indent: 6,
-                  endIndent: 6,
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                ),
-                ExpressiveIconButton.circle(
-                  icon: ValueListenableBuilder<double>(
-                    valueListenable: _bearingNotifier,
-                    builder: (context, bearing, child) {
-                      return Transform.rotate(
-                        angle: -bearing * (math.pi / 180),
-                        child: child,
-                      );
-                    },
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedArrowUp04,
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedZoomIn,
                       color: colorScheme.onSurface,
                       strokeWidth: 2,
                     ),
+                    tooltip: l10n.homeZoomInTooltip,
+                    onPressed: _zoomIn,
                   ),
-                  tooltip: l10n.homeResetNorthTooltip,
-                  onPressed: _resetNorth,
-                ),
-                Divider(
-                  height: 6,
-                  indent: 6,
-                  endIndent: 6,
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                ),
-                ExpressiveIconButton.circle(
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedZoomOut,
-                    color: colorScheme.onSurface,
-                    strokeWidth: 2,
+                  Divider(
+                    height: 6,
+                    indent: 6,
+                    endIndent: 6,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                   ),
-                  tooltip: l10n.homeZoomOutTooltip,
-                  onPressed: _zoomOut,
-                ),
-              ],
+                  ExpressiveIconButton.circle(
+                    icon: ValueListenableBuilder<double>(
+                      valueListenable: _bearingNotifier,
+                      builder: (context, bearing, child) {
+                        return Transform.rotate(
+                          angle: -bearing * (math.pi / 180),
+                          child: child,
+                        );
+                      },
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowUp04,
+                        color: colorScheme.onSurface,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                    tooltip: l10n.homeResetNorthTooltip,
+                    onPressed: _resetNorth,
+                  ),
+                  Divider(
+                    height: 6,
+                    indent: 6,
+                    endIndent: 6,
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+                  ),
+                  ExpressiveIconButton.circle(
+                    icon: HugeIcon(
+                      icon: HugeIcons.strokeRoundedZoomOut,
+                      color: colorScheme.onSurface,
+                      strokeWidth: 2,
+                    ),
+                    tooltip: l10n.homeZoomOutTooltip,
+                    onPressed: _zoomOut,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

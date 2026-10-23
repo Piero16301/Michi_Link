@@ -18,6 +18,11 @@ class SettingsView extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return BlocBuilder<AppCubit, AppState>(
+      buildWhen: (previous, current) =>
+          previous.theme != current.theme ||
+          previous.baseColor != current.baseColor ||
+          previous.fontFamily != current.fontFamily ||
+          previous.language != current.language,
       builder: (context, state) {
         final currentColorName = state.baseColor.localizedName(context);
         final currentThemeName = state.theme.localizedName(context);
@@ -457,13 +462,10 @@ class SettingsView extends StatelessWidget {
   }
 
   List<List<dynamic>> _getThemeIcon(ThemeMode themeMode) {
-    switch (themeMode) {
-      case ThemeMode.light:
-        return HugeIcons.strokeRoundedSun03;
-      case ThemeMode.dark:
-        return HugeIcons.strokeRoundedMoon02;
-      case ThemeMode.system:
-        return HugeIcons.strokeRoundedComputerPhoneSync;
-    }
+    return switch (themeMode) {
+      ThemeMode.light => HugeIcons.strokeRoundedSun03,
+      ThemeMode.dark => HugeIcons.strokeRoundedMoon02,
+      ThemeMode.system => HugeIcons.strokeRoundedComputerPhoneSync,
+    };
   }
 }

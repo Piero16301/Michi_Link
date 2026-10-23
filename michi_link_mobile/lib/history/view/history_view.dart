@@ -129,13 +129,15 @@ class HistoryView extends StatelessWidget {
                 children: [
                   // Fullscreen map or loading shimmer
                   Positioned.fill(
-                    child: isLoading
-                        ? _buildLoadingState(context)
-                        : HistoryMapView(
-                            records: records,
-                            selectedRecord: state.selectedRecord,
-                            onRecordSelected: cubit.selectRecord,
-                          ),
+                    child: RepaintBoundary(
+                      child: isLoading
+                          ? _buildLoadingState(context)
+                          : HistoryMapView(
+                              records: records,
+                              selectedRecord: state.selectedRecord,
+                              onRecordSelected: cubit.selectRecord,
+                            ),
+                    ),
                   ),
 
                   // Floating bottom panel with date selector and time range
@@ -144,37 +146,40 @@ class HistoryView extends StatelessWidget {
                     left: 16,
                     right: 16,
                     bottom: 28,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (state.selectedRecord != null) ...[
-                          HistoryRecordCarousel(
-                            records: validRecords,
-                            selectedRecord: state.selectedRecord,
-                            onRecordSelected: cubit.selectRecord,
-                            onClose: () => cubit.selectRecord(null),
+                    child: RepaintBoundary(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (state.selectedRecord != null) ...[
+                            HistoryRecordCarousel(
+                              records: validRecords,
+                              selectedRecord: state.selectedRecord,
+                              onRecordSelected: cubit.selectRecord,
+                              onClose: () => cubit.selectRecord(null),
+                            ),
+                            const SizedBox(height: 8),
+                          ] else if (validRecords.isNotEmpty) ...[
+                            RouteSummaryFloatingBadge(
+                              count: validRecords.length,
+                              startTime: chronologicalRecords.first.timestamp,
+                              endTime: chronologicalRecords.last.timestamp,
+                              onTap: () =>
+                                  cubit.selectRecord(validRecords.first),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          HistoryFilterCard(
+                            selectedDate: state.effectiveDate,
+                            isNextEnabled: isNextEnabled,
+                            onPreviousDate: cubit.previousDay,
+                            onNextDate: cubit.nextDay,
+                            onDateSelected: cubit.selectDate,
+                            startHour: state.startHour,
+                            endHour: state.endHour,
+                            onTimeRangeChanged: cubit.changeTimeRange,
                           ),
-                          const SizedBox(height: 8),
-                        ] else if (validRecords.isNotEmpty) ...[
-                          RouteSummaryFloatingBadge(
-                            count: validRecords.length,
-                            startTime: chronologicalRecords.first.timestamp,
-                            endTime: chronologicalRecords.last.timestamp,
-                            onTap: () => cubit.selectRecord(validRecords.first),
-                          ),
-                          const SizedBox(height: 8),
                         ],
-                        HistoryFilterCard(
-                          selectedDate: state.effectiveDate,
-                          isNextEnabled: isNextEnabled,
-                          onPreviousDate: cubit.previousDay,
-                          onNextDate: cubit.nextDay,
-                          onDateSelected: cubit.selectDate,
-                          startHour: state.startHour,
-                          endHour: state.endHour,
-                          onTimeRangeChanged: cubit.changeTimeRange,
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],

@@ -169,12 +169,16 @@ class HomeContentView extends StatelessWidget {
           ),
           body: Stack(
             children: [
-              Positioned.fill(child: HomeMapView(collar: collar)),
+              Positioned.fill(
+                child: RepaintBoundary(child: HomeMapView(collar: collar)),
+              ),
               Positioned(
                 left: 16,
                 right: 16,
                 bottom: 28,
-                child: HomeTelemetryPanel(collar: collar),
+                child: RepaintBoundary(
+                  child: HomeTelemetryPanel(collar: collar),
+                ),
               ),
             ],
           ),

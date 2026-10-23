@@ -103,6 +103,7 @@ class _HomeMapViewState extends State<HomeMapView> {
           View.of(context).devicePixelRatio;
 
       final catIcon = await HomeMarkerBuilder.createSvgMarker(
+        cacheKey: widget.collar.breed.name,
         loader: SvgAssetLoader(widget.collar.breed.assetPath),
         borderColor: colorScheme.primary,
         bgColor: isDark ? colorScheme.surfaceContainerHigh : Colors.white,
@@ -117,6 +118,7 @@ class _HomeMapViewState extends State<HomeMapView> {
         colorScheme.primary,
       );
       final baseIcon = await HomeMarkerBuilder.createSvgMarker(
+        cacheKey: 'base_radio_tower_${colorScheme.primary.toARGB32()}',
         loader: SvgStringLoader(baseSvg),
         borderColor: colorScheme.secondary,
         bgColor: isDark ? colorScheme.surfaceContainerHigh : Colors.white,

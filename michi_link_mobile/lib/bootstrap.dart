@@ -14,19 +14,25 @@ class AppBlocObserver extends BlocObserver {
   @override
   void onChange(BlocBase<dynamic> bloc, Change<dynamic> change) {
     super.onChange(bloc, change);
-    log('onChange(${bloc.runtimeType}, $change)');
+    if (kDebugMode) {
+      log('onChange(${bloc.runtimeType}, $change)');
+    }
   }
 
   @override
   void onError(BlocBase<dynamic> bloc, Object error, StackTrace stackTrace) {
-    log('onError(${bloc.runtimeType}, $error, $stackTrace)');
+    if (kDebugMode) {
+      log('onError(${bloc.runtimeType}, $error, $stackTrace)');
+    }
     super.onError(bloc, error, stackTrace);
   }
 }
 
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   FlutterError.onError = (details) {
-    log(details.exceptionAsString(), stackTrace: details.stack);
+    if (kDebugMode) {
+      log(details.exceptionAsString(), stackTrace: details.stack);
+    }
     if (getIt.isRegistered<CrashService>()) {
       getIt<CrashService>().recordError(
         details.exception,
@@ -37,7 +43,9 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    log(error.toString(), stackTrace: stack);
+    if (kDebugMode) {
+      log(error.toString(), stackTrace: stack);
+    }
     if (getIt.isRegistered<CrashService>()) {
       getIt<CrashService>().recordError(error, stack, fatal: true);
     }

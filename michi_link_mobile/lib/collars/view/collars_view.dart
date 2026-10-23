@@ -12,79 +12,55 @@ class CollarsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AppCubit, AppState>(
-      builder: (context, appState) {
-        final theme = Theme.of(context);
-        final colorScheme = theme.colorScheme;
-        final textTheme = theme.textTheme;
-        final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final l10n = AppLocalizations.of(context);
 
-        return Scaffold(
-          backgroundColor: colorScheme.surface,
-          appBar: ExpressiveTopAppBar(
-            centerTitle: false,
-            leading: Padding(
-              padding: const EdgeInsets.all(8),
-              child: ExpressiveIconButton.circle(
-                icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  color: colorScheme.onSurface,
-                ),
-                onPressed: () => context.pop(),
-              ),
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      appBar: ExpressiveTopAppBar(
+        centerTitle: false,
+        leading: Padding(
+          padding: const EdgeInsets.all(8),
+          child: ExpressiveIconButton.circle(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowLeft01,
+              color: colorScheme.onSurface,
             ),
-            title: Text(
-              l10n.collarsTitle,
-              style: textTheme.titleLarge?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
+            onPressed: () => context.pop(),
           ),
-          body: BlocBuilder<CollarsCubit, CollarsState>(
-            builder: (context, state) {
-              if (state.collars.isEmpty) {
-                return Column(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Text(
-                            l10n.collarsEmptyTitle,
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+        ),
+        title: Text(
+          l10n.collarsTitle,
+          style: textTheme.titleLarge?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      body: BlocBuilder<CollarsCubit, CollarsState>(
+        builder: (context, state) {
+          if (state.collars.isEmpty) {
+            return Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        l10n.collarsEmptyTitle,
+                        textAlign: TextAlign.center,
+                        style: textTheme.bodyLarge?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                      child: ExpressiveButton.filled(
-                        onPressed: () => _showAddCollarModal(context),
-                        label: l10n.collarsLinkNew,
-                        icon: const HugeIcon(
-                          icon: HugeIcons.strokeRoundedAdd01,
-                          size: 20,
-                        ),
-                        isExpanded: true,
-                        size: ExpressiveButtonSize.large,
-                      ),
-                    ),
-                  ],
-                );
-              }
-
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-                children: [
-                  for (final collarId in state.collars) ...[
-                    CollarCard(collarId: collarId),
-                    const SizedBox(height: 16),
-                  ],
-                  ExpressiveButton.filled(
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                  child: ExpressiveButton.filled(
                     onPressed: () => _showAddCollarModal(context),
                     label: l10n.collarsLinkNew,
                     icon: const HugeIcon(
@@ -94,12 +70,35 @@ class CollarsView extends StatelessWidget {
                     isExpanded: true,
                     size: ExpressiveButtonSize.large,
                   ),
-                ],
+                ),
+              ],
+            );
+          }
+
+          final collarsCount = state.collars.length;
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            itemCount: collarsCount + 1,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              if (index < collarsCount) {
+                final collarId = state.collars[index];
+                return RepaintBoundary(child: CollarCard(collarId: collarId));
+              }
+              return ExpressiveButton.filled(
+                onPressed: () => _showAddCollarModal(context),
+                label: l10n.collarsLinkNew,
+                icon: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  size: 20,
+                ),
+                isExpanded: true,
+                size: ExpressiveButtonSize.large,
               );
             },
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
