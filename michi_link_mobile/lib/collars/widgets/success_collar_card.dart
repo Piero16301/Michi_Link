@@ -221,6 +221,23 @@ class SuccessCollarCard extends StatelessWidget {
                       ExpressiveIconButton.circle(
                         size: ExpressiveIconButtonSize.small,
                         variant: ExpressiveIconButtonVariant.tonal,
+                        tooltip: l10n.collarsLocationHistoryTooltip,
+                        icon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedRoute01,
+                          size: 16,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () => unawaited(
+                          context.pushNamed(
+                            AppRoute.history.name,
+                            pathParameters: {'collarId': collar.deviceId},
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      ExpressiveIconButton.circle(
+                        size: ExpressiveIconButtonSize.small,
+                        variant: ExpressiveIconButtonVariant.tonal,
                         tooltip: l10n.collarsNotificationsTooltip,
                         showBadgeDot: collar.hasActiveAlert,
                         icon: HugeIcon(
@@ -231,23 +248,6 @@ class SuccessCollarCard extends StatelessWidget {
                         onPressed: () => unawaited(
                           context.pushNamed(
                             AppRoute.notifications.name,
-                            pathParameters: {'collarId': collar.deviceId},
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      ExpressiveIconButton.circle(
-                        size: ExpressiveIconButtonSize.small,
-                        variant: ExpressiveIconButtonVariant.tonal,
-                        tooltip: l10n.collarsLocationHistoryTooltip,
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedRoute01,
-                          size: 16,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () => unawaited(
-                          context.pushNamed(
-                            AppRoute.history.name,
                             pathParameters: {'collarId': collar.deviceId},
                           ),
                         ),

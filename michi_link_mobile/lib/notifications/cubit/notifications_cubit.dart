@@ -14,14 +14,18 @@ class NotificationsCubit extends Cubit<NotificationsState> {
        super(NotificationsState(collarId: collarId)) {
     _alertsSubscription = _databaseService
         .getAlertRecordsStream(collarId: collarId)
-        .listen(_onAlertsChanged);
+        .listen(
+          _onAlertsChanged,
+          onError: (_) =>
+              emit(state.copyWith(status: NotificationsStatus.failure)),
+        );
   }
 
   final DatabaseService _databaseService;
   late final StreamSubscription<List<AlertRecord>> _alertsSubscription;
 
   void _onAlertsChanged(List<AlertRecord> alerts) {
-    emit(state.copyWith(alerts: alerts));
+    emit(state.copyWith(alerts: alerts, status: NotificationsStatus.success));
   }
 
   @override

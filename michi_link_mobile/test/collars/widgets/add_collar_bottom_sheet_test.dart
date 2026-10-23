@@ -50,10 +50,7 @@ void main() {
         await tester.pumpAndSettle();
 
         verify(
-          () => collarsCubit.addCollar(
-            name: any(named: 'name'),
-            deviceId: 'COLLAR_0123456789ABCDEF',
-          ),
+          () => collarsCubit.addCollar(deviceId: 'COLLAR_0123456789ABCDEF'),
         ).called(1);
       },
     );

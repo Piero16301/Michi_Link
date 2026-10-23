@@ -26,13 +26,24 @@ void main() {
       expect(updated.props, [
         'COLLAR_1',
         [alert],
+        NotificationsStatus.loading,
       ]);
     });
 
+    test('copyWith updates status correctly', () {
+      const state = NotificationsState();
+      final updated = state.copyWith(status: NotificationsStatus.success);
+      expect(updated.status, NotificationsStatus.success);
+    });
+
     test('copyWith preserves fields when null passed', () {
-      const state = NotificationsState(collarId: 'COLLAR_1');
+      const state = NotificationsState(
+        collarId: 'COLLAR_1',
+        status: NotificationsStatus.success,
+      );
       final updated = state.copyWith();
       expect(updated.collarId, 'COLLAR_1');
+      expect(updated.status, NotificationsStatus.success);
     });
   });
 }

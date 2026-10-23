@@ -133,7 +133,10 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
 
   @override
   void saveLanguage({required Locale language}) {
-    final languageString = '${language.languageCode}_${language.countryCode}';
+    final country = language.countryCode;
+    final languageString = country != null && country.isNotEmpty
+        ? '${language.languageCode}_$country'
+        : language.languageCode;
     _settingsBox
         .put(LocalStorageRepository.kUserLanguage, languageString)
         .ignore();
@@ -144,11 +147,16 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
     final languageString = _settingsBox.get(
       LocalStorageRepository.kUserLanguage,
     );
-    if (languageString == null) {
+    if (languageString == null || languageString.isEmpty) {
       return null;
     }
     final languageParts = languageString.split('_');
-    return Locale(languageParts.first, languageParts.last);
+    if (languageParts.length > 1 &&
+        languageParts[1].isNotEmpty &&
+        languageParts[1] != 'null') {
+      return Locale(languageParts.first, languageParts[1]);
+    }
+    return Locale(languageParts.first);
   }
 
   @override

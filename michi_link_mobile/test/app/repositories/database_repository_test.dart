@@ -100,6 +100,7 @@ void main() {
 
       test('getCollarStream emits CollarModel from document snapshot', () {
         final mockSnapshot = MockDocumentSnapshot();
+        when(() => mockSnapshot.exists).thenReturn(true);
         when(
           () => mockDocRef.snapshots(),
         ).thenAnswer((_) => Stream.value(mockSnapshot));

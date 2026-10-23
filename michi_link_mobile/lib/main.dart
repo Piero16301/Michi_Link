@@ -1,6 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/bootstrap.dart';
@@ -16,10 +14,6 @@ Future<void> main() async {
 
   // Setup service locator
   setupServiceLocator(currentEnv);
-
-  if (kDebugMode) {
-    await dotenv.load();
-  }
 
   // Initialize services and plugins in parallel
   final performance = getIt<PerformanceService>();

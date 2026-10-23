@@ -15,16 +15,27 @@ class NotificationsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (context.readOrNull<NotificationsCubit>() != null) {
+      return const _NotificationsViewBody();
+    }
+
+    final effectiveCollarId = collarId ?? '';
+    return BlocProvider(
+      create: (_) => NotificationsCubit(collarId: effectiveCollarId),
+      child: const _NotificationsViewBody(),
+    );
+  }
+}
+
+class _NotificationsViewBody extends StatelessWidget {
+  const _NotificationsViewBody();
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context);
-
-    final effectiveCollarId =
-        collarId ??
-        context.select<NotificationsCubit, String>(
-          (cubit) => cubit.state.collarId,
-        );
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -48,16 +59,35 @@ class NotificationsView extends StatelessWidget {
           ),
         ),
       ),
-      body: StreamBuilder<List<AlertRecord>>(
-        stream: getIt<DatabaseService>().getAlertRecordsStream(
-          collarId: effectiveCollarId,
-        ),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return const SizedBox.shrink();
+      body: BlocBuilder<NotificationsCubit, NotificationsState>(
+        builder: (context, state) {
+          if (state.status == NotificationsStatus.failure) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedAlert02,
+                      size: 48,
+                      color: colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.collarsStatusDisconnected,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
-          if (!snapshot.hasData) {
+          if (state.status == NotificationsStatus.loading) {
             return ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               itemCount: 5,
@@ -66,7 +96,7 @@ class NotificationsView extends StatelessWidget {
             );
           }
 
-          final alerts = snapshot.data ?? [];
+          final alerts = state.alerts;
 
           if (alerts.isEmpty) {
             return Center(
@@ -129,10 +159,12 @@ class NotificationsView extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return switch (item) {
-                _DateHeaderItem(:final date) => _NotificationDateHeader(
-                  date: date,
+                final _DateHeaderItem header => _NotificationDateHeader(
+                  date: header.date,
                 ),
-                _AlertCardItem(:final alert) => NotificationCard(alert: alert),
+                final _AlertCardItem card => NotificationCard(
+                  alert: card.alert,
+                ),
               };
             },
           );
@@ -163,6 +195,16 @@ class NotificationsView extends StatelessWidget {
     }
 
     return items;
+  }
+}
+
+extension _BuildContextReadOrNull on BuildContext {
+  T? readOrNull<T>() {
+    try {
+      return read<T>();
+    } on Object catch (_) {
+      return null;
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/collars/collars.dart';
@@ -13,15 +14,40 @@ class CollarCard extends StatelessWidget {
       stream: getIt<DatabaseService>().getCollarStream(collarId: collarId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const SizedBox.shrink();
+          final colorScheme = Theme.of(context).colorScheme;
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.errorContainer.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: colorScheme.error.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlert02,
+                  color: colorScheme.error,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    collarId,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
-        if (!snapshot.hasData) {
+        if (!snapshot.hasData || snapshot.data == null) {
           return LoadingCollarCard(collarId: collarId);
-        }
-
-        if (snapshot.data == null) {
-          return const SizedBox.shrink();
         }
 
         final collar = snapshot.data!;
