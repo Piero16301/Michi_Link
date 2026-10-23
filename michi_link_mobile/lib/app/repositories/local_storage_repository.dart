@@ -154,10 +154,7 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
   @override
   void saveTheme({required ThemeMode theme}) {
     _settingsBox
-        .put(
-          LocalStorageRepository.kUserTheme,
-          ExpressiveTheme.toKey(theme),
-        )
+        .put(LocalStorageRepository.kUserTheme, ExpressiveTheme.toKey(theme))
         .ignore();
   }
 

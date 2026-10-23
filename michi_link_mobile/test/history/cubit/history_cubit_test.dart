@@ -77,6 +77,73 @@ void main() {
       ],
     );
 
+    test(
+      'initial state defaults to now when no optional arguments provided',
+      () {
+        final cubit = HistoryCubit(collarId: 'collar_456');
+        final now = DateTime.now();
+
+        expect(cubit.state.collarId, equals('collar_456'));
+        expect(cubit.state.selectedDate?.year, equals(now.year));
+        expect(cubit.state.selectedDate?.month, equals(now.month));
+        expect(cubit.state.selectedDate?.day, equals(now.day));
+        expect(
+          cubit.state.startHour,
+          equals(now.hour.toDouble().clamp(0.0, 23.0)),
+        );
+        expect(
+          cubit.state.endHour,
+          equals((now.hour + 1).toDouble().clamp(1.0, 24.0)),
+        );
+        unawaited(cubit.close());
+      },
+    );
+
+    blocTest<HistoryCubit, HistoryState>(
+      'selectDate does not emit when clean date matches current selectedDate',
+      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      act: (cubit) => cubit.selectDate(DateTime(2026, 10, 15, 14, 30)),
+      expect: () => <HistoryState>[],
+    );
+
+    blocTest<HistoryCubit, HistoryState>(
+      'nextDay increments date when next day is not after today',
+      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      act: (cubit) => cubit.nextDay(),
+      expect: () => [
+        isA<HistoryState>().having(
+          (s) => s.selectedDate,
+          'selectedDate',
+          DateTime(2026, 10, 16),
+        ),
+      ],
+    );
+
+    blocTest<HistoryCubit, HistoryState>(
+      'nextDay does not advance when next day is after today',
+      build: () {
+        final now = DateTime.now();
+        return HistoryCubit(
+          collarId: 'collar_123',
+          initialDate: DateTime(now.year, now.month, now.day),
+        );
+      },
+      act: (cubit) => cubit.nextDay(),
+      expect: () => <HistoryState>[],
+    );
+
+    blocTest<HistoryCubit, HistoryState>(
+      'changeTimeRange does not emit when startHour and endHour are identical',
+      build: () => HistoryCubit(
+        collarId: 'collar_123',
+        initialDate: testDate,
+        initialStartHour: 8,
+        initialEndHour: 16,
+      ),
+      act: (cubit) => cubit.changeTimeRange(8, 16),
+      expect: () => <HistoryState>[],
+    );
+
     blocTest<HistoryCubit, HistoryState>(
       'selectRecord updates selectedRecord',
       build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
@@ -107,6 +174,19 @@ void main() {
           (s) => s.selectedRecord?.id,
           'selectedRecord.id',
           'rec_1',
+        ),
+      ],
+    );
+
+    blocTest<HistoryCubit, HistoryState>(
+      'selectRecord with null clears selectedRecord',
+      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      act: (cubit) => cubit.selectRecord(null),
+      expect: () => [
+        isA<HistoryState>().having(
+          (s) => s.selectedRecord,
+          'selectedRecord',
+          isNull,
         ),
       ],
     );
