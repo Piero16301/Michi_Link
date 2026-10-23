@@ -600,7 +600,6 @@ func TestBuildLocalizedNotification(t *testing.T) {
 	})
 }
 
-
 func TestParseCoordinate(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -664,12 +663,6 @@ func TestGeodesicDistanceWGS84(t *testing.T) {
 	})
 }
 
-func newTestIngestService() *IngestService {
-	return &IngestService{
-		alertStates: make(map[string]*CollarState),
-	}
-}
-
 func defaultTestConfig() models.CollarConfig {
 	return models.CollarConfig{
 		MaxDistanceM:  150.0,
@@ -679,65 +672,48 @@ func defaultTestConfig() models.CollarConfig {
 	}
 }
 
-func TestEvaluateAlerts_InitialPacketNoSpam(t *testing.T) {
-	svc := newTestIngestService()
+func TestEvaluateAlertTransitions_Geofence(t *testing.T) {
 	cfg := defaultTestConfig()
-	now := time.Now()
-
-	// Primer paquete llegando fuera de geovalla, batería crítica, sin fix y señal débil
-	alerts := svc.evaluateAlerts("COLLAR_TEST", false, 0, 300.0, 5, -120.0, cfg, now)
-
-	if len(alerts) != 0 {
-		t.Fatalf("el primer paquete no debe disparar alertas por supresión de inicio, se obtuvieron: %d", len(alerts))
-	}
-
-	state := svc.alertStates["COLLAR_TEST"]
-	if state == nil || !state.Initialized {
-		t.Fatal("el estado del collar debió quedar marcado como Initialized=true")
-	}
-	if !state.InGeofenceBreach {
-		// Nota: hasFix era false, por lo que InGeofenceBreach debe ser false
-	}
-	if !state.InCriticalBat {
-		t.Errorf("se esperaba InCriticalBat=true")
-	}
-	if !state.InNoGpsFix {
-		t.Errorf("se esperaba InNoGpsFix=true")
-	}
-	if !state.InWeakSignal {
-		t.Errorf("se esperaba InWeakSignal=true")
-	}
-}
-
-func TestEvaluateAlerts_Geofence(t *testing.T) {
-	svc := newTestIngestService()
-	cfg := defaultTestConfig()
-	now := time.Now()
+	now := time.Now().UTC()
 	devID := "COLLAR_GEOFENCE"
 
-	// 1. Paquete inicial dentro de zona segura con fix
-	svc.evaluateAlerts(devID, true, 8, 50.0, 80, -90.0, cfg, now)
-
-	// 2. Salida de geocerca (distancia > 150m) con fix
-	alerts := svc.evaluateAlerts(devID, true, 8, 200.0, 80, -90.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "GEOFENCE_BREACH" || alerts[0].Severity != models.SeverityCritical {
-		t.Fatalf("se esperaba 1 alerta GEOFENCE_BREACH (CRITICAL), se obtuvo: %+v", alerts)
+	// 1. Paquete inicial dentro de zona segura con fix (distancia <= 150m) -> sin alerta
+	lastAlert := models.LastAlertInfo{}
+	alerts := evaluateAlertTransitions(devID, true, 8, 50.0, 80, -90.0, cfg, lastAlert, now)
+	if len(alerts) != 0 {
+		t.Fatalf("no se esperaba alerta dentro de zona segura, se obtuvo: %+v", alerts)
 	}
 
-	// 3. Paquete sucesivo aún fuera de geocerca -> No debe enviar spam
-	alerts = svc.evaluateAlerts(devID, true, 8, 210.0, 80, -90.0, cfg, now)
+	// 2. Salida de geocerca (distancia > 150m) con fix -> Dispara GEOFENCE_BREACH (CRITICAL)
+	alerts = evaluateAlertTransitions(devID, true, 8, 200.0, 80, -90.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "GEOFENCE_BREACH" || alerts[0].Severity != models.SeverityCritical || alerts[0].Value != 200.0 {
+		t.Fatalf("se esperaba 1 alerta GEOFENCE_BREACH (CRITICAL), se obtuvo: %+v", alerts)
+	}
+	if alerts[0].DeviceID != devID || alerts[0].Timestamp != now {
+		t.Errorf("campos de metadatos DeviceID o Timestamp incorrectos: %+v", alerts[0])
+	}
+
+	// 3. Paquete sucesivo aún fuera de geocerca (lastAlert ya es GEOFENCE_BREACH) -> No debe enviar spam
+	lastAlert = models.LastAlertInfo{
+		Type:      "GEOFENCE_BREACH",
+		Severity:  models.SeverityCritical,
+		Value:     200.0,
+		Timestamp: now,
+	}
+	alerts = evaluateAlertTransitions(devID, true, 8, 210.0, 80, -90.0, cfg, lastAlert, now)
 	if len(alerts) != 0 {
 		t.Fatalf("no se esperaba spam mientras permanece fuera, se obtuvo: %+v", alerts)
 	}
 
-	// 4. Retorno a zona segura (distancia <= 150m)
-	alerts = svc.evaluateAlerts(devID, true, 8, 80.0, 80, -90.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "GEOFENCE_RESTORED" || alerts[0].Severity != models.SeverityInfo {
+	// 4. Retorno a zona segura (distancia <= 150m) con lastAlert=GEOFENCE_BREACH -> Dispara GEOFENCE_RESTORED (INFO)
+	alerts = evaluateAlertTransitions(devID, true, 8, 80.0, 80, -90.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "GEOFENCE_RESTORED" || alerts[0].Severity != models.SeverityInfo || alerts[0].Value != 80.0 {
 		t.Fatalf("se esperaba 1 alerta GEOFENCE_RESTORED (INFO), se obtuvo: %+v", alerts)
 	}
 
-	// 5. Sin fix satelital -> No debe disparar alerta de geocerca
-	alerts = svc.evaluateAlerts(devID, false, 0, 500.0, 80, -90.0, cfg, now)
+	// 5. Sin fix satelital -> No debe disparar alerta de geocerca aunque distM > MaxDistanceM
+	lastAlert = models.LastAlertInfo{}
+	alerts = evaluateAlertTransitions(devID, false, 0, 500.0, 80, -90.0, cfg, lastAlert, now)
 	for _, a := range alerts {
 		if a.Type == "GEOFENCE_BREACH" {
 			t.Errorf("no se debe disparar GEOFENCE_BREACH si hasFix es false")
@@ -745,171 +721,199 @@ func TestEvaluateAlerts_Geofence(t *testing.T) {
 	}
 }
 
-func TestEvaluateAlerts_Battery(t *testing.T) {
-	svc := newTestIngestService()
-	cfg := defaultTestConfig() // MinBatteryPct: 20
-	now := time.Now()
+func TestEvaluateAlertTransitions_Battery(t *testing.T) {
+	cfg := defaultTestConfig() // MinBatteryPct: 20, BatteryCriticalPct: 10
+	now := time.Now().UTC()
 	devID := "COLLAR_BAT"
 
-	// Paquete inicial normal (100%)
-	svc.evaluateAlerts(devID, true, 8, 50.0, 100, -85.0, cfg, now)
+	// 1. Paquete inicial normal (100%) -> sin alertas
+	lastAlert := models.LastAlertInfo{}
+	alerts := evaluateAlertTransitions(devID, true, 8, 50.0, 100, -85.0, cfg, lastAlert, now)
+	if len(alerts) != 0 {
+		t.Fatalf("no se esperaba alerta con batería al 100%%, se obtuvo: %+v", alerts)
+	}
 
-	// Caída a batería baja (15% <= 20%, > 10%)
-	alerts := svc.evaluateAlerts(devID, true, 8, 50.0, 15, -85.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "LOW_BATTERY" || alerts[0].Severity != models.SeverityWarning {
+	// 2. Caída a batería baja (15% <= 20%, > 10%) -> Dispara LOW_BATTERY (WARNING)
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 15, -85.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "LOW_BATTERY" || alerts[0].Severity != models.SeverityWarning || alerts[0].Value != 15.0 {
 		t.Fatalf("se esperaba LOW_BATTERY (WARNING), se obtuvo: %+v", alerts)
 	}
 
-	// Permanece en 14% -> sin spam
-	alerts = svc.evaluateAlerts(devID, true, 8, 50.0, 14, -85.0, cfg, now)
+	// 3. Permanece en 14% con lastAlert=LOW_BATTERY -> sin spam
+	lastAlert = models.LastAlertInfo{
+		Type:      "LOW_BATTERY",
+		Severity:  models.SeverityWarning,
+		Value:     15.0,
+		Timestamp: now,
+	}
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 14, -85.0, cfg, lastAlert, now)
 	if len(alerts) != 0 {
 		t.Fatalf("no se esperaba spam de LOW_BATTERY, se obtuvo: %+v", alerts)
 	}
 
-	// Caída a batería crítica (8% <= BatteryCriticalPct: 10%)
-	alerts = svc.evaluateAlerts(devID, true, 8, 50.0, 8, -85.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "BATTERY_CRITICAL" || alerts[0].Severity != models.SeverityCritical {
+	// 4. Caída a batería crítica (8% <= BatteryCriticalPct: 10%) -> Dispara BATTERY_CRITICAL (CRITICAL)
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 8, -85.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "BATTERY_CRITICAL" || alerts[0].Severity != models.SeverityCritical || alerts[0].Value != 8.0 {
 		t.Fatalf("se esperaba BATTERY_CRITICAL (CRITICAL), se obtuvo: %+v", alerts)
 	}
 
-	// Permanece en 7% -> sin spam
-	alerts = svc.evaluateAlerts(devID, true, 8, 50.0, 7, -85.0, cfg, now)
+	// 5. Permanece en 7% con lastAlert=BATTERY_CRITICAL -> sin spam
+	lastAlert = models.LastAlertInfo{
+		Type:      "BATTERY_CRITICAL",
+		Severity:  models.SeverityCritical,
+		Value:     8.0,
+		Timestamp: now,
+	}
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 7, -85.0, cfg, lastAlert, now)
 	if len(alerts) != 0 {
 		t.Fatalf("no se esperaba spam de BATTERY_CRITICAL, se obtuvo: %+v", alerts)
 	}
 
-	// Carga completa normalizada (90% > 20%)
-	alerts = svc.evaluateAlerts(devID, true, 8, 50.0, 90, -85.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "BATTERY_NORMAL" || alerts[0].Severity != models.SeverityInfo {
+	// 6. Carga completa normalizada (90% > 20%) tras BATTERY_CRITICAL -> Dispara BATTERY_NORMAL (INFO)
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 90, -85.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "BATTERY_NORMAL" || alerts[0].Severity != models.SeverityInfo || alerts[0].Value != 90.0 {
 		t.Fatalf("se esperaba BATTERY_NORMAL (INFO), se obtuvo: %+v", alerts)
 	}
 
-	// Permanece en 95% -> sin spam
-	alerts = svc.evaluateAlerts(devID, true, 8, 50.0, 95, -85.0, cfg, now)
+	// 7. Carga normalizada tras LOW_BATTERY -> Dispara BATTERY_NORMAL (INFO)
+	lastAlertLow := models.LastAlertInfo{Type: "LOW_BATTERY", Severity: models.SeverityWarning, Value: 18.0}
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 85, -85.0, cfg, lastAlertLow, now)
+	if len(alerts) != 1 || alerts[0].Type != "BATTERY_NORMAL" || alerts[0].Severity != models.SeverityInfo || alerts[0].Value != 85.0 {
+		t.Fatalf("se esperaba BATTERY_NORMAL tras LOW_BATTERY, se obtuvo: %+v", alerts)
+	}
+
+	// 8. Permanece en 95% con lastAlert=BATTERY_NORMAL -> sin spam
+	lastAlertNormal := models.LastAlertInfo{Type: "BATTERY_NORMAL", Severity: models.SeverityInfo, Value: 90.0}
+	alerts = evaluateAlertTransitions(devID, true, 8, 50.0, 95, -85.0, cfg, lastAlertNormal, now)
 	if len(alerts) != 0 {
 		t.Fatalf("no se esperaba spam de BATTERY_NORMAL, se obtuvo: %+v", alerts)
 	}
 }
 
-func TestEvaluateAlerts_GPSFix(t *testing.T) {
-	svc := newTestIngestService()
+func TestEvaluateAlertTransitions_GPSFix(t *testing.T) {
 	cfg := defaultTestConfig() // RequireGpsFix: true
-	now := time.Now()
+	now := time.Now().UTC()
 	devID := "COLLAR_GPS"
 
-	// 1. Paquete inicial con fix
-	svc.evaluateAlerts(devID, true, 7, 50.0, 90, -80.0, cfg, now)
+	// 1. Paquete inicial con fix -> sin alertas
+	lastAlert := models.LastAlertInfo{}
+	alerts := evaluateAlertTransitions(devID, true, 7, 50.0, 90, -80.0, cfg, lastAlert, now)
+	if len(alerts) != 0 {
+		t.Fatalf("no se esperaba alerta con GPS fix activo, se obtuvo: %+v", alerts)
+	}
 
-	// 2. Pérdida de fix GPS
-	alerts := svc.evaluateAlerts(devID, false, 0, 50.0, 90, -80.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "NO_GPS_FIX" || alerts[0].Severity != models.SeverityWarning {
+	// 2. Pérdida de fix GPS -> Dispara NO_GPS_FIX (WARNING)
+	alerts = evaluateAlertTransitions(devID, false, 0, 50.0, 90, -80.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "NO_GPS_FIX" || alerts[0].Severity != models.SeverityWarning || alerts[0].Value != 0 {
 		t.Fatalf("se esperaba NO_GPS_FIX (WARNING), se obtuvo: %+v", alerts)
 	}
 
-	// 3. Permanece sin fix -> sin spam
-	alerts = svc.evaluateAlerts(devID, false, 0, 50.0, 90, -80.0, cfg, now)
+	// 3. Permanece sin fix con lastAlert=NO_GPS_FIX -> sin spam
+	lastAlert = models.LastAlertInfo{
+		Type:      "NO_GPS_FIX",
+		Severity:  models.SeverityWarning,
+		Value:     0,
+		Timestamp: now,
+	}
+	alerts = evaluateAlertTransitions(devID, false, 0, 50.0, 90, -80.0, cfg, lastAlert, now)
 	if len(alerts) != 0 {
 		t.Fatalf("no se esperaba spam de NO_GPS_FIX, se obtuvo: %+v", alerts)
 	}
 
-	// 4. Recuperación de fix GPS con 6 satélites
-	alerts = svc.evaluateAlerts(devID, true, 6, 50.0, 90, -80.0, cfg, now)
+	// 4. Recuperación de fix GPS con 6 satélites -> Dispara GPS_FIX_RESTORED (INFO) con sats
+	alerts = evaluateAlertTransitions(devID, true, 6, 50.0, 90, -80.0, cfg, lastAlert, now)
 	if len(alerts) != 1 || alerts[0].Type != "GPS_FIX_RESTORED" || alerts[0].Severity != models.SeverityInfo || alerts[0].Value != 6 {
 		t.Fatalf("se esperaba GPS_FIX_RESTORED (INFO) con valor 6 satélites, se obtuvo: %+v", alerts)
 	}
 
-	// 5. Configuración con RequireGpsFix = false no debe alertar
+	// 5. Configuración con RequireGpsFix = false no debe alertar sobre fix
 	cfgNoFixReq := cfg
 	cfgNoFixReq.RequireGpsFix = false
-	devID2 := "COLLAR_GPS_IGNORE"
-	svc.evaluateAlerts(devID2, true, 7, 50.0, 90, -80.0, cfgNoFixReq, now)
-	alerts = svc.evaluateAlerts(devID2, false, 0, 50.0, 90, -80.0, cfgNoFixReq, now)
+	alerts = evaluateAlertTransitions(devID, false, 0, 50.0, 90, -80.0, cfgNoFixReq, models.LastAlertInfo{}, now)
 	if len(alerts) != 0 {
 		t.Errorf("no se esperaba alerta de fix si RequireGpsFix es false, se obtuvo: %+v", alerts)
 	}
 }
 
-func TestEvaluateAlerts_LoraSignalHysteresis(t *testing.T) {
-	svc := newTestIngestService()
+func TestEvaluateAlertTransitions_LoraSignalHysteresis(t *testing.T) {
 	cfg := defaultTestConfig()
-	now := time.Now()
+	now := time.Now().UTC()
 	devID := "COLLAR_LORA"
 
-	// 1. Paquete inicial con señal fuerte (-80 dBm)
-	svc.evaluateAlerts(devID, true, 7, 50.0, 90, -80.0, cfg, now)
+	// 1. Paquete inicial con señal fuerte (-80 dBm) -> sin alertas
+	lastAlert := models.LastAlertInfo{}
+	alerts := evaluateAlertTransitions(devID, true, 7, 50.0, 90, -80.0, cfg, lastAlert, now)
+	if len(alerts) != 0 {
+		t.Fatalf("no se esperaba alerta con señal normal, se obtuvo: %+v", alerts)
+	}
 
-	// 2. Señal cae bajo el umbral crítico LoraWeakRssiThreshold (-115 dBm) a -118 dBm
-	alerts := svc.evaluateAlerts(devID, true, 7, 50.0, 90, -118.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "WEAK_SIGNAL" || alerts[0].Severity != models.SeverityWarning {
+	// 2. Señal cae bajo el umbral crítico LoraWeakRssiThreshold (-115 dBm) a -118 dBm -> Dispara WEAK_SIGNAL (WARNING)
+	alerts = evaluateAlertTransitions(devID, true, 7, 50.0, 90, -118.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "WEAK_SIGNAL" || alerts[0].Severity != models.SeverityWarning || alerts[0].Value != -118.0 {
 		t.Fatalf("se esperaba WEAK_SIGNAL (WARNING), se obtuvo: %+v", alerts)
 	}
 
 	// 3. Señal sube levemente a -110 dBm (dentro de la banda de histéresis -115 a -105 dBm) -> no debe restaurarse aún
-	alerts = svc.evaluateAlerts(devID, true, 7, 50.0, 90, -110.0, cfg, now)
+	lastAlert = models.LastAlertInfo{
+		Type:      "WEAK_SIGNAL",
+		Severity:  models.SeverityWarning,
+		Value:     -118.0,
+		Timestamp: now,
+	}
+	alerts = evaluateAlertTransitions(devID, true, 7, 50.0, 90, -110.0, cfg, lastAlert, now)
 	if len(alerts) != 0 {
 		t.Fatalf("no se esperaba alerta en la banda de histéresis (-110 dBm), se obtuvo: %+v", alerts)
 	}
 
-	// 4. Señal sube a -104 dBm (>= LoraWeakRssiThreshold + 10 = -105 dBm) -> se restaura
-	alerts = svc.evaluateAlerts(devID, true, 7, 50.0, 90, -104.0, cfg, now)
-	if len(alerts) != 1 || alerts[0].Type != "SIGNAL_NORMAL" || alerts[0].Severity != models.SeverityInfo {
+	// 4. Señal sube a -104 dBm (>= LoraWeakRssiThreshold + 10 = -105 dBm) -> se restaura a SIGNAL_NORMAL (INFO)
+	alerts = evaluateAlertTransitions(devID, true, 7, 50.0, 90, -104.0, cfg, lastAlert, now)
+	if len(alerts) != 1 || alerts[0].Type != "SIGNAL_NORMAL" || alerts[0].Severity != models.SeverityInfo || alerts[0].Value != -104.0 {
 		t.Fatalf("se esperaba SIGNAL_NORMAL (INFO), se obtuvo: %+v", alerts)
+	}
+
+	// 5. Señal normalizada continúa fuerte con lastAlert=SIGNAL_NORMAL -> sin spam
+	lastAlertNormal := models.LastAlertInfo{
+		Type:      "SIGNAL_NORMAL",
+		Severity:  models.SeverityInfo,
+		Value:     -104.0,
+		Timestamp: now,
+	}
+	alerts = evaluateAlertTransitions(devID, true, 7, 50.0, 90, -85.0, cfg, lastAlertNormal, now)
+	if len(alerts) != 0 {
+		t.Fatalf("no se esperaba spam de SIGNAL_NORMAL, se obtuvo: %+v", alerts)
 	}
 }
 
-func TestEvaluateAlerts_SimultaneousAlerts(t *testing.T) {
-	svc := newTestIngestService()
+func TestEvaluateAlertTransitions_SimultaneousAlerts(t *testing.T) {
 	cfg := defaultTestConfig()
-	now := time.Now()
+	now := time.Now().UTC()
 	devID := "COLLAR_MULTI"
 
-	// 1. Paquete inicial en condiciones óptimas
-	svc.evaluateAlerts(devID, true, 8, 20.0, 100, -75.0, cfg, now)
-
-	// 2. Suceso simultáneo: breach de geovalla, batería crítica y señal débil
-	alerts := svc.evaluateAlerts(devID, true, 8, 350.0, 5, -122.0, cfg, now)
+	// Suceso simultáneo con lastAlert vacío: breach de geovalla, batería crítica y señal débil
+	alerts := evaluateAlertTransitions(devID, true, 8, 350.0, 5, -122.0, cfg, models.LastAlertInfo{}, now)
 	if len(alerts) != 3 {
 		t.Fatalf("se esperaban 3 alertas simultáneas, se obtuvieron %d: %+v", len(alerts), alerts)
 	}
 
-	alertTypes := make(map[string]bool)
+	alertTypes := make(map[string]models.AlertPayload)
 	for _, a := range alerts {
-		alertTypes[a.Type] = true
-	}
-	if !alertTypes["GEOFENCE_BREACH"] || !alertTypes["BATTERY_CRITICAL"] || !alertTypes["WEAK_SIGNAL"] {
-		t.Errorf("alertas esperadas faltantes en conjunto: %+v", alertTypes)
-	}
-}
-
-func TestEvaluateAlerts_DeviceIsolation(t *testing.T) {
-	svc := newTestIngestService()
-	cfg := defaultTestConfig()
-	now := time.Now()
-
-	devA := "COLLAR_ALPHA"
-	devB := "COLLAR_BETA"
-
-	// Inicializar ambos
-	svc.evaluateAlerts(devA, true, 8, 20.0, 100, -80.0, cfg, now)
-	svc.evaluateAlerts(devB, true, 8, 20.0, 100, -80.0, cfg, now)
-
-	// Collar A sale de la geocerca
-	alertsA := svc.evaluateAlerts(devA, true, 8, 300.0, 100, -80.0, cfg, now)
-	if len(alertsA) != 1 || alertsA[0].Type != "GEOFENCE_BREACH" {
-		t.Fatalf("Collar A debió disparar GEOFENCE_BREACH")
+		alertTypes[a.Type] = a
 	}
 
-	// Collar B se mantiene seguro -> 0 alertas
-	alertsB := svc.evaluateAlerts(devB, true, 8, 25.0, 100, -80.0, cfg, now)
-	if len(alertsB) != 0 {
-		t.Fatalf("Collar B no debió verse afectado por Collar A, se obtuvo: %+v", alertsB)
+	if geofence, ok := alertTypes["GEOFENCE_BREACH"]; !ok || geofence.Severity != models.SeverityCritical || geofence.Value != 350.0 {
+		t.Errorf("alerta GEOFENCE_BREACH incorrecta: %+v", geofence)
+	}
+	if bat, ok := alertTypes["BATTERY_CRITICAL"]; !ok || bat.Severity != models.SeverityCritical || bat.Value != 5.0 {
+		t.Errorf("alerta BATTERY_CRITICAL incorrecta: %+v", bat)
+	}
+	if rssi, ok := alertTypes["WEAK_SIGNAL"]; !ok || rssi.Severity != models.SeverityWarning || rssi.Value != -122.0 {
+		t.Errorf("alerta WEAK_SIGNAL incorrecta: %+v", rssi)
 	}
 }
 
-func TestEvaluateAlerts_ConcurrentSafe(t *testing.T) {
-	svc := newTestIngestService()
+func TestEvaluateAlertTransitions_ConcurrentSafe(t *testing.T) {
 	cfg := defaultTestConfig()
-	now := time.Now()
+	now := time.Now().UTC()
 
 	const workers = 20
 	const iterations = 50
@@ -923,9 +927,12 @@ func TestEvaluateAlerts_ConcurrentSafe(t *testing.T) {
 			for i := 0; i < iterations; i++ {
 				dist := float64(50 + (i % 200))
 				bat := 10 + (i % 90)
-				rssi := float32(-120 + (i % 50))
+				rssi := float64(-120 + (i % 50))
 				hasFix := (i % 2) == 0
-				svc.evaluateAlerts(id, hasFix, 7, dist, bat, rssi, cfg, now)
+				lastAlert := models.LastAlertInfo{
+					Type: "NONE",
+				}
+				_ = evaluateAlertTransitions(id, hasFix, 7, dist, bat, rssi, cfg, lastAlert, now)
 			}
 		}(devID)
 	}

@@ -156,6 +156,7 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
         .collection('collars')
         .doc(collarId)
         .snapshots()
+        .where((snapshot) => snapshot.exists && snapshot.data() != null)
         .map((snapshot) => CollarModel.fromJson(snapshot.data()!));
   }
 

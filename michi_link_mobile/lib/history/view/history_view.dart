@@ -96,7 +96,26 @@ class HistoryView extends StatelessWidget {
             ),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const SizedBox.shrink();
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedAlert02,
+                        size: 48,
+                        color: colorScheme.error,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.collarsStatusDisconnected,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
 
               final isLoading = !snapshot.hasData;

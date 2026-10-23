@@ -19,15 +19,39 @@ class HomeContentView extends StatelessWidget {
       stream: getIt<DatabaseService>().getCollarStream(collarId: collarId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return const SizedBox.shrink();
+          final theme = Theme.of(context);
+          final colorScheme = theme.colorScheme;
+          final l10n = AppLocalizations.of(context);
+          return Scaffold(
+            backgroundColor: colorScheme.surface,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedAlert02,
+                      size: 48,
+                      color: colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.collarsStatusDisconnected,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         }
 
-        if (!snapshot.hasData) {
+        if (!snapshot.hasData || snapshot.data == null) {
           return LoadingMapView(collarId: collarId);
-        }
-
-        if (snapshot.data == null) {
-          return const SizedBox.shrink();
         }
 
         final collar = snapshot.data!;

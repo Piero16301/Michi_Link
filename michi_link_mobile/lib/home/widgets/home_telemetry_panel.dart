@@ -353,16 +353,15 @@ class HomeTelemetryPanel extends StatelessWidget {
               ExpressiveIconButton.circle(
                 size: ExpressiveIconButtonSize.large,
                 variant: ExpressiveIconButtonVariant.tonal,
-                tooltip: l10n.collarsNotificationsTooltip,
-                showBadgeDot: collar.hasActiveAlert,
+                tooltip: l10n.collarsLocationHistoryTooltip,
                 icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedNotification01,
+                  icon: HugeIcons.strokeRoundedRoute01,
                   size: 20,
                   color: colorScheme.onSurfaceVariant,
                 ),
                 onPressed: () => unawaited(
                   context.pushNamed(
-                    AppRoute.notifications.name,
+                    AppRoute.history.name,
                     pathParameters: {'collarId': collar.deviceId},
                   ),
                 ),
@@ -383,15 +382,16 @@ class HomeTelemetryPanel extends StatelessWidget {
               ExpressiveIconButton.circle(
                 size: ExpressiveIconButtonSize.large,
                 variant: ExpressiveIconButtonVariant.tonal,
-                tooltip: l10n.collarsLocationHistoryTooltip,
+                tooltip: l10n.collarsNotificationsTooltip,
+                showBadgeDot: collar.hasActiveAlert,
                 icon: HugeIcon(
-                  icon: HugeIcons.strokeRoundedRoute01,
+                  icon: HugeIcons.strokeRoundedNotification01,
                   size: 20,
                   color: colorScheme.onSurfaceVariant,
                 ),
                 onPressed: () => unawaited(
                   context.pushNamed(
-                    AppRoute.history.name,
+                    AppRoute.notifications.name,
                     pathParameters: {'collarId': collar.deviceId},
                   ),
                 ),

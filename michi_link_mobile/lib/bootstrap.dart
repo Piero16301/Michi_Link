@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:michi_link_mobile/app/app.dart';
+
 class AppBlocObserver extends BlocObserver {
   const AppBlocObserver();
 
@@ -25,10 +27,20 @@ class AppBlocObserver extends BlocObserver {
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   FlutterError.onError = (details) {
     log(details.exceptionAsString(), stackTrace: details.stack);
+    if (getIt.isRegistered<CrashService>()) {
+      getIt<CrashService>().recordError(
+        details.exception,
+        details.stack ?? StackTrace.empty,
+        fatal: true,
+      );
+    }
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
     log(error.toString(), stackTrace: stack);
+    if (getIt.isRegistered<CrashService>()) {
+      getIt<CrashService>().recordError(error, stack, fatal: true);
+    }
     return true;
   };
 

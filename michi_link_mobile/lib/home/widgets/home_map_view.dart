@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
-import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -10,6 +8,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
+import 'package:michi_link_mobile/home/widgets/home_map_controls.dart';
+import 'package:michi_link_mobile/home/widgets/home_marker_builder.dart';
+import 'package:michi_link_mobile/home/widgets/home_marker_callout.dart';
 import 'package:michi_link_mobile/l10n/l10n.dart';
 
 enum _SelectedMarkerType { none, cat, base }
@@ -92,102 +93,6 @@ class _HomeMapViewState extends State<HomeMapView> {
     }
   }
 
-  String _buildHugeIconSvg(
-    List<List<dynamic>> iconData,
-    Color color, {
-    double strokeWidth = 2.0,
-  }) {
-    final hexColor =
-        '#${(color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0')}';
-    final buffer = StringBuffer()
-      ..write(
-        '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">',
-      );
-    for (final element in iconData) {
-      final tagName = element[0] as String;
-      final attributes = element[1] as Map<String, dynamic>;
-      buffer.write('<$tagName');
-      for (final entry in attributes.entries) {
-        final key = entry.key;
-        final value = entry.value;
-        if (key == 'key' || key == 'opacity') continue;
-        var finalValue = value.toString();
-        if (key == 'stroke' || key == 'fill') {
-          finalValue = hexColor;
-        } else if (key == 'strokeWidth') {
-          finalValue = strokeWidth.toString();
-        }
-        final svgKey = key.replaceAllMapped(
-          RegExp('[A-Z]'),
-          (m) => '-${m[0]!.toLowerCase()}',
-        );
-        buffer.write(' $svgKey="$finalValue"');
-      }
-      buffer.write('/>');
-    }
-    buffer.write('</svg>');
-    return buffer.toString();
-  }
-
-  // Construye un marcador SVG personalizado con soporte para alta resolución
-  Future<BitmapDescriptor> _createSvgMarker({
-    required BytesLoader loader,
-    required Color borderColor,
-    required Color bgColor,
-    required double markerSize,
-    required double contentSize,
-    double borderWidth = 2.5,
-    double pixelRatio = 1.0,
-  }) async {
-    final pictureInfo = await vg.loadPicture(loader, null);
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder)..scale(pixelRatio);
-
-    final center = Offset(markerSize / 2, markerSize / 2);
-    final radius = (markerSize / 2) - 4;
-
-    final shadowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.28)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-
-    final borderPaint = Paint()
-      ..color = borderColor
-      ..style = PaintingStyle.fill;
-
-    final bgPaint = Paint()
-      ..color = bgColor
-      ..style = PaintingStyle.fill;
-
-    final clipPath = Path()
-      ..addOval(Rect.fromCircle(center: center, radius: radius - borderWidth));
-
-    final srcWidth = pictureInfo.size.width;
-    final srcHeight = pictureInfo.size.height;
-    final scale = contentSize / math.max(srcWidth, srcHeight);
-    final dx = center.dx - (srcWidth * scale) / 2;
-    final dy = center.dy - (srcHeight * scale) / 2;
-
-    canvas
-      ..drawCircle(center.translate(0, 2), radius, shadowPaint)
-      ..drawCircle(center, radius, borderPaint)
-      ..drawCircle(center, radius - borderWidth, bgPaint)
-      ..save()
-      ..clipPath(clipPath)
-      ..translate(dx, dy)
-      ..scale(scale, scale)
-      ..drawPicture(pictureInfo.picture)
-      ..restore();
-
-    final picture = recorder.endRecording();
-    final targetSize = (markerSize * pixelRatio).round();
-    final img = await picture.toImage(targetSize, targetSize);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.bytes(
-      byteData!.buffer.asUint8List(),
-      imagePixelRatio: pixelRatio,
-    );
-  }
-
   Future<void> _loadCustomMarkers() async {
     try {
       final theme = Theme.of(context);
@@ -197,7 +102,7 @@ class _HomeMapViewState extends State<HomeMapView> {
           MediaQuery.maybeDevicePixelRatioOf(context) ??
           View.of(context).devicePixelRatio;
 
-      final catIcon = await _createSvgMarker(
+      final catIcon = await HomeMarkerBuilder.createSvgMarker(
         loader: SvgAssetLoader(widget.collar.breed.assetPath),
         borderColor: colorScheme.primary,
         bgColor: isDark ? colorScheme.surfaceContainerHigh : Colors.white,
@@ -207,11 +112,11 @@ class _HomeMapViewState extends State<HomeMapView> {
         pixelRatio: pixelRatio,
       );
 
-      final baseSvg = _buildHugeIconSvg(
+      final baseSvg = HomeMarkerBuilder.buildHugeIconSvg(
         HugeIcons.strokeRoundedRadioTower,
         colorScheme.primary,
       );
-      final baseIcon = await _createSvgMarker(
+      final baseIcon = await HomeMarkerBuilder.createSvgMarker(
         loader: SvgStringLoader(baseSvg),
         borderColor: colorScheme.secondary,
         bgColor: isDark ? colorScheme.surfaceContainerHigh : Colors.white,
@@ -713,7 +618,7 @@ class _HomeMapViewState extends State<HomeMapView> {
                     _selectedMarker = _SelectedMarkerType.none;
                   });
                 },
-                child: _CalloutBubble(
+                child: CalloutBubble(
                   title: _selectedMarker == _SelectedMarkerType.cat
                       ? widget.collar.name
                       : l10n.homeMyLocationTooltip,
@@ -770,256 +675,17 @@ class _HomeMapViewState extends State<HomeMapView> {
             ),
           ),
 
-        Positioned(
-          left: 16,
-          right: 16,
-          top: topPadding,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(
-                    alpha: 0.92,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ExpressiveIconButton.circle(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedZoomIn,
-                        color: colorScheme.onSurface,
-                        strokeWidth: 2,
-                      ),
-                      tooltip: l10n.homeZoomInTooltip,
-                      onPressed: _zoomIn,
-                    ),
-                    Divider(
-                      height: 6,
-                      indent: 6,
-                      endIndent: 6,
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                    ),
-                    ExpressiveIconButton.circle(
-                      icon: ValueListenableBuilder<double>(
-                        valueListenable: _bearingNotifier,
-                        builder: (context, bearing, child) {
-                          return Transform.rotate(
-                            angle: -bearing * (math.pi / 180),
-                            child: child,
-                          );
-                        },
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedArrowUp04,
-                          color: colorScheme.onSurface,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                      tooltip: l10n.homeResetNorthTooltip,
-                      onPressed: _resetNorth,
-                    ),
-                    Divider(
-                      height: 6,
-                      indent: 6,
-                      endIndent: 6,
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                    ),
-                    ExpressiveIconButton.circle(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedZoomOut,
-                        color: colorScheme.onSurface,
-                        strokeWidth: 2,
-                      ),
-                      tooltip: l10n.homeZoomOutTooltip,
-                      onPressed: _zoomOut,
-                    ),
-                  ],
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(
-                    alpha: 0.92,
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ExpressiveIconButton.circle(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedNavigation03,
-                        color: colorScheme.onSurface,
-                        strokeWidth: 2,
-                      ),
-                      tooltip: l10n.homeMyLocationTooltip,
-                      onPressed: _goToMyLocation,
-                    ),
-                    const SizedBox(height: 2),
-                    ExpressiveIconButton.circle(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedPawPrint,
-                        color: colorScheme.primary,
-                        strokeWidth: 2,
-                      ),
-                      tooltip: l10n.homeCatLocationTooltip,
-                      onPressed: _goToCatLocation,
-                    ),
-                    const SizedBox(height: 2),
-                    ExpressiveIconButton.circle(
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedTarget02,
-                        color: colorScheme.onSurface,
-                        strokeWidth: 2,
-                      ),
-                      tooltip: l10n.homeFitRangeTooltip,
-                      onPressed: _fitMaxDistanceRange,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        HomeMapControls(
+          topPadding: topPadding,
+          bearingNotifier: _bearingNotifier,
+          onZoomIn: _zoomIn,
+          onResetNorth: _resetNorth,
+          onZoomOut: _zoomOut,
+          onMyLocation: _goToMyLocation,
+          onCatLocation: _goToCatLocation,
+          onFitRange: _fitMaxDistanceRange,
         ),
       ],
     );
   }
-}
-
-class _CalloutBubble extends StatelessWidget {
-  const _CalloutBubble({
-    required this.title,
-    required this.colorScheme,
-    required this.theme,
-    this.subtitle,
-    this.leading,
-  });
-
-  final String title;
-  final String? subtitle;
-  final ColorScheme colorScheme;
-  final ThemeData theme;
-  final Widget? leading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.96),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.65),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.22),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (leading != null) ...[leading!, const SizedBox(width: 8)],
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 1),
-                    Text(
-                      subtitle!,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-        CustomPaint(
-          size: const Size(12, 6),
-          painter: _TriangleArrowPainter(
-            color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.96),
-            borderColor: colorScheme.outlineVariant.withValues(alpha: 0.65),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TriangleArrowPainter extends CustomPainter {
-  const _TriangleArrowPainter({required this.color, required this.borderColor});
-
-  final Color color;
-  final Color borderColor;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(0, 0)
-      ..lineTo(size.width / 2, size.height)
-      ..lineTo(size.width, 0)
-      ..close();
-
-    final fillPaint = Paint()..color = color;
-    final borderPaint = Paint()
-      ..color = borderColor
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    canvas
-      ..drawPath(path, fillPaint)
-      ..drawLine(Offset.zero, Offset(size.width / 2, size.height), borderPaint)
-      ..drawLine(
-        Offset(size.width / 2, size.height),
-        Offset(size.width, 0),
-        borderPaint,
-      );
-  }
-
-  @override
-  bool shouldRepaint(_TriangleArrowPainter oldDelegate) =>
-      color != oldDelegate.color || borderColor != oldDelegate.borderColor;
 }

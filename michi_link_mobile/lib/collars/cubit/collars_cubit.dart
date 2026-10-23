@@ -30,7 +30,7 @@ class CollarsCubit extends Cubit<CollarsState> {
     emit(state.copyWith(collars: collars));
   }
 
-  void addCollar({required String deviceId, String? name, CatBreed? breed}) {
+  void addCollar({required String deviceId}) {
     if (state.collars.contains(deviceId)) return;
 
     final isFirstCollar = state.collars.isEmpty;

@@ -209,12 +209,11 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
                                   .toUpperCase();
                               if (idText.length != 16) return;
 
-                              final name = l10n.collarsDefaultPetName;
                               final hwId = 'COLLAR_$idText';
 
                               widget.parentContext
                                   .read<CollarsCubit>()
-                                  .addCollar(name: name, deviceId: hwId);
+                                  .addCollar(deviceId: hwId);
 
                               Navigator.pop(context);
                               ScaffoldMessenger.of(
@@ -222,7 +221,7 @@ class AddCollarBottomSheetState extends State<AddCollarBottomSheet> {
                               ).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    l10n.collarsLinkedSuccess(name),
+                                    l10n.collarsLinkedSuccess(hwId),
                                   ),
                                   behavior: SnackBarBehavior.floating,
                                 ),
