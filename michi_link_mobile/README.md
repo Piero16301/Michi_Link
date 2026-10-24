@@ -1,139 +1,140 @@
-# Michi Link Mobile
+<!-- cspell:disable -->
+# Michi Link Móvil
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.47+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.12+-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Analysis](https://img.shields.io/badge/Style-Very%20Good%20Analysis-blueviolet.svg)](https://pub.dev/packages/very_good_analysis)
 
-A Flutter mobile application designed for locating, tracking, and monitoring pets (specifically cats) using long-range **LoRa** radio frequency technology and **GPS** positioning. It provides real-time cartographic tracking, virtual geofencing perimeters, advanced radio link telemetry (RSSI, SNR, packet loss), battery status monitoring, instant security alerts, and historical route playback.
+Una aplicación móvil desarrollada en Flutter diseñada para la localización, rastreo y monitoreo de mascotas (específicamente gatos) mediante tecnología de radiofrecuencia de largo alcance **LoRa** y posicionamiento satelital **GPS**. Proporciona seguimiento cartográfico en tiempo real, perímetros virtuales de geocercas, telemetría avanzada del radioenlace (RSSI, SNR, tasa de pérdida de paquetes), monitoreo del estado y voltaje de batería, alertas de seguridad instantáneas y reproducción de rutas históricas.
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Inicio Rápido
 
-### Prerequisites
+### Requisitos Previos
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (version `>= 3.47.0`)
-- [Dart SDK](https://dart.dev/get-dart) (version `>= 3.12.0 < 4.0.0`)
-- Android Studio / Xcode configured with simulators, emulators, or physical test devices.
-- Valid API keys configured for **Google Maps** (Android and iOS) and a configured **Firebase** project.
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) (versión `>= 3.47.0`)
+- [Dart SDK](https://dart.dev/get-dart) (versión `>= 3.12.0 < 4.0.0`)
+- Android Studio o Xcode configurado con simuladores, emuladores o dispositivos físicos de prueba.
+- Claves de API válidas configuradas para **Google Maps** (Android e iOS) y un proyecto de **Firebase** aprovisionado.
 
-### Installation Steps
+### Pasos de Instalación
 
-1. **Clone the repository:**
+1. **Clonar el repositorio:**
    ```bash
    git clone https://github.com/Piero16301/Michi_Link.git
    cd Michi_Link/michi_link_mobile
    ```
 
-2. **Install dependencies:**
+2. **Instalar dependencias:**
    ```bash
    flutter pub get
    ```
 
-3. **Generate localization files (if needed after checkout):**
+3. **Generar archivos de localización e internacionalización:**
    ```bash
    flutter gen-l10n
    ```
 
-4. **Configure environment & credentials:**
-   - **Android**: Ensure `android/app/google-services.json` is present and Google Maps API key is configured in `android/app/src/main/AndroidManifest.xml`.
-   - **iOS**: Ensure `ios/Runner/GoogleService-Info.plist` is present and Google Maps API key is configured in `ios/Runner/AppDelegate.swift`.
-   - The app supports `Environment.mock` (simulated telemetry and collars without live cloud dependencies) and `Environment.prod` (live Cloud Firestore streams). Configurable in `lib/main.dart`.
+4. **Configurar credenciales y variables de entorno:**
+   - **Android**: Asegurar que el archivo `android/app/google-services.json` esté presente y que la clave de Google Maps esté declarada en `android/app/src/main/AndroidManifest.xml`.
+   - **iOS**: Asegurar que el archivo `ios/Runner/GoogleService-Info.plist` esté presente y que la clave de Google Maps esté configurada en `ios/Runner/AppDelegate.swift`.
+   - La aplicación admite dos entornos: `Environment.mock` (telemetría y collares simulados localmente sin dependencias en la nube) y `Environment.prod` (transmisiones reactivas en vivo vía Cloud Firestore). Configurable en `lib/main.dart`.
 
-5. **Run the application:**
+5. **Ejecutar la aplicación:**
    ```bash
    flutter run
    ```
 
 ---
 
-## 🛠️ Common Commands
+## 🛠️ Comandos Comunes
 
-| Command | Description |
-|---------|-------------|
-| `flutter pub get` | Downloads and installs project dependencies. |
-| `flutter run` | Starts the app on the connected device or simulator. |
-| `flutter run -d chrome` | Runs the app on Google Chrome (web dev mode). |
-| `flutter test` | Executes the unit and widget test suite. |
-| `flutter test --coverage` | Runs tests and generates an LCOV coverage report in `coverage/lcov.info`. |
-| `flutter analyze` | Runs static code analysis using `very_good_analysis` and `bloc_lint`. |
-| `dart fix --apply` | Automatically applies recommended linter fixes across Dart files. |
-| `flutter gen-l10n` | Regenerates strongly-typed localization files from `.arb` templates. |
-| `dart run flutter_launcher_icons` | Generates adaptive app launcher icons for Android and iOS. |
-| `flutter build apk --release` | Generates the production APK binary for Android. |
-| `flutter build appbundle --release` | Generates the Android App Bundle (AAB) for Google Play. |
-| `flutter build ipa --release` | Generates the iOS distribution archive (App Store / TestFlight). |
-
----
-
-## 🧭 Key Features
-
-- **🛰️ Real-Time GPS Tracking & LoRa Telemetry**: Continuous rendering of the pet's coordinates, distance to the home base station (`distanceHomeM`), radio signal strength (`rssi`), signal-to-noise ratio (`snr`), and packet loss rate.
-- **🛡️ Virtual Geofencing**: Configurable safe movement radius (`maxDistanceM`). Immediate visual and event notifications when the pet breaches or re-enters the safe perimeter.
-- **🔋 Battery & Hardware Sensors**: Real-time display of battery percentage, voltage (`batteryV`), GPS lock status (`gpsFix`), and active satellite count (`sats`).
-- **🗺️ Interactive Map Experience**: Smooth Google Maps integration featuring custom cat breed avatars as map markers, light and dark map styling, and quick-centering controls.
-- **📜 Route History & Breadcrumbs**: Query past positions filtered by date and time, visualizing the travel trail with map polylines.
-- **🔔 Notifications & Alert Center**: Categorized by severity (`CRITICAL`, `WARNING`, `INFO`) for geofence breaches, low battery levels, or radio signal dropouts.
-- **🐈 Multi-Collar Management & Cat Breeds**: Support for multiple collars with custom pet names and vector SVG avatars for 10 distinct cat breeds.
-- **🎨 Expressive Design System**: Built with **Material 3 Expressive** (`expressive_kit`), featuring dynamic seed color palette generation, font selection, and smooth light/dark mode transitions.
-- **🌐 Internationalization (i18n / l10n)**: Full Spanish and English support with dynamic runtime language switching.
+| Comando | Descripción |
+| :--- | :--- |
+| `flutter pub get` | Descarga e instala las dependencias del proyecto. |
+| `flutter run` | Inicia la aplicación en el dispositivo conectado o simulador. |
+| `flutter run -d chrome` | Ejecuta la aplicación en Google Chrome (modo de inspección web). |
+| `flutter test` | Ejecuta la suite de pruebas unitarias y de widgets. |
+| `flutter test --coverage` | Ejecuta las pruebas y genera el reporte LCOV en `coverage/lcov.info`. |
+| `flutter analyze` | Ejecuta el análisis estático de código mediante `very_good_analysis` y `bloc_lint`. |
+| `dart fix --apply` | Aplica automáticamente correcciones recomendadas por el linter en archivos Dart. |
+| `flutter gen-l10n` | Regenera las clases tipadas de localización desde las plantillas `.arb`. |
+| `dart run flutter_launcher_icons` | Genera los iconos adaptativos de la app para Android e iOS. |
+| `flutter build apk --release` | Compila el instalador APK optimizado para producción en Android. |
+| `flutter build appbundle --release` | Genera el Android App Bundle (AAB) para publicación en Google Play. |
+| `flutter build ipa --release` | Genera el archivo de distribución para iOS (App Store / TestFlight). |
 
 ---
 
-## 🏗️ Architecture & Project Structure
+## 🧭 Características Principales
 
-The project follows a **Feature-First** layered architecture emphasizing strict separation of concerns and unidirectional data flow:
+- **🛰️ Rastreo GPS en Tiempo Real y Telemetría LoRa**: Visualización continua de las coordenadas del felino, distancia geodésica a la estación base hogareña (`distanceHomeM`), potencia de señal de radio (`rssi`), relación señal/ruido (`snr`) y porcentaje de paquetes perdidos.
+- **🛡️ Geocercas Virtuales Dinámicas**: Radio seguro de desplazamiento configurable (`maxDistanceM`). Notificaciones visuales y auditivas inmediatas al cruzar o reingresar al perímetro seguro.
+- **🔋 Monitoreo de Batería y Sensores de Hardware**: Indicador de porcentaje y voltaje de la batería (`batteryV`), estado de fijación GNSS (`gpsFix`) y recuento de satélites enlazados (`sats`).
+- **🗺️ Experiencia Cartográfica Fluida**: Integración con Google Maps incorporando avatares vectoriales por raza de gato convertidos a marcadores nativos, estilos claros y oscuros, y centrado dinámico.
+- **📜 Rutas Históricas y Migajas de Pan**: Consulta de posiciones pasadas filtradas cronológicamente, visualizando el recorrido sobre el mapa mediante polilíneas.
+- **🔔 Centro de Notificaciones y Registro de Alertas**: Clasificación de incidentes por severidad (`CRITICAL`, `WARNING`, `INFO`) ante salidas de geocerca, batería crítica o degradación del radioenlace.
+- **🐈 Gestión de Múltiples Collares y Razas**: Compatibilidad con múltiples dispositivos simultáneos, nombres personalizados y avatares SVG para 10 razas de gatos distintas.
+- **🎨 Sistema de Diseño Expresivo**: Construido con **Material 3 Expressive** (`expressive_kit`), generando dinámicamente paletas cromáticas tonales a partir de un color semilla configurable por el usuario.
+- **🌐 Internacionalización (i18n / l10n)**: Soporte completo en español e inglés con cambio dinámico de idioma en tiempo de ejecución.
 
-```
+---
+
+## 🏗️ Arquitectura y Estructura del Proyecto
+
+El proyecto sigue una arquitectura **Feature-First** (por funcionalidades) con separación estricta de responsabilidades y flujo unidireccional de datos:
+
+```text
 lib/
-├── app/                  # Application core
-│   ├── cubit/            # Global app state (theme, language, seed color)
-│   ├── global/           # App constants, routes (GoRouter), dependencies (GetIt), enums, styles
-│   ├── models/           # Domain data models (CollarModel, AlertRecord, etc.)
-│   ├── repositories/     # Data interfaces & implementations (Firestore, Hive, Mocks)
-│   ├── services/         # Telemetry services (Crashlytics, Performance, Analytics, Storage)
-│   └── view/             # App entry views (AppPage, AppView)
-├── collars/              # Collar pairing and configuration management feature
-├── history/              # Route history and telemetry breadcrumbs feature
-├── home/                 # Main dashboard (map view, telemetry panel, geofence setup)
-├── l10n/                 # Localization templates (.arb) and generated classes
-├── notifications/        # Alerts and notification history feature
-├── settings/             # User settings and UI customization feature
-├── bootstrap.dart        # BLoC observer initialization and global crash boundary setup
-├── firebase_options.dart # Auto-generated Firebase platform configuration
-└── main.dart             # Application main entry point
+├── app/                  # Núcleo y configuración global
+│   ├── cubit/            # Estado global de la app (tema claro/oscuro, idioma, color semilla)
+│   ├── global/           # Constantes, rutas (GoRouter), inyector (GetIt), enums y estilos
+│   ├── models/           # Entidades de dominio inmutables (CollarModel, AlertRecord, etc.)
+│   ├── repositories/     # Contratos e implementaciones de datos (Firestore, Hive, Mocks)
+│   ├── services/         # Servicios de infraestructura (Crashlytics, Performance, Analytics, Storage)
+│   └── view/             # Vistas de entrada de la app (AppPage, AppView)
+├── collars/              # Módulo de emparejamiento y configuración de collares
+├── history/              # Módulo de rutas históricas y migajas de pan (breadcrumbs)
+├── home/                 # Dashboard principal (vista de mapa, panel de telemetría y geocerca)
+├── l10n/                 # Plantillas de localización (.arb) y clases generadas
+├── notifications/        # Módulo de historial de alertas y notificaciones push
+├── settings/             # Módulo de personalización visual, temas y ajustes de usuario
+├── bootstrap.dart        # Inicialización de observadores BLoC y captura global de excepciones
+├── firebase_options.dart # Configuración auto-generada de Firebase por plataforma
+└── main.dart             # Punto de entrada principal de la aplicación móvil
 ```
 
 ### Architecture Decision Records (ADRs)
 
-Key architectural decisions, trade-offs, and technical rationales are recorded under [`docs/decisions/`](docs/decisions/):
+Las decisiones arquitectónicas clave, alternativas consideradas y justificaciones técnicas para la aplicación móvil y el ecosistema completo se encuentran documentadas en el [README.md principal](../README.md#-architecture-decision-records-adrs):
 
-- [**ADR-001: Feature-First Architecture with BLoC/Cubit and GetIt Service Locator**](docs/decisions/ADR-001-architecture-and-state-management.md) — Explains the architectural pattern, unidirectional data flow, and dependency injection via `GetIt` / `ServiceFactory`.
-- [**ADR-002: Hybrid Data Strategy: Cloud Firestore and Local Storage with Hive**](docs/decisions/ADR-002-data-storage-strategy.md) — Details the separation between reactive real-time Firestore streams and fast offline local persistence via Hive.
-- [**ADR-003: Google Maps Integration, LoRa Telemetry, and Geofencing**](docs/decisions/ADR-003-lora-telemetry-and-mapping.md) — Justifies the use of `google_maps_flutter`, dynamic marker canvas generation, and radio link monitoring metrics.
-- [**ADR-004: Expressive Design System and Flutter l10n Internationalization**](docs/decisions/ADR-004-design-system-and-internationalization.md) — Documents the adoption of Material 3 Expressive tokens and typed ARB localization.
+- [**ADR-005: Arquitectura Móvil Feature-First con BLoC/Cubit y Service Locator (GetIt) en Flutter**](../README.md#adr-005-arquitectura-feature-first-con-bloccubit-y-getit-en-flutter) — Explica la separación de capas, el flujo unidireccional y la inyección con `GetIt` / `ServiceFactory`.
+- [**ADR-004: Modelo Híbrido de Persistencia en Cloud Firestore con TTL de 15 Días**](../README.md#adr-004-modelo-híbrido-de-persistencia-en-firestore-con-ttl-de-15-días) — Detalla la estrategia reactiva en tiempo real con Firestore y la persistencia local fuera de línea con Hive.
+- [**ADR-006: Geodesia WGS-84 en Servidor y Notificaciones Push Multilingües con FCM**](../README.md#adr-006-geodesia-wgs-84-en-servidor-y-notificaciones-push-multilingües-con-fcm) — Justifica el uso de `google_maps_flutter`, renderizado dinámico de marcadores y cálculo submétrico en backend.
+- [**ADR-001: Radioenlace LoRa P2P vs. Red LoRaWAN Centralizada**](../README.md#adr-001-radioenlace-lora-p2p-vs-red-lorawan) — Fundamenta la selección del enlace de radiofrecuencia directo para la localización felina.
 
 ---
 
-## 🧪 Testing & Code Quality
+## 🧪 Pruebas y Calidad de Código
 
-The project maintains high code quality standards and testing coverage:
+El proyecto mantiene altos estándares de calidad mediante herramientas automatizadas:
 
-1. **Static Analysis**:
-   Enforces rules from [`very_good_analysis`](https://pub.dev/packages/very_good_analysis) and [`bloc_lint`](https://pub.dev/packages/bloc_lint).
+1. **Análisis Estático**:
+   Aplica las reglas de [`very_good_analysis`](https://pub.dev/packages/very_good_analysis) y [`bloc_lint`](https://pub.dev/packages/bloc_lint):
    ```bash
    flutter analyze
    ```
 
-2. **Unit & Widget Testing**:
-   Built with `mocktail` and `bloc_test`.
+2. **Pruebas Unitarias y de Widgets**:
+   Construidas con `mocktail` y `bloc_test`:
    ```bash
    flutter test
    ```
 
-3. **Code Coverage**:
-   Generate an LCOV coverage report:
+3. **Reporte de Cobertura de Código**:
+   Generación del informe de cobertura LCOV:
    ```bash
    flutter test --coverage
    genhtml coverage/lcov.info -o coverage/html
@@ -142,16 +143,16 @@ The project maintains high code quality standards and testing coverage:
 
 ---
 
-## 🤝 Contributing & Workflow
+## 🤝 Contribución y Flujo de Trabajo
 
-1. Create a descriptive feature branch (`feature/feature-name` or `fix/fix-description`).
-2. Adhere to code conventions and ensure `flutter analyze` runs without errors or warnings.
-3. Write unit and widget tests for new logic in `test/`.
-4. If introducing a major architectural or technical decision, document it with an ADR in `docs/decisions/`.
-5. Submit a Pull Request detailing the changes and acceptance criteria.
+1. Crear una rama descriptiva (`feature/nombre-funcionalidad` o `fix/descripcion-arreglo`).
+2. Respetar las convenciones de código y asegurar que `flutter analyze` finalice sin errores ni advertencias.
+3. Escribir pruebas unitarias y de widgets para cualquier lógica agregada en `test/`.
+4. Si se introduce una decisión arquitectónica mayor, documentarla mediante un nuevo ADR siguiendo el formato establecido.
+5. Crear un Pull Request detallando los cambios y criterios de aceptación.
 
 ---
 
-## 📄 License
+## 📄 Licencia
 
-This project is licensed under the [MIT License](LICENSE).
+Este proyecto está bajo la licencia [MIT](LICENSE).
