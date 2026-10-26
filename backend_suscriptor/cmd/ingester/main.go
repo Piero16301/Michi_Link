@@ -27,6 +27,11 @@ const (
 	RetentionDays     = 15  // TTL para histórico y alertas en Firestore (días)
 	CollarIntervalSec = 120 // Intervalo de transmisión predeterminado (segundos)
 
+	// NotificationChannelCritical Canales de notificación Android
+	NotificationChannelCritical = "michi_critical_channel"
+	NotificationChannelWarning  = "michi_warning_channel"
+	NotificationChannelInfo     = "michi_info_channel"
+
 	// Parámetros oficiales del elipsoide de referencia WGS-84
 	wgs84A = 6378137.0           // Semieje mayor (metros)
 	wgs84F = 1.0 / 298.257223563 // Achatamiento polar
@@ -539,14 +544,27 @@ func (s *IngestService) handleStatus(_ mqtt.Client, msg mqtt.Message) {
 // NOTIFICACIONES PUSH MULTI-IDIOMA
 // ----------------------------------------------------------------------------
 func (s *IngestService) sendPushNotification(ctx context.Context, alert models.AlertPayload, petName string, lang string) {
-	topic := fmt.Sprintf("collar_%s", alert.DeviceID)
-	valStr := fmt.Sprintf("%.1f", alert.Value)
+	topic := alert.DeviceID
 
 	title, body := buildLocalizedNotification(lang, alert.Severity, alert.Type, petName, alert.Value)
 
-	channelID := "michi_info_channel"
-	if alert.Severity == models.SeverityCritical {
-		channelID = "michi_critical_channel"
+	channelID := NotificationChannelInfo
+	androidPriority := "normal"
+	notifPriority := messaging.PriorityDefault
+
+	switch alert.Severity {
+	case models.SeverityCritical:
+		channelID = NotificationChannelCritical
+		androidPriority = "high"
+		notifPriority = messaging.PriorityHigh
+	case models.SeverityWarning:
+		channelID = NotificationChannelWarning
+		androidPriority = "high"
+		notifPriority = messaging.PriorityHigh
+	default:
+		channelID = NotificationChannelInfo
+		androidPriority = "normal"
+		notifPriority = messaging.PriorityDefault
 	}
 
 	fcmMessage := &messaging.Message{
@@ -557,24 +575,23 @@ func (s *IngestService) sendPushNotification(ctx context.Context, alert models.A
 		},
 		Data: map[string]string{
 			"device_id": alert.DeviceID,
-			"pet_name":  petName,
-			"type":      alert.Type,
-			"severity":  alert.Severity,
-			"value":     valStr,
-			"lang":      lang,
-			"timestamp": alert.Timestamp.Format(time.RFC3339),
 		},
 		Android: &messaging.AndroidConfig{
-			Priority: "high",
+			CollapseKey: alert.DeviceID,
+			Priority:    androidPriority,
 			Notification: &messaging.AndroidNotification{
 				Sound:     "default",
 				ChannelID: channelID,
-				Tag:       fmt.Sprintf("collar_%s", alert.DeviceID),
+				Priority:  notifPriority,
+				Tag:       alert.DeviceID,
 				Title:     title,
 				Body:      body,
 			},
 		},
 		APNS: &messaging.APNSConfig{
+			Headers: map[string]string{
+				"apns-collapse-id": alert.DeviceID,
+			},
 			Payload: &messaging.APNSPayload{
 				Aps: &messaging.Aps{
 					Sound: "default",
@@ -589,10 +606,10 @@ func (s *IngestService) sendPushNotification(ctx context.Context, alert models.A
 
 	response, err := s.fcmClient.Send(ctx, fcmMessage)
 	if err != nil {
-		log.Printf("❌ [FCM ERROR] Fallo enviando notificación al tópico %s: %v", topic, err)
+		log.Printf("❌ [FCM ERROR] Fallo enviando notificación al tópico %s (%s): %v", topic, channelID, err)
 		return
 	}
-	log.Printf("📲 [FCM OK] Push enviado (%s) [ID: %s]", lang, response)
+	log.Printf("📲 [FCM OK] Push enviado (%s) [Canal: %s, ID: %s]", lang, channelID, response)
 }
 
 func buildLocalizedNotification(lang, severity, alertType, petName string, val float64) (string, string) {
