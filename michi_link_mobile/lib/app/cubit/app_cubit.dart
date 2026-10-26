@@ -21,8 +21,8 @@ class AppCubit extends Cubit<AppState> {
   final LocalStorageService _localStorage;
   late final StreamSubscription<String?> _selectedCollarSubscription;
 
-  void _onSelectedCollarChanged(String? collarId) {
-    emit(state.copyWith(selectedCollarId: collarId));
+  void _onSelectedCollarChanged(String? deviceId) {
+    emit(state.copyWith(selectedCollarId: deviceId));
   }
 
   void initialLoad() {
@@ -109,8 +109,8 @@ class AppCubit extends Cubit<AppState> {
     emit(state.copyWith(fontFamily: fontFamily));
   }
 
-  void changeSelectedCollarId({String? collarId}) {
-    _localStorage.saveSelectedCollarId(collarId: collarId);
+  void changeSelectedCollarId({String? deviceId}) {
+    _localStorage.saveSelectedCollarId(deviceId: deviceId);
   }
 
   @override

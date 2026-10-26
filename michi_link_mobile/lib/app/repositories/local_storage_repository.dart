@@ -10,7 +10,7 @@ abstract class LocalStorageRepository {
   static const kUserFontFamily = '__user_font_family__';
 
   static const kCollars = '__collars__';
-  static const kSelectedCollarId = '__selected_collar_id__';
+  static const kSelectedDeviceId = '__selected_device_id__';
 
   Future<void> initialize();
   void saveLanguage({required Locale language});
@@ -24,7 +24,7 @@ abstract class LocalStorageRepository {
   void saveCollars({required List<String> collars});
   List<String> getCollars();
   Stream<List<String>> getCollarsStream();
-  void saveSelectedCollarId({String? collarId});
+  void saveSelectedCollarId({String? deviceId});
   String? getSelectedCollarId();
   Stream<String?> getSelectedCollarIdStream();
 }
@@ -79,7 +79,7 @@ class MockLocalStorageRepository implements LocalStorageRepository {
   }
 
   @override
-  void saveSelectedCollarId({String? collarId}) {}
+  void saveSelectedCollarId({String? deviceId}) {}
 
   @override
   String? getSelectedCollarId() {
@@ -229,26 +229,26 @@ class HiveLocalStorageRepository implements LocalStorageRepository {
   }
 
   @override
-  void saveSelectedCollarId({String? collarId}) {
-    if (collarId == null) {
-      _propertiesBox.delete(LocalStorageRepository.kSelectedCollarId).ignore();
+  void saveSelectedCollarId({String? deviceId}) {
+    if (deviceId == null) {
+      _propertiesBox.delete(LocalStorageRepository.kSelectedDeviceId).ignore();
     } else {
       _propertiesBox
-          .put(LocalStorageRepository.kSelectedCollarId, collarId)
+          .put(LocalStorageRepository.kSelectedDeviceId, deviceId)
           .ignore();
     }
   }
 
   @override
   String? getSelectedCollarId() {
-    return _propertiesBox.get(LocalStorageRepository.kSelectedCollarId);
+    return _propertiesBox.get(LocalStorageRepository.kSelectedDeviceId);
   }
 
   @override
   Stream<String?> getSelectedCollarIdStream() async* {
     yield getSelectedCollarId();
     yield* _propertiesBox
-        .watch(key: LocalStorageRepository.kSelectedCollarId)
+        .watch(key: LocalStorageRepository.kSelectedDeviceId)
         .map((_) => getSelectedCollarId());
   }
 }

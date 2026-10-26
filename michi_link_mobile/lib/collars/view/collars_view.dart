@@ -82,8 +82,8 @@ class CollarsView extends StatelessWidget {
             separatorBuilder: (context, index) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               if (index < collarsCount) {
-                final collarId = state.collars[index];
-                return RepaintBoundary(child: CollarCard(collarId: collarId));
+                final deviceId = state.collars[index];
+                return RepaintBoundary(child: CollarCard(deviceId: deviceId));
               }
               return ExpressiveButton.filled(
                 onPressed: () => _showAddCollarModal(context),

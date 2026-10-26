@@ -20,9 +20,9 @@ void main() {
       expect(AppRoute.settings.name, 'settings');
       expect(AppRoute.collars.path, 'collars');
       expect(AppRoute.collars.name, 'collars');
-      expect(AppRoute.notifications.path, 'notifications/:collarId');
+      expect(AppRoute.notifications.path, 'notifications/:deviceId');
       expect(AppRoute.notifications.name, 'notifications');
-      expect(AppRoute.history.path, 'history/:collarId');
+      expect(AppRoute.history.path, 'history/:deviceId');
       expect(AppRoute.history.name, 'history');
     });
 
@@ -42,7 +42,7 @@ void main() {
       final router = AppRoutes.getRouter();
       final homeRoute = router.configuration.routes.first as GoRoute;
       final state = MockGoRouterState();
-      when(() => state.pathParameters).thenReturn({'collarId': 'COLLAR_1'});
+      when(() => state.pathParameters).thenReturn({'deviceId': 'COLLAR_1'});
 
       await tester.pumpWidget(
         MaterialApp(

@@ -96,16 +96,16 @@ void main() {
 
     test('saveSelectedCollarId, getSelectedCollarId and stream delegate', () {
       when(
-        () => repository.saveSelectedCollarId(collarId: 'COLLAR_1'),
+        () => repository.saveSelectedCollarId(deviceId: 'COLLAR_1'),
       ).thenReturn(null);
       when(() => repository.getSelectedCollarId()).thenReturn('COLLAR_1');
       when(
         () => repository.getSelectedCollarIdStream(),
       ).thenAnswer((_) => Stream.value('COLLAR_1'));
 
-      service.saveSelectedCollarId(collarId: 'COLLAR_1');
+      service.saveSelectedCollarId(deviceId: 'COLLAR_1');
       verify(
-        () => repository.saveSelectedCollarId(collarId: 'COLLAR_1'),
+        () => repository.saveSelectedCollarId(deviceId: 'COLLAR_1'),
       ).called(1);
 
       expect(service.getSelectedCollarId(), 'COLLAR_1');

@@ -3,14 +3,14 @@ import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/history/history.dart';
 
 class HistoryPage extends StatelessWidget {
-  const HistoryPage({required this.collarId, super.key});
+  const HistoryPage({required this.deviceId, super.key});
 
-  final String collarId;
+  final String deviceId;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HistoryCubit(collarId: collarId),
+      create: (_) => HistoryCubit(deviceId: deviceId),
       child: const HistoryView(),
     );
   }

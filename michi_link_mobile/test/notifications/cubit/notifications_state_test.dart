@@ -19,9 +19,9 @@ void main() {
         timestamp: DateTime(2026),
       );
 
-      final updated = state.copyWith(collarId: 'COLLAR_1', alerts: [alert]);
+      final updated = state.copyWith(deviceId: 'COLLAR_1', alerts: [alert]);
 
-      expect(updated.collarId, 'COLLAR_1');
+      expect(updated.deviceId, 'COLLAR_1');
       expect(updated.alerts, [alert]);
       expect(updated.props, [
         'COLLAR_1',
@@ -38,11 +38,11 @@ void main() {
 
     test('copyWith preserves fields when null passed', () {
       const state = NotificationsState(
-        collarId: 'COLLAR_1',
+        deviceId: 'COLLAR_1',
         status: NotificationsStatus.success,
       );
       final updated = state.copyWith();
-      expect(updated.collarId, 'COLLAR_1');
+      expect(updated.deviceId, 'COLLAR_1');
       expect(updated.status, NotificationsStatus.success);
     });
   });

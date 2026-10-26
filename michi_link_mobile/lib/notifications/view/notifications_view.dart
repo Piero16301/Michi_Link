@@ -9,9 +9,9 @@ import 'package:michi_link_mobile/l10n/l10n.dart';
 import 'package:michi_link_mobile/notifications/notifications.dart';
 
 class NotificationsView extends StatelessWidget {
-  const NotificationsView({this.collarId, super.key});
+  const NotificationsView({this.deviceId, super.key});
 
-  final String? collarId;
+  final String? deviceId;
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +19,9 @@ class NotificationsView extends StatelessWidget {
       return const _NotificationsViewBody();
     }
 
-    final effectiveCollarId = collarId ?? '';
+    final effectiveDeviceId = deviceId ?? '';
     return BlocProvider(
-      create: (_) => NotificationsCubit(collarId: effectiveCollarId),
+      create: (_) => NotificationsCubit(deviceId: effectiveDeviceId),
       child: const _NotificationsViewBody(),
     );
   }

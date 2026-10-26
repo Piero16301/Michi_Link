@@ -27,7 +27,7 @@ void main() {
 
       when(() => appCubit.state).thenReturn(const AppState());
       when(
-        () => databaseService.getCollarStream(collarId: any(named: 'collarId')),
+        () => databaseService.getCollarStream(deviceId: any(named: 'deviceId')),
       ).thenAnswer((_) => streamController.stream);
 
       if (getIt.isRegistered<DatabaseService>()) {
@@ -49,7 +49,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<AppCubit>.value(
           value: appCubit,
-          child: const Scaffold(body: CollarCard(collarId: 'COLLAR_TEST')),
+          child: const Scaffold(body: CollarCard(deviceId: 'COLLAR_TEST')),
         ),
       );
 
@@ -64,7 +64,7 @@ void main() {
           value: appCubit,
           child: const Scaffold(
             body: SingleChildScrollView(
-              child: CollarCard(collarId: 'COLLAR_TEST'),
+              child: CollarCard(deviceId: 'COLLAR_TEST'),
             ),
           ),
         ),
@@ -87,7 +87,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<AppCubit>.value(
           value: appCubit,
-          child: const Scaffold(body: CollarCard(collarId: 'COLLAR_TEST')),
+          child: const Scaffold(body: CollarCard(deviceId: 'COLLAR_TEST')),
         ),
       );
 

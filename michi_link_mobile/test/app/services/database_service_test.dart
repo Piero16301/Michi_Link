@@ -30,31 +30,31 @@ void main() {
     test('getCollarStream delegates to repository', () {
       final collar = CollarModel.fromJson(const {'device_id': 'COLLAR_1'});
       when(
-        () => repository.getCollarStream(collarId: 'COLLAR_1'),
+        () => repository.getCollarStream(deviceId: 'COLLAR_1'),
       ).thenAnswer((_) => Stream.value(collar));
 
-      expect(service.getCollarStream(collarId: 'COLLAR_1'), emits(collar));
-      verify(() => repository.getCollarStream(collarId: 'COLLAR_1')).called(1);
+      expect(service.getCollarStream(deviceId: 'COLLAR_1'), emits(collar));
+      verify(() => repository.getCollarStream(deviceId: 'COLLAR_1')).called(1);
     });
 
     test('updateCollar delegates to repository', () {
       when(
         () => repository.updateCollar(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           name: 'Michi',
           breed: CatBreed.siamese,
         ),
       ).thenReturn(null);
 
       service.updateCollar(
-        collarId: 'COLLAR_1',
+        deviceId: 'COLLAR_1',
         name: 'Michi',
         breed: CatBreed.siamese,
       );
 
       verify(
         () => repository.updateCollar(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           name: 'Michi',
           breed: CatBreed.siamese,
         ),
@@ -70,28 +70,28 @@ void main() {
       );
       when(
         () =>
-            repository.updateCollarConfig(collarId: 'COLLAR_1', config: config),
+            repository.updateCollarConfig(deviceId: 'COLLAR_1', config: config),
       ).thenReturn(null);
 
-      service.updateCollarConfig(collarId: 'COLLAR_1', config: config);
+      service.updateCollarConfig(deviceId: 'COLLAR_1', config: config);
 
       verify(
         () =>
-            repository.updateCollarConfig(collarId: 'COLLAR_1', config: config),
+            repository.updateCollarConfig(deviceId: 'COLLAR_1', config: config),
       ).called(1);
     });
 
     test('getAlertRecordsStream delegates to repository', () {
       when(
-        () => repository.getAlertRecordsStream(collarId: 'COLLAR_1'),
+        () => repository.getAlertRecordsStream(deviceId: 'COLLAR_1'),
       ).thenAnswer((_) => Stream.value([]));
 
       expect(
-        service.getAlertRecordsStream(collarId: 'COLLAR_1'),
+        service.getAlertRecordsStream(deviceId: 'COLLAR_1'),
         emits(isEmpty),
       );
       verify(
-        () => repository.getAlertRecordsStream(collarId: 'COLLAR_1'),
+        () => repository.getAlertRecordsStream(deviceId: 'COLLAR_1'),
       ).called(1);
     });
 
@@ -100,7 +100,7 @@ void main() {
       final end = DateTime(2026, 1, 2);
       when(
         () => repository.getHistoryRecordsStream(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           start: start,
           end: end,
         ),
@@ -108,7 +108,7 @@ void main() {
 
       expect(
         service.getHistoryRecordsStream(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           start: start,
           end: end,
         ),
@@ -116,9 +116,33 @@ void main() {
       );
       verify(
         () => repository.getHistoryRecordsStream(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           start: start,
           end: end,
+        ),
+      ).called(1);
+    });
+
+    test('updateDeviceSettings delegates to repository', () {
+      when(
+        () => repository.updateDeviceSettings(
+          token: 'token123',
+          collarToModify: 'COLLAR_1',
+          enabledCollars: ['COLLAR_1'],
+        ),
+      ).thenReturn(null);
+
+      service.updateDeviceSettings(
+        token: 'token123',
+        collarToModify: 'COLLAR_1',
+        enabledCollars: ['COLLAR_1'],
+      );
+
+      verify(
+        () => repository.updateDeviceSettings(
+          token: 'token123',
+          collarToModify: 'COLLAR_1',
+          enabledCollars: ['COLLAR_1'],
         ),
       ).called(1);
     });

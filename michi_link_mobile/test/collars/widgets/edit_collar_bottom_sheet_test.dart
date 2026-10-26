@@ -68,7 +68,7 @@ void main() {
 
       verify(
         () => collarsCubit.updateCollar(
-          collarId: 'COLLAR_TEST_1234',
+          deviceId: 'COLLAR_TEST_1234',
           name: 'Michi New Name',
           breed: CatBreed.siamese,
         ),

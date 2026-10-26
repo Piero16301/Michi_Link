@@ -10,8 +10,14 @@ class CollarsCubit extends Cubit<CollarsState> {
   CollarsCubit({
     LocalStorageService? localStorage,
     DatabaseService? databaseService,
+    NotificationService? notificationService,
   }) : _localStorage = localStorage ?? getIt<LocalStorageService>(),
        _databaseService = databaseService ?? getIt<DatabaseService>(),
+       _notificationService =
+           notificationService ??
+           (getIt.isRegistered<NotificationService>()
+               ? getIt<NotificationService>()
+               : null),
        super(
          CollarsState(
            collars: (localStorage ?? getIt<LocalStorageService>()).getCollars(),
@@ -24,6 +30,7 @@ class CollarsCubit extends Cubit<CollarsState> {
 
   final LocalStorageService _localStorage;
   final DatabaseService _databaseService;
+  final NotificationService? _notificationService;
   late final StreamSubscription<List<String>> _collarsSubscription;
 
   void _onCollarsChanged(List<String> collars) {
@@ -34,25 +41,43 @@ class CollarsCubit extends Cubit<CollarsState> {
     if (state.collars.contains(deviceId)) return;
 
     final isFirstCollar = state.collars.isEmpty;
-    _localStorage.saveCollars(collars: [...state.collars, deviceId]);
+    final currentCollars = state.collars;
+    _localStorage.saveCollars(collars: [...currentCollars, deviceId]);
 
     if (isFirstCollar) {
-      _localStorage.saveSelectedCollarId(collarId: deviceId);
+      _localStorage.saveSelectedCollarId(deviceId: deviceId);
+    }
+
+    unawaited(
+      _notificationService?.toggleCollarTopic(
+        deviceId: deviceId,
+        enabled: true,
+      ),
+    );
+
+    final token = _notificationService?.token;
+    if (token != null && token.isNotEmpty) {
+      _databaseService.updateDeviceSettings(
+        token: token,
+        collarToModify: deviceId,
+        enabledCollars: currentCollars,
+      );
     }
   }
 
   void updateCollar({
-    required String collarId,
+    required String deviceId,
     required String name,
     required CatBreed breed,
   }) {
-    _databaseService.updateCollar(collarId: collarId, name: name, breed: breed);
+    _databaseService.updateCollar(deviceId: deviceId, name: name, breed: breed);
   }
 
   void removeCollar(String deviceId) {
     if (!state.collars.contains(deviceId)) return;
 
-    final updatedList = state.collars.where((id) => id != deviceId).toList();
+    final currentCollars = state.collars;
+    final updatedList = currentCollars.where((id) => id != deviceId).toList();
     _localStorage.saveCollars(collars: updatedList);
 
     final selectedCollarId = _localStorage.getSelectedCollarId();
@@ -60,7 +85,23 @@ class CollarsCubit extends Cubit<CollarsState> {
       final nextSelectedCollarId = updatedList.isNotEmpty
           ? updatedList.first
           : null;
-      _localStorage.saveSelectedCollarId(collarId: nextSelectedCollarId);
+      _localStorage.saveSelectedCollarId(deviceId: nextSelectedCollarId);
+    }
+
+    unawaited(
+      _notificationService?.toggleCollarTopic(
+        deviceId: deviceId,
+        enabled: false,
+      ),
+    );
+
+    final token = _notificationService?.token;
+    if (token != null && token.isNotEmpty) {
+      _databaseService.updateDeviceSettings(
+        token: token,
+        collarToModify: deviceId,
+        enabledCollars: currentCollars,
+      );
     }
   }
 

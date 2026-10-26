@@ -11,7 +11,7 @@ void main() {
     });
 
     testWidgets('renders HistoryPage and builds HistoryView', (tester) async {
-      await tester.pumpApp(const HistoryPage(collarId: 'COLLAR_TEST_PAGE'));
+      await tester.pumpApp(const HistoryPage(deviceId: 'COLLAR_TEST_PAGE'));
       await tester.pumpAndSettle();
 
       expect(find.byType(HistoryPage), findsOneWidget);

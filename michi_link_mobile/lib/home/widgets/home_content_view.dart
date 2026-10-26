@@ -9,14 +9,14 @@ import 'package:michi_link_mobile/home/home.dart';
 import 'package:michi_link_mobile/l10n/l10n.dart';
 
 class HomeContentView extends StatelessWidget {
-  const HomeContentView({required this.collarId, super.key});
+  const HomeContentView({required this.deviceId, super.key});
 
-  final String collarId;
+  final String deviceId;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<CollarModel>(
-      stream: getIt<DatabaseService>().getCollarStream(collarId: collarId),
+      stream: getIt<DatabaseService>().getCollarStream(deviceId: deviceId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           final theme = Theme.of(context);
@@ -51,7 +51,7 @@ class HomeContentView extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data == null) {
-          return LoadingMapView(collarId: collarId);
+          return LoadingMapView(deviceId: deviceId);
         }
 
         final collar = snapshot.data!;

@@ -1,33 +1,40 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:michi_link_mobile/app/app.dart';
 
 abstract class DatabaseRepository {
-  Stream<CollarModel> getCollarStream({required String collarId});
+  Stream<CollarModel> getCollarStream({required String deviceId});
   void updateCollar({
-    required String collarId,
+    required String deviceId,
     required String name,
     required CatBreed breed,
   });
   void updateCollarConfig({
-    required String collarId,
+    required String deviceId,
     required CollarConfig config,
   });
-  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId});
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String deviceId});
   Stream<List<HistoryRecord>> getHistoryRecordsStream({
-    required String collarId,
+    required String deviceId,
     required DateTime start,
     required DateTime end,
+  });
+  void updateDeviceSettings({
+    required String token,
+    AppDeviceInfo? deviceInfo,
+    String? collarToModify,
+    List<String>? enabledCollars,
   });
 }
 
 class MockDatabaseRepository implements DatabaseRepository {
   @override
-  Stream<CollarModel> getCollarStream({required String collarId}) {
+  Stream<CollarModel> getCollarStream({required String deviceId}) {
     return Stream.value(
       CollarModel(
-        deviceId: collarId,
+        deviceId: deviceId,
         name: 'Collar 1',
         isOnline: true,
         hasActiveAlert: true,
@@ -62,19 +69,19 @@ class MockDatabaseRepository implements DatabaseRepository {
 
   @override
   void updateCollar({
-    required String collarId,
+    required String deviceId,
     required String name,
     required CatBreed breed,
   }) {}
 
   @override
   void updateCollarConfig({
-    required String collarId,
+    required String deviceId,
     required CollarConfig config,
   }) {}
 
   @override
-  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId}) {
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String deviceId}) {
     return Stream.value([
       AlertRecord(
         id: '1',
@@ -97,7 +104,7 @@ class MockDatabaseRepository implements DatabaseRepository {
 
   @override
   Stream<List<HistoryRecord>> getHistoryRecordsStream({
-    required String collarId,
+    required String deviceId,
     required DateTime start,
     required DateTime end,
   }) {
@@ -142,6 +149,14 @@ class MockDatabaseRepository implements DatabaseRepository {
       ),
     ]);
   }
+
+  @override
+  void updateDeviceSettings({
+    required String token,
+    AppDeviceInfo? deviceInfo,
+    String? collarToModify,
+    List<String>? enabledCollars,
+  }) {}
 }
 
 class FirestoreDatabaseRepository implements DatabaseRepository {
@@ -151,10 +166,10 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
   final FirebaseFirestore _firestore;
 
   @override
-  Stream<CollarModel> getCollarStream({required String collarId}) {
+  Stream<CollarModel> getCollarStream({required String deviceId}) {
     return _firestore
         .collection('collars')
-        .doc(collarId)
+        .doc(deviceId)
         .snapshots()
         .where((snapshot) => snapshot.exists && snapshot.data() != null)
         .map((snapshot) => CollarModel.fromJson(snapshot.data()!));
@@ -162,12 +177,12 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
 
   @override
   void updateCollar({
-    required String collarId,
+    required String deviceId,
     required String name,
     required CatBreed breed,
   }) {
     unawaited(
-      _firestore.collection('collars').doc(collarId).update({
+      _firestore.collection('collars').doc(deviceId).update({
         'name': name,
         'breed': breed.name,
       }),
@@ -176,21 +191,21 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
 
   @override
   void updateCollarConfig({
-    required String collarId,
+    required String deviceId,
     required CollarConfig config,
   }) {
     unawaited(
-      _firestore.collection('collars').doc(collarId).update({
+      _firestore.collection('collars').doc(deviceId).update({
         'config': config.toJson(),
       }),
     );
   }
 
   @override
-  Stream<List<AlertRecord>> getAlertRecordsStream({required String collarId}) {
+  Stream<List<AlertRecord>> getAlertRecordsStream({required String deviceId}) {
     return _firestore
         .collection('collars')
-        .doc(collarId)
+        .doc(deviceId)
         .collection('alerts')
         .orderBy('timestamp', descending: true)
         .snapshots()
@@ -203,13 +218,13 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
 
   @override
   Stream<List<HistoryRecord>> getHistoryRecordsStream({
-    required String collarId,
+    required String deviceId,
     required DateTime start,
     required DateTime end,
   }) {
     return _firestore
         .collection('collars')
-        .doc(collarId)
+        .doc(deviceId)
         .collection('history')
         .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
@@ -220,5 +235,49 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
               .map((doc) => HistoryRecord.fromJson(doc.data(), id: doc.id))
               .toList(),
         );
+  }
+
+  @override
+  void updateDeviceSettings({
+    required String token,
+    AppDeviceInfo? deviceInfo,
+    String? collarToModify,
+    List<String>? enabledCollars,
+  }) {
+    if (token.isEmpty) return;
+
+    final data = <String, dynamic>{
+      if (deviceInfo != null) ...{
+        'platform': AppVariables.appOS,
+        'token': token,
+        'lastOpenAt': FieldValue.serverTimestamp(),
+        'androidInfo': deviceInfo.toJson(),
+      },
+    };
+
+    if (data.isNotEmpty) {
+      unawaited(
+        _firestore
+            .collection('devices')
+            .doc(token)
+            .set(data, SetOptions(mergeFields: data.keys.toList())),
+      );
+    }
+
+    if (collarToModify != null && enabledCollars != null) {
+      if (enabledCollars.contains(collarToModify)) {
+        unawaited(
+          _firestore.collection('devices').doc(token).update({
+            'enabledCollars': FieldValue.arrayRemove([collarToModify]),
+          }),
+        );
+      } else {
+        unawaited(
+          _firestore.collection('devices').doc(token).update({
+            'enabledCollars': FieldValue.arrayUnion([collarToModify]),
+          }),
+        );
+      }
+    }
   }
 }

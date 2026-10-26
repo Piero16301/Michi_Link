@@ -453,7 +453,7 @@ class _CollarConfigBottomSheetState extends State<CollarConfigBottomSheet> {
                         );
 
                         getIt<DatabaseService>().updateCollarConfig(
-                          collarId: widget.collar.deviceId,
+                          deviceId: widget.collar.deviceId,
                           config: updatedConfig,
                         );
 

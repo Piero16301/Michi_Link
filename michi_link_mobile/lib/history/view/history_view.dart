@@ -9,9 +9,9 @@ import 'package:michi_link_mobile/l10n/l10n.dart';
 import 'package:shimmer/shimmer.dart';
 
 class HistoryView extends StatelessWidget {
-  const HistoryView({this.collarId, super.key});
+  const HistoryView({this.deviceId, super.key});
 
-  final String? collarId;
+  final String? deviceId;
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +20,9 @@ class HistoryView extends StatelessWidget {
     final textTheme = theme.textTheme;
     final l10n = AppLocalizations.of(context);
 
-    final effectiveCollarId =
-        collarId ??
-        context.select<HistoryCubit, String>((cubit) => cubit.state.collarId);
+    final effectiveDeviceId =
+        deviceId ??
+        context.select<HistoryCubit, String>((cubit) => cubit.state.deviceId);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -90,7 +90,7 @@ class HistoryView extends StatelessWidget {
 
           return StreamBuilder<List<HistoryRecord>>(
             stream: getIt<DatabaseService>().getHistoryRecordsStream(
-              collarId: effectiveCollarId,
+              deviceId: effectiveDeviceId,
               start: state.startDateTime,
               end: state.endDateTime,
             ),

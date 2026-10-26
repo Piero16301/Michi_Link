@@ -2,9 +2,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:shimmer/shimmer.dart';
 
 class LoadingCollarCard extends StatelessWidget {
-  const LoadingCollarCard({required this.collarId, super.key});
+  const LoadingCollarCard({required this.deviceId, super.key});
 
-  final String collarId;
+  final String deviceId;
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,7 @@ class LoadingCollarCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    final shortId = _getShortId(collarId);
+    final shortId = _getShortId(deviceId);
 
     return Container(
       padding: const EdgeInsets.all(18),

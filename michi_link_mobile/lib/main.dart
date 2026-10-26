@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/bootstrap.dart';
@@ -15,10 +18,22 @@ Future<void> main() async {
   // Setup service locator
   setupServiceLocator(currentEnv);
 
+  getIt<CrashService>()
+    ..log('Application initialization started')
+    ..setCustomKey('environment', currentEnv.toString())
+    ..setCustomKey('debug_mode', kDebugMode.toString());
+
   // Initialize services and plugins in parallel
   final performance = getIt<PerformanceService>();
   final trace = performance.startTrace('app_initialization');
-  await Future.wait([getIt<LocalStorageService>().initialize()]);
+  await Future.wait([
+    getIt<LocalStorageService>().initialize(),
+    getIt<DeviceInfoService>().initialize(),
+  ]);
+
+  // Inicio notificaciones en segundo plano para no bloquear el inicio de la app
+  unawaited(getIt<NotificationService>().initialize());
+
   performance.stopTrace(trace);
 
   // Bootstrap the app

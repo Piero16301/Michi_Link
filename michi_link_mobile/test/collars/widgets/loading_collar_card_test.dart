@@ -8,7 +8,7 @@ void main() {
   group('LoadingCollarCard', () {
     testWidgets('renders loading shimmer and shortId', (tester) async {
       await tester.pumpApp(
-        const Scaffold(body: LoadingCollarCard(collarId: 'COLLAR_1234')),
+        const Scaffold(body: LoadingCollarCard(deviceId: 'COLLAR_1234')),
       );
 
       expect(find.byType(LoadingCollarCard), findsOneWidget);
@@ -19,7 +19,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpApp(
-        const Scaffold(body: LoadingCollarCard(collarId: 'ABCD')),
+        const Scaffold(body: LoadingCollarCard(deviceId: 'ABCD')),
       );
 
       expect(find.text('ID: ...ABCD'), findsOneWidget);

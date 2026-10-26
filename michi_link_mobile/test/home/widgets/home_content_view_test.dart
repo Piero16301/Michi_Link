@@ -15,7 +15,7 @@ void main() {
     testWidgets('renders HomeMapView and HomeTelemetryPanel on stream data', (
       tester,
     ) async {
-      await tester.pumpApp(const HomeContentView(collarId: 'COLLAR_1'));
+      await tester.pumpApp(const HomeContentView(deviceId: 'COLLAR_1'));
       await tester.pumpAndSettle();
 
       expect(find.byType(HomeContentView), findsOneWidget);

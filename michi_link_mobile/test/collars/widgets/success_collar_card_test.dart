@@ -87,7 +87,7 @@ void main() {
         (_) => Stream.value(const AppState(selectedCollarId: 'OTHER_COLLAR')),
       );
       when(
-        () => appCubit.changeSelectedCollarId(collarId: any(named: 'collarId')),
+        () => appCubit.changeSelectedCollarId(deviceId: any(named: 'deviceId')),
       ).thenAnswer((_) async {});
 
       await tester.pumpApp(
@@ -107,7 +107,7 @@ void main() {
       await tester.pumpAndSettle();
 
       verify(
-        () => appCubit.changeSelectedCollarId(collarId: 'COLLAR_001'),
+        () => appCubit.changeSelectedCollarId(deviceId: 'COLLAR_001'),
       ).called(1);
     });
   });

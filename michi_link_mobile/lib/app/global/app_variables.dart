@@ -33,7 +33,13 @@ class AppVariables {
   static const String nameRegExp =
       r'^(?=.{2,}$)[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+(?: [a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+)*$';
 
-  static const collarsCollection = 'categories';
+  static const String appOS = 'ANDROID';
+  static const String allDevicesTopic = 'all-devices';
+  static const String androidTopic = 'platform-android';
+
+  static const String criticalNotificationChannel = 'michi_critical_channel';
+  static const String warningNotificationChannel = 'michi_warning_channel';
+  static const String infoNotificationChannel = 'michi_info_channel';
 }
 
 enum SnackBarType {

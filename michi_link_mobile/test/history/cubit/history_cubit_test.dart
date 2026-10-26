@@ -10,10 +10,10 @@ void main() {
     final testDate = DateTime(2026, 10, 15);
 
     test('initial state has correct defaults (last hour of current day)', () {
-      final cubit = HistoryCubit(collarId: 'collar_123', initialDate: testDate);
+      final cubit = HistoryCubit(deviceId: 'collar_123', initialDate: testDate);
 
       final now = DateTime.now();
-      expect(cubit.state.collarId, equals('collar_123'));
+      expect(cubit.state.deviceId, equals('collar_123'));
       expect(cubit.state.selectedDate, equals(testDate));
       expect(
         cubit.state.startHour,
@@ -29,7 +29,7 @@ void main() {
 
     test('initial state accepts explicit startHour and endHour', () {
       final cubit = HistoryCubit(
-        collarId: 'collar_123',
+        deviceId: 'collar_123',
         initialDate: testDate,
         initialStartHour: 8,
         initialEndHour: 12,
@@ -42,7 +42,7 @@ void main() {
 
     blocTest<HistoryCubit, HistoryState>(
       'selectDate updates selectedDate',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) => cubit.selectDate(DateTime(2026, 10, 10)),
       expect: () => [
         isA<HistoryState>().having(
@@ -55,7 +55,7 @@ void main() {
 
     blocTest<HistoryCubit, HistoryState>(
       'previousDay decrements date by 1 day',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) => cubit.previousDay(),
       expect: () => [
         isA<HistoryState>().having(
@@ -68,7 +68,7 @@ void main() {
 
     blocTest<HistoryCubit, HistoryState>(
       'changeTimeRange updates startHour and endHour',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) => cubit.changeTimeRange(8, 16),
       expect: () => [
         isA<HistoryState>()
@@ -80,10 +80,10 @@ void main() {
     test(
       'initial state defaults to now when no optional arguments provided',
       () {
-        final cubit = HistoryCubit(collarId: 'collar_456');
+        final cubit = HistoryCubit(deviceId: 'collar_456');
         final now = DateTime.now();
 
-        expect(cubit.state.collarId, equals('collar_456'));
+        expect(cubit.state.deviceId, equals('collar_456'));
         expect(cubit.state.selectedDate?.year, equals(now.year));
         expect(cubit.state.selectedDate?.month, equals(now.month));
         expect(cubit.state.selectedDate?.day, equals(now.day));
@@ -101,14 +101,14 @@ void main() {
 
     blocTest<HistoryCubit, HistoryState>(
       'selectDate does not emit when clean date matches current selectedDate',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) => cubit.selectDate(DateTime(2026, 10, 15, 14, 30)),
       expect: () => <HistoryState>[],
     );
 
     blocTest<HistoryCubit, HistoryState>(
       'nextDay increments date when next day is not after today',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) => cubit.nextDay(),
       expect: () => [
         isA<HistoryState>().having(
@@ -124,7 +124,7 @@ void main() {
       build: () {
         final now = DateTime.now();
         return HistoryCubit(
-          collarId: 'collar_123',
+          deviceId: 'collar_123',
           initialDate: DateTime(now.year, now.month, now.day),
         );
       },
@@ -135,7 +135,7 @@ void main() {
     blocTest<HistoryCubit, HistoryState>(
       'changeTimeRange does not emit when startHour and endHour are identical',
       build: () => HistoryCubit(
-        collarId: 'collar_123',
+        deviceId: 'collar_123',
         initialDate: testDate,
         initialStartHour: 8,
         initialEndHour: 16,
@@ -146,7 +146,7 @@ void main() {
 
     blocTest<HistoryCubit, HistoryState>(
       'selectRecord updates selectedRecord',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) {
         final record = HistoryRecord(
           id: 'rec_1',
@@ -180,7 +180,7 @@ void main() {
 
     blocTest<HistoryCubit, HistoryState>(
       'selectRecord with null clears selectedRecord',
-      build: () => HistoryCubit(collarId: 'collar_123', initialDate: testDate),
+      build: () => HistoryCubit(deviceId: 'collar_123', initialDate: testDate),
       act: (cubit) => cubit.selectRecord(null),
       expect: () => [
         isA<HistoryState>().having(

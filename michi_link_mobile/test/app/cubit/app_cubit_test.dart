@@ -210,13 +210,13 @@ void main() {
     test('changeSelectedCollarId delegates to localStorage', () {
       when(
         () =>
-            localStorage.saveSelectedCollarId(collarId: any(named: 'collarId')),
+            localStorage.saveSelectedCollarId(deviceId: any(named: 'deviceId')),
       ).thenReturn(null);
       final cubit = AppCubit(localStorage: localStorage)
-        ..changeSelectedCollarId(collarId: 'COLLAR_999');
+        ..changeSelectedCollarId(deviceId: 'COLLAR_999');
 
       verify(
-        () => localStorage.saveSelectedCollarId(collarId: 'COLLAR_999'),
+        () => localStorage.saveSelectedCollarId(deviceId: 'COLLAR_999'),
       ).called(1);
       unawaited(cubit.close());
     });

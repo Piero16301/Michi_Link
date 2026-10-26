@@ -4,9 +4,9 @@ import 'package:michi_link_mobile/home/home.dart';
 import 'package:shimmer/shimmer.dart';
 
 class LoadingMapView extends StatelessWidget {
-  const LoadingMapView({this.collarId, super.key});
+  const LoadingMapView({this.deviceId, super.key});
 
-  final String? collarId;
+  final String? deviceId;
 
   @override
   Widget build(BuildContext context) {

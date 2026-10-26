@@ -26,10 +26,26 @@ void setupServiceLocator(Environment env) {
         localStorageRepository: ServiceFactory.getLocalStorageRepository(env),
       ),
     )
-    // 3. Servicios de Datos
+    // 3. Servicios de Datos / Externos
     ..registerLazySingleton<DatabaseService>(
       () => DatabaseService(
         databaseRepository: ServiceFactory.getDatabaseRepository(env),
+      ),
+    )
+    ..registerLazySingleton<DeviceInfoService>(
+      () => DeviceInfoService(
+        deviceInfoRepository: ServiceFactory.getDeviceInfoRepository(env),
+      ),
+    )
+    ..registerLazySingleton<NotificationService>(
+      () => NotificationService(
+        notificationRepository: ServiceFactory.getNotificationRepository(env),
+        databaseService: getIt<DatabaseService>(),
+        deviceInfoService: getIt<DeviceInfoService>(),
+        localStorageService: getIt<LocalStorageService>(),
+        performanceService: getIt<PerformanceService>(),
+        crashService: getIt<CrashService>(),
+        analyticsService: getIt<AnalyticsService>(),
       ),
     );
 }
@@ -79,6 +95,24 @@ class ServiceFactory {
         return MockDatabaseRepository();
       case Environment.prod:
         return FirestoreDatabaseRepository();
+    }
+  }
+
+  static DeviceInfoRepository getDeviceInfoRepository(Environment env) {
+    switch (env) {
+      case Environment.mock:
+        return MockDeviceInfoRepository();
+      case Environment.prod:
+        return PlusDeviceInfoRepository();
+    }
+  }
+
+  static NotificationRepository getNotificationRepository(Environment env) {
+    switch (env) {
+      case Environment.mock:
+        return MockNotificationRepository();
+      case Environment.prod:
+        return FirebaseNotificationRepository();
     }
   }
 }

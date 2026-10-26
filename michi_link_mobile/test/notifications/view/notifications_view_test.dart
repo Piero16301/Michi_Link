@@ -20,7 +20,7 @@ void main() {
 
       when(
         () => databaseService.getAlertRecordsStream(
-          collarId: any(named: 'collarId'),
+          deviceId: any(named: 'deviceId'),
         ),
       ).thenAnswer((_) => streamController.stream);
 
@@ -40,7 +40,7 @@ void main() {
     testWidgets('renders LoadingNotificationCard when stream has no data yet', (
       tester,
     ) async {
-      await tester.pumpApp(const NotificationsView(collarId: 'COLLAR_TEST'));
+      await tester.pumpApp(const NotificationsView(deviceId: 'COLLAR_TEST'));
 
       expect(find.byType(LoadingNotificationCard), findsWidgets);
     });
@@ -48,7 +48,7 @@ void main() {
     testWidgets('renders empty state when alerts list is empty', (
       tester,
     ) async {
-      await tester.pumpApp(const NotificationsView(collarId: 'COLLAR_TEST'));
+      await tester.pumpApp(const NotificationsView(deviceId: 'COLLAR_TEST'));
 
       streamController.add([]);
       await tester.pump();
@@ -59,7 +59,7 @@ void main() {
     testWidgets('renders notification items and headers when alerts arrive', (
       tester,
     ) async {
-      await tester.pumpApp(const NotificationsView(collarId: 'COLLAR_TEST'));
+      await tester.pumpApp(const NotificationsView(deviceId: 'COLLAR_TEST'));
 
       final alerts = [
         AlertRecord(
@@ -87,7 +87,7 @@ void main() {
     });
 
     testWidgets('renders SizedBox.shrink on stream error', (tester) async {
-      await tester.pumpApp(const NotificationsView(collarId: 'COLLAR_TEST'));
+      await tester.pumpApp(const NotificationsView(deviceId: 'COLLAR_TEST'));
 
       streamController.addError(Exception('error'));
       await tester.pump();

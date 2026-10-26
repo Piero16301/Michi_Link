@@ -2,6 +2,7 @@
 // ignore_for_file: subtype_of_sealed_class
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:expressive_kit/expressive_kit.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:mocktail/mocktail.dart';
@@ -25,26 +26,28 @@ class MockQuerySnapshot extends Mock
 class MockQueryDocumentSnapshot extends Mock
     implements QueryDocumentSnapshot<Map<String, dynamic>> {}
 
+class FakeSetOptions extends Fake implements SetOptions {}
+
 void main() {
   group('DatabaseRepository', () {
     test('MockDatabaseRepository returns mock streams and handles updates', () {
       final repo = MockDatabaseRepository();
 
       expect(
-        repo.getCollarStream(collarId: 'COLLAR_1'),
+        repo.getCollarStream(deviceId: 'COLLAR_1'),
         emits(
           isA<CollarModel>().having((c) => c.deviceId, 'deviceId', 'COLLAR_1'),
         ),
       );
 
       expect(
-        repo.getAlertRecordsStream(collarId: 'COLLAR_1'),
+        repo.getAlertRecordsStream(deviceId: 'COLLAR_1'),
         emits(hasLength(2)),
       );
 
       expect(
         repo.getHistoryRecordsStream(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           start: DateTime.now(),
           end: DateTime.now(),
         ),
@@ -53,7 +56,7 @@ void main() {
 
       expect(
         () => repo.updateCollar(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           name: 'Michi',
           breed: CatBreed.siamese,
         ),
@@ -62,7 +65,7 @@ void main() {
 
       expect(
         () => repo.updateCollarConfig(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           config: const CollarConfig(
             maxDistanceM: 100,
             minBatteryPct: 20,
@@ -72,24 +75,48 @@ void main() {
         ),
         returnsNormally,
       );
+
+      expect(
+        () => repo.updateDeviceSettings(
+          token: 'token123',
+          collarToModify: 'COLLAR_1',
+          enabledCollars: ['COLLAR_1'],
+        ),
+        returnsNormally,
+      );
     });
 
     group('FirestoreDatabaseRepository', () {
       late MockFirebaseFirestore mockFirestore;
       late MockCollectionReference mockCollarsCollection;
       late MockDocumentReference mockDocRef;
+      late MockCollectionReference mockDevicesCollection;
+      late MockDocumentReference mockDeviceDocRef;
       late FirestoreDatabaseRepository repo;
+
+      setUpAll(() {
+        registerFallbackValue(FakeSetOptions());
+      });
 
       setUp(() {
         mockFirestore = MockFirebaseFirestore();
         mockCollarsCollection = MockCollectionReference();
         mockDocRef = MockDocumentReference();
+        mockDevicesCollection = MockCollectionReference();
+        mockDeviceDocRef = MockDocumentReference();
         repo = FirestoreDatabaseRepository(firestore: mockFirestore);
 
         when(
           () => mockFirestore.collection('collars'),
         ).thenReturn(mockCollarsCollection);
         when(() => mockCollarsCollection.doc(any())).thenReturn(mockDocRef);
+
+        when(
+          () => mockFirestore.collection('devices'),
+        ).thenReturn(mockDevicesCollection);
+        when(
+          () => mockDevicesCollection.doc(any()),
+        ).thenReturn(mockDeviceDocRef);
       });
 
       test('defaults to FirebaseFirestore.instance when omitted', () {
@@ -116,7 +143,7 @@ void main() {
         });
 
         expect(
-          repo.getCollarStream(collarId: 'COLLAR_1'),
+          repo.getCollarStream(deviceId: 'COLLAR_1'),
           emits(
             isA<CollarModel>()
                 .having((c) => c.deviceId, 'deviceId', 'COLLAR_1')
@@ -125,11 +152,50 @@ void main() {
         );
       });
 
+      test(
+        'getCollarStream filters out non-existent or null data snapshots',
+        () async {
+          final nonExistentSnapshot = MockDocumentSnapshot();
+          when(() => nonExistentSnapshot.exists).thenReturn(false);
+          when(nonExistentSnapshot.data).thenReturn(null);
+
+          final nullDataSnapshot = MockDocumentSnapshot();
+          when(() => nullDataSnapshot.exists).thenReturn(true);
+          when(nullDataSnapshot.data).thenReturn(null);
+
+          final validSnapshot = MockDocumentSnapshot();
+          when(() => validSnapshot.exists).thenReturn(true);
+          when(validSnapshot.data).thenReturn(<String, dynamic>{
+            'device_id': 'COLLAR_VALID',
+            'name': 'Michi Valid',
+            'is_online': true,
+            'has_active_alert': false,
+            'packet_loss_pct': 0,
+            'packets_lost': 0,
+            'packets_received': 50,
+            'seq': 2,
+          });
+
+          when(() => mockDocRef.snapshots()).thenAnswer(
+            (_) => Stream.fromIterable([
+              nonExistentSnapshot,
+              nullDataSnapshot,
+              validSnapshot,
+            ]),
+          );
+
+          final result = await repo
+              .getCollarStream(deviceId: 'COLLAR_VALID')
+              .first;
+          expect(result.deviceId, equals('COLLAR_VALID'));
+        },
+      );
+
       test('updateCollar calls update on document reference', () {
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
         repo.updateCollar(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           name: 'Michi Renamed',
           breed: CatBreed.siamese,
         );
@@ -151,7 +217,7 @@ void main() {
         );
         when(() => mockDocRef.update(any())).thenAnswer((_) async {});
 
-        repo.updateCollarConfig(collarId: 'COLLAR_1', config: config);
+        repo.updateCollarConfig(deviceId: 'COLLAR_1', config: config);
 
         verify(
           () => mockDocRef.update(<String, dynamic>{'config': config.toJson()}),
@@ -186,7 +252,7 @@ void main() {
           });
 
           expect(
-            repo.getAlertRecordsStream(collarId: 'COLLAR_1'),
+            repo.getAlertRecordsStream(deviceId: 'COLLAR_1'),
             emits(
               isA<List<AlertRecord>>().having(
                 (list) => list.first.id,
@@ -252,7 +318,7 @@ void main() {
 
         expect(
           repo.getHistoryRecordsStream(
-            collarId: 'COLLAR_1',
+            deviceId: 'COLLAR_1',
             start: start,
             end: end,
           ),
@@ -264,6 +330,78 @@ void main() {
             ),
           ),
         );
+      });
+
+      group('updateDeviceSettings', () {
+        test('does nothing when token is empty', () {
+          repo.updateDeviceSettings(
+            token: '',
+            deviceInfo: const AppDeviceInfo(id: 'device-123'),
+            collarToModify: 'COLLAR_1',
+            enabledCollars: ['COLLAR_1'],
+          );
+
+          verifyNever(() => mockFirestore.collection(any()));
+        });
+
+        test('sets device info when deviceInfo is provided', () {
+          when(
+            () => mockDeviceDocRef.set(any(), any()),
+          ).thenAnswer((_) async {});
+
+          const info = AppDeviceInfo(id: 'device-123');
+
+          repo.updateDeviceSettings(token: 'valid_token', deviceInfo: info);
+
+          verify(() => mockFirestore.collection('devices')).called(1);
+          verify(() => mockDevicesCollection.doc('valid_token')).called(1);
+          verify(() => mockDeviceDocRef.set(any(), any())).called(1);
+        });
+
+        test(
+          'removes collar from enabledCollars when collar is already present',
+          () {
+            when(() => mockDeviceDocRef.update(any())).thenAnswer((_) async {});
+
+            repo.updateDeviceSettings(
+              token: 'valid_token',
+              collarToModify: 'COLLAR_1',
+              enabledCollars: ['COLLAR_1', 'COLLAR_2'],
+            );
+
+            verify(() => mockFirestore.collection('devices')).called(1);
+            verify(() => mockDevicesCollection.doc('valid_token')).called(1);
+            verify(() => mockDeviceDocRef.update(any())).called(1);
+          },
+        );
+
+        test('adds collar to enabledCollars when collar is not present', () {
+          when(() => mockDeviceDocRef.update(any())).thenAnswer((_) async {});
+
+          repo.updateDeviceSettings(
+            token: 'valid_token',
+            collarToModify: 'COLLAR_3',
+            enabledCollars: ['COLLAR_1', 'COLLAR_2'],
+          );
+
+          verify(() => mockFirestore.collection('devices')).called(1);
+          verify(() => mockDevicesCollection.doc('valid_token')).called(1);
+          verify(() => mockDeviceDocRef.update(any())).called(1);
+        });
+
+        test('does not update enabledCollars when '
+            'collarToModify or enabledCollars is null', () {
+          when(
+            () => mockDeviceDocRef.set(any(), any()),
+          ).thenAnswer((_) async {});
+
+          repo.updateDeviceSettings(
+            token: 'valid_token',
+            deviceInfo: const AppDeviceInfo(id: 'device-123'),
+          );
+
+          verifyNever(() => mockDeviceDocRef.update(any()));
+        });
       });
     });
   });

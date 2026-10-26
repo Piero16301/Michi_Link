@@ -55,7 +55,7 @@ void main() {
       expect(() => repo.saveBaseColor(baseColor: Colors.red), returnsNormally);
       expect(() => repo.saveFontFamily(fontFamily: 'Inter'), returnsNormally);
       expect(() => repo.saveCollars(collars: ['1']), returnsNormally);
-      expect(() => repo.saveSelectedCollarId(collarId: '1'), returnsNormally);
+      expect(() => repo.saveSelectedCollarId(deviceId: '1'), returnsNormally);
     });
 
     group('HiveLocalStorageRepository', () {
@@ -164,7 +164,7 @@ void main() {
         () async {
           expect(repo.getSelectedCollarId(), isNull);
 
-          repo.saveSelectedCollarId(collarId: 'COLLAR_SELECT');
+          repo.saveSelectedCollarId(deviceId: 'COLLAR_SELECT');
           await Future<void>.delayed(Duration.zero);
           expect(repo.getSelectedCollarId(), 'COLLAR_SELECT');
 
@@ -183,7 +183,7 @@ void main() {
           );
 
           await Future<void>.delayed(const Duration(milliseconds: 20));
-          repo.saveSelectedCollarId(collarId: 'COLLAR_99');
+          repo.saveSelectedCollarId(deviceId: 'COLLAR_99');
           await Future<void>.delayed(const Duration(milliseconds: 50));
         },
       );

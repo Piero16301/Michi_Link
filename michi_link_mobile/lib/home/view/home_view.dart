@@ -16,7 +16,7 @@ class HomeView extends StatelessWidget {
           return const HomeNoCollarView();
         }
 
-        return HomeContentView(collarId: state.selectedCollarId!);
+        return HomeContentView(deviceId: state.selectedCollarId!);
       },
     );
   }

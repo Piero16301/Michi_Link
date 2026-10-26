@@ -18,7 +18,7 @@ void main() {
 
       when(
         () => databaseService.getAlertRecordsStream(
-          collarId: any(named: 'collarId'),
+          deviceId: any(named: 'deviceId'),
         ),
       ).thenAnswer((_) => streamController.stream);
     });
@@ -27,20 +27,20 @@ void main() {
       await streamController.close();
     });
 
-    test('initial state has provided collarId and empty alerts', () {
+    test('initial state has provided deviceId and empty alerts', () {
       final cubit = NotificationsCubit(
-        collarId: 'COLLAR_TEST',
+        deviceId: 'COLLAR_TEST',
         databaseService: databaseService,
       );
 
-      expect(cubit.state.collarId, 'COLLAR_TEST');
+      expect(cubit.state.deviceId, 'COLLAR_TEST');
       expect(cubit.state.alerts, isEmpty);
       unawaited(cubit.close());
     });
 
     test('emits updated alerts when stream emits', () async {
       final cubit = NotificationsCubit(
-        collarId: 'COLLAR_TEST',
+        deviceId: 'COLLAR_TEST',
         databaseService: databaseService,
       );
 

@@ -54,8 +54,8 @@ class LocalStorageService {
     return _localStorageRepository.getCollarsStream();
   }
 
-  void saveSelectedCollarId({String? collarId}) {
-    _localStorageRepository.saveSelectedCollarId(collarId: collarId);
+  void saveSelectedCollarId({String? deviceId}) {
+    _localStorageRepository.saveSelectedCollarId(deviceId: deviceId);
   }
 
   String? getSelectedCollarId() {

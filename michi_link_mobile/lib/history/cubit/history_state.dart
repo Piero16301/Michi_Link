@@ -2,14 +2,14 @@ part of 'history_cubit.dart';
 
 class HistoryState extends Equatable {
   const HistoryState({
-    this.collarId = '',
+    this.deviceId = '',
     this.selectedDate,
     this.startHour = 0,
     this.endHour = 24,
     this.selectedRecord,
   });
 
-  final String collarId;
+  final String deviceId;
   final DateTime? selectedDate;
   final double startHour;
   final double endHour;
@@ -38,14 +38,14 @@ class HistoryState extends Equatable {
   }
 
   HistoryState copyWith({
-    String? collarId,
+    String? deviceId,
     DateTime? selectedDate,
     double? startHour,
     double? endHour,
     HistoryRecord? Function()? selectedRecord,
   }) {
     return HistoryState(
-      collarId: collarId ?? this.collarId,
+      deviceId: deviceId ?? this.deviceId,
       selectedDate: selectedDate ?? this.selectedDate,
       startHour: startHour ?? this.startHour,
       endHour: endHour ?? this.endHour,
@@ -57,7 +57,7 @@ class HistoryState extends Equatable {
 
   @override
   List<Object?> get props => [
-    collarId,
+    deviceId,
     selectedDate,
     startHour,
     endHour,

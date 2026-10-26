@@ -11,7 +11,7 @@ void main() {
     });
 
     testWidgets('renders NotificationsView', (tester) async {
-      await tester.pumpApp(const NotificationsPage(collarId: 'COLLAR_TEST'));
+      await tester.pumpApp(const NotificationsPage(deviceId: 'COLLAR_TEST'));
 
       expect(find.byType(NotificationsView), findsOneWidget);
     });

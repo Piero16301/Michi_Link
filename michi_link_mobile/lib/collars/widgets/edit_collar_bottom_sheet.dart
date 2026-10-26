@@ -273,7 +273,7 @@ class EditCollarBottomSheetState extends State<EditCollarBottomSheet> {
                               widget.parentContext
                                   .read<CollarsCubit>()
                                   .updateCollar(
-                                    collarId: widget.collar.deviceId,
+                                    deviceId: widget.collar.deviceId,
                                     name: updatedName,
                                     breed: _selectedBreed,
                                   );

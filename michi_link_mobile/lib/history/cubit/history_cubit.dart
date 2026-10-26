@@ -6,13 +6,13 @@ part 'history_state.dart';
 
 class HistoryCubit extends Cubit<HistoryState> {
   HistoryCubit({
-    required String collarId,
+    required String deviceId,
     DateTime? initialDate,
     double? initialStartHour,
     double? initialEndHour,
   }) : super(
          HistoryState(
-           collarId: collarId,
+           deviceId: deviceId,
            selectedDate: initialDate ?? _defaultDate(),
            startHour: initialStartHour ?? _defaultStartHour(),
            endHour: initialEndHour ?? _defaultEndHour(),

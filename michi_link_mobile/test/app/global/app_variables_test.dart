@@ -21,7 +21,6 @@ void main() {
       expect(AppVariables.mapFocusZoom, 19.0);
       expect(AppVariables.snackBarDuration, const Duration(seconds: 5));
       expect(AppVariables.animationDuration, const Duration(milliseconds: 400));
-      expect(AppVariables.collarsCollection, 'categories');
       expect(
         AppVariables.formatDate.format(DateTime(2026, 1, 15)),
         '15/01/2026',

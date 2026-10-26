@@ -4,27 +4,27 @@ enum NotificationsStatus { initial, loading, success, failure }
 
 class NotificationsState extends Equatable {
   const NotificationsState({
-    this.collarId = '',
+    this.deviceId = '',
     this.alerts = const [],
     this.status = NotificationsStatus.loading,
   });
 
-  final String collarId;
+  final String deviceId;
   final List<AlertRecord> alerts;
   final NotificationsStatus status;
 
   NotificationsState copyWith({
-    String? collarId,
+    String? deviceId,
     List<AlertRecord>? alerts,
     NotificationsStatus? status,
   }) {
     return NotificationsState(
-      collarId: collarId ?? this.collarId,
+      deviceId: deviceId ?? this.deviceId,
       alerts: alerts ?? this.alerts,
       status: status ?? this.status,
     );
   }
 
   @override
-  List<Object?> get props => [collarId, alerts, status];
+  List<Object?> get props => [deviceId, alerts, status];
 }

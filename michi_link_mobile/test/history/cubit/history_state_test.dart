@@ -39,16 +39,16 @@ void main() {
         });
 
         final state = HistoryState(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           selectedRecord: record,
         );
 
         final updated = state.copyWith(
-          collarId: 'COLLAR_2',
+          deviceId: 'COLLAR_2',
           selectedRecord: () => null,
         );
 
-        expect(updated.collarId, 'COLLAR_2');
+        expect(updated.deviceId, 'COLLAR_2');
         expect(updated.selectedRecord, isNull);
       },
     );
@@ -62,18 +62,18 @@ void main() {
           'coords': {'lat': 0, 'lon': 0, 'alt_m': 0},
         });
         final state = HistoryState(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           selectedRecord: record,
         );
 
         final updated = state.copyWith(
-          collarId: 'COLLAR_2',
+          deviceId: 'COLLAR_2',
           selectedDate: DateTime(2026, 6),
           startHour: 10,
           endHour: 20,
         );
 
-        expect(updated.collarId, 'COLLAR_2');
+        expect(updated.deviceId, 'COLLAR_2');
         expect(updated.selectedDate, DateTime(2026, 6));
         expect(updated.startHour, 10);
         expect(updated.endHour, 20);
@@ -92,7 +92,7 @@ void main() {
 
     test('props contains all relevant fields', () {
       final state = HistoryState(
-        collarId: 'COLLAR_1',
+        deviceId: 'COLLAR_1',
         selectedDate: DateTime(2026),
         startHour: 5,
         endHour: 10,

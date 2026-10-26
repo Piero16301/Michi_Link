@@ -4,14 +4,14 @@ import 'package:michi_link_mobile/app/app.dart';
 import 'package:michi_link_mobile/collars/collars.dart';
 
 class CollarCard extends StatelessWidget {
-  const CollarCard({required this.collarId, super.key});
+  const CollarCard({required this.deviceId, super.key});
 
-  final String collarId;
+  final String deviceId;
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<CollarModel>(
-      stream: getIt<DatabaseService>().getCollarStream(collarId: collarId),
+      stream: getIt<DatabaseService>().getCollarStream(deviceId: deviceId),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           final colorScheme = Theme.of(context).colorScheme;
@@ -33,7 +33,7 @@ class CollarCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    collarId,
+                    deviceId,
                     style: TextStyle(
                       fontFamily: 'monospace',
                       fontWeight: FontWeight.bold,
@@ -47,7 +47,7 @@ class CollarCard extends StatelessWidget {
         }
 
         if (!snapshot.hasData || snapshot.data == null) {
-          return LoadingCollarCard(collarId: collarId);
+          return LoadingCollarCard(deviceId: deviceId);
         }
 
         final collar = snapshot.data!;

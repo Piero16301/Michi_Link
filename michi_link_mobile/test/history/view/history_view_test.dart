@@ -75,14 +75,14 @@ void main() {
 
       when(() => historyCubit.state).thenReturn(
         HistoryState(
-          collarId: 'COLLAR_1',
+          deviceId: 'COLLAR_1',
           selectedDate: DateTime(2026, 10, 22),
         ),
       );
       when(() => historyCubit.stream).thenAnswer(
         (_) => Stream.value(
           HistoryState(
-            collarId: 'COLLAR_1',
+            deviceId: 'COLLAR_1',
             selectedDate: DateTime(2026, 10, 22),
           ),
         ),
@@ -90,7 +90,7 @@ void main() {
 
       when(
         () => databaseService.getHistoryRecordsStream(
-          collarId: any(named: 'collarId'),
+          deviceId: any(named: 'deviceId'),
           start: any(named: 'start'),
           end: any(named: 'end'),
         ),
@@ -119,7 +119,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<HistoryCubit>.value(
           value: historyCubit,
-          child: const HistoryView(collarId: 'COLLAR_1'),
+          child: const HistoryView(deviceId: 'COLLAR_1'),
         ),
       );
 
@@ -141,7 +141,7 @@ void main() {
       (tester) async {
         when(() => historyCubit.state).thenReturn(
           HistoryState(
-            collarId: 'COLLAR_1',
+            deviceId: 'COLLAR_1',
             selectedDate: DateTime(2026, 10, 22),
             selectedRecord: sampleRecord1,
           ),
@@ -149,7 +149,7 @@ void main() {
         when(() => historyCubit.stream).thenAnswer(
           (_) => Stream.value(
             HistoryState(
-              collarId: 'COLLAR_1',
+              deviceId: 'COLLAR_1',
               selectedDate: DateTime(2026, 10, 22),
               selectedRecord: sampleRecord1,
             ),
@@ -182,7 +182,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<HistoryCubit>.value(
           value: historyCubit,
-          child: const HistoryView(collarId: 'COLLAR_1'),
+          child: const HistoryView(deviceId: 'COLLAR_1'),
         ),
       );
       await tester.pump();
@@ -197,7 +197,7 @@ void main() {
           data: ThemeData.dark(),
           child: BlocProvider<HistoryCubit>.value(
             value: historyCubit,
-            child: const HistoryView(collarId: 'COLLAR_1'),
+            child: const HistoryView(deviceId: 'COLLAR_1'),
           ),
         ),
       );
@@ -212,7 +212,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<HistoryCubit>.value(
           value: historyCubit,
-          child: const HistoryView(collarId: 'COLLAR_1'),
+          child: const HistoryView(deviceId: 'COLLAR_1'),
         ),
       );
 
@@ -233,7 +233,7 @@ void main() {
           goRouter: goRouter,
           child: BlocProvider<HistoryCubit>.value(
             value: historyCubit,
-            child: const HistoryView(collarId: 'COLLAR_1'),
+            child: const HistoryView(deviceId: 'COLLAR_1'),
           ),
         ),
       );
@@ -277,7 +277,7 @@ void main() {
         await tester.pumpApp(
           BlocProvider<HistoryCubit>.value(
             value: historyCubit,
-            child: const HistoryView(collarId: 'COLLAR_1'),
+            child: const HistoryView(deviceId: 'COLLAR_1'),
           ),
         );
 
@@ -295,7 +295,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<HistoryCubit>.value(
           value: historyCubit,
-          child: const HistoryView(collarId: 'COLLAR_1'),
+          child: const HistoryView(deviceId: 'COLLAR_1'),
         ),
       );
 
@@ -314,7 +314,7 @@ void main() {
       await tester.pumpApp(
         BlocProvider<HistoryCubit>.value(
           value: historyCubit,
-          child: const HistoryView(collarId: 'COLLAR_1'),
+          child: const HistoryView(deviceId: 'COLLAR_1'),
         ),
       );
 

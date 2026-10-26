@@ -9,6 +9,8 @@ class MockLocalStorageService extends Mock implements LocalStorageService {}
 
 class MockDatabaseService extends Mock implements DatabaseService {}
 
+class MockNotificationService extends Mock implements NotificationService {}
+
 void main() {
   setUpAll(() {
     registerFallbackValue(CatBreed.persian);
@@ -17,12 +19,29 @@ void main() {
   group('CollarsCubit', () {
     late MockLocalStorageService localStorage;
     late MockDatabaseService databaseService;
+    late MockNotificationService notificationService;
     late StreamController<List<String>> collarsStreamController;
 
     setUp(() {
       localStorage = MockLocalStorageService();
       databaseService = MockDatabaseService();
+      notificationService = MockNotificationService();
       collarsStreamController = StreamController<List<String>>.broadcast();
+
+      when(() => notificationService.token).thenReturn('mock_token');
+      when(
+        () => notificationService.toggleCollarTopic(
+          deviceId: any(named: 'deviceId'),
+          enabled: any(named: 'enabled'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        () => databaseService.updateDeviceSettings(
+          token: any(named: 'token'),
+          collarToModify: any(named: 'collarToModify'),
+          enabledCollars: any(named: 'enabledCollars'),
+        ),
+      ).thenAnswer((_) async {});
 
       when(() => localStorage.getCollars()).thenReturn(['COLLAR_1']);
       when(
@@ -33,11 +52,11 @@ void main() {
       ).thenAnswer((_) async {});
       when(
         () =>
-            localStorage.saveSelectedCollarId(collarId: any(named: 'collarId')),
+            localStorage.saveSelectedCollarId(deviceId: any(named: 'deviceId')),
       ).thenAnswer((_) async {});
       when(
         () => databaseService.updateCollar(
-          collarId: any(named: 'collarId'),
+          deviceId: any(named: 'deviceId'),
           name: any(named: 'name'),
           breed: any(named: 'breed'),
         ),
@@ -76,10 +95,17 @@ void main() {
         final cubit = CollarsCubit(
           localStorage: localStorage,
           databaseService: databaseService,
+          notificationService: notificationService,
         )..addCollar(deviceId: 'COLLAR_1');
 
         verifyNever(
           () => localStorage.saveCollars(collars: any(named: 'collars')),
+        );
+        verifyNever(
+          () => notificationService.toggleCollarTopic(
+            deviceId: any(named: 'deviceId'),
+            enabled: any(named: 'enabled'),
+          ),
         );
         unawaited(cubit.close());
       });
@@ -89,13 +115,27 @@ void main() {
         final cubit = CollarsCubit(
           localStorage: localStorage,
           databaseService: databaseService,
+          notificationService: notificationService,
         )..addCollar(deviceId: 'NEW_COLLAR');
 
         verify(
           () => localStorage.saveCollars(collars: ['NEW_COLLAR']),
         ).called(1);
         verify(
-          () => localStorage.saveSelectedCollarId(collarId: 'NEW_COLLAR'),
+          () => localStorage.saveSelectedCollarId(deviceId: 'NEW_COLLAR'),
+        ).called(1);
+        verify(
+          () => notificationService.toggleCollarTopic(
+            deviceId: 'NEW_COLLAR',
+            enabled: true,
+          ),
+        ).called(1);
+        verify(
+          () => databaseService.updateDeviceSettings(
+            token: 'mock_token',
+            collarToModify: 'NEW_COLLAR',
+            enabledCollars: [],
+          ),
         ).called(1);
         unawaited(cubit.close());
       });
@@ -104,6 +144,7 @@ void main() {
         final cubit = CollarsCubit(
           localStorage: localStorage,
           databaseService: databaseService,
+          notificationService: notificationService,
         )..addCollar(deviceId: 'COLLAR_2');
 
         verify(
@@ -111,9 +152,22 @@ void main() {
         ).called(1);
         verifyNever(
           () => localStorage.saveSelectedCollarId(
-            collarId: any(named: 'collarId'),
+            deviceId: any(named: 'deviceId'),
           ),
         );
+        verify(
+          () => notificationService.toggleCollarTopic(
+            deviceId: 'COLLAR_2',
+            enabled: true,
+          ),
+        ).called(1);
+        verify(
+          () => databaseService.updateDeviceSettings(
+            token: 'mock_token',
+            collarToModify: 'COLLAR_2',
+            enabledCollars: ['COLLAR_1'],
+          ),
+        ).called(1);
         unawaited(cubit.close());
       });
     });
@@ -125,14 +179,14 @@ void main() {
               localStorage: localStorage,
               databaseService: databaseService,
             )..updateCollar(
-              collarId: 'COLLAR_1',
+              deviceId: 'COLLAR_1',
               name: 'Michi',
               breed: CatBreed.siamese,
             );
 
         verify(
           () => databaseService.updateCollar(
-            collarId: 'COLLAR_1',
+            deviceId: 'COLLAR_1',
             name: 'Michi',
             breed: CatBreed.siamese,
           ),
@@ -146,10 +200,17 @@ void main() {
         final cubit = CollarsCubit(
           localStorage: localStorage,
           databaseService: databaseService,
+          notificationService: notificationService,
         )..removeCollar('NON_EXISTENT');
 
         verifyNever(
           () => localStorage.saveCollars(collars: any(named: 'collars')),
+        );
+        verifyNever(
+          () => notificationService.toggleCollarTopic(
+            deviceId: any(named: 'deviceId'),
+            enabled: any(named: 'enabled'),
+          ),
         );
         unawaited(cubit.close());
       });
@@ -164,11 +225,25 @@ void main() {
         final cubit = CollarsCubit(
           localStorage: localStorage,
           databaseService: databaseService,
+          notificationService: notificationService,
         )..removeCollar('COLLAR_1');
 
         verify(() => localStorage.saveCollars(collars: ['COLLAR_2'])).called(1);
         verify(
-          () => localStorage.saveSelectedCollarId(collarId: 'COLLAR_2'),
+          () => localStorage.saveSelectedCollarId(deviceId: 'COLLAR_2'),
+        ).called(1);
+        verify(
+          () => notificationService.toggleCollarTopic(
+            deviceId: 'COLLAR_1',
+            enabled: false,
+          ),
+        ).called(1);
+        verify(
+          () => databaseService.updateDeviceSettings(
+            token: 'mock_token',
+            collarToModify: 'COLLAR_1',
+            enabledCollars: ['COLLAR_1', 'COLLAR_2'],
+          ),
         ).called(1);
         unawaited(cubit.close());
       });
@@ -182,10 +257,24 @@ void main() {
           final cubit = CollarsCubit(
             localStorage: localStorage,
             databaseService: databaseService,
+            notificationService: notificationService,
           )..removeCollar('COLLAR_1');
 
           verify(() => localStorage.saveCollars(collars: [])).called(1);
           verify(() => localStorage.saveSelectedCollarId()).called(1);
+          verify(
+            () => notificationService.toggleCollarTopic(
+              deviceId: 'COLLAR_1',
+              enabled: false,
+            ),
+          ).called(1);
+          verify(
+            () => databaseService.updateDeviceSettings(
+              token: 'mock_token',
+              collarToModify: 'COLLAR_1',
+              enabledCollars: ['COLLAR_1'],
+            ),
+          ).called(1);
           unawaited(cubit.close());
         },
       );
@@ -202,6 +291,7 @@ void main() {
           final cubit = CollarsCubit(
             localStorage: localStorage,
             databaseService: databaseService,
+            notificationService: notificationService,
           )..removeCollar('COLLAR_1');
 
           verify(
@@ -209,9 +299,22 @@ void main() {
           ).called(1);
           verifyNever(
             () => localStorage.saveSelectedCollarId(
-              collarId: any(named: 'collarId'),
+              deviceId: any(named: 'deviceId'),
             ),
           );
+          verify(
+            () => notificationService.toggleCollarTopic(
+              deviceId: 'COLLAR_1',
+              enabled: false,
+            ),
+          ).called(1);
+          verify(
+            () => databaseService.updateDeviceSettings(
+              token: 'mock_token',
+              collarToModify: 'COLLAR_1',
+              enabledCollars: ['COLLAR_1', 'COLLAR_2'],
+            ),
+          ).called(1);
           unawaited(cubit.close());
         },
       );

@@ -8,12 +8,12 @@ part 'notifications_state.dart';
 
 class NotificationsCubit extends Cubit<NotificationsState> {
   NotificationsCubit({
-    required String collarId,
+    required String deviceId,
     DatabaseService? databaseService,
   }) : _databaseService = databaseService ?? getIt<DatabaseService>(),
-       super(NotificationsState(collarId: collarId)) {
+       super(NotificationsState(deviceId: deviceId)) {
     _alertsSubscription = _databaseService
-        .getAlertRecordsStream(collarId: collarId)
+        .getAlertRecordsStream(deviceId: deviceId)
         .listen(
           _onAlertsChanged,
           onError: (_) =>
