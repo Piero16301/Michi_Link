@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -41,6 +42,12 @@ class NotificationService {
           ? getIt<DeviceInfoService>()
           : null)!;
 
+  LocalStorageService? get _localStorage =>
+      _localStorageService ??
+      (getIt.isRegistered<LocalStorageService>()
+          ? getIt<LocalStorageService>()
+          : null);
+
   PerformanceService? get _perf =>
       _performanceService ??
       (getIt.isRegistered<PerformanceService>()
@@ -73,7 +80,6 @@ class NotificationService {
     try {
       await _notificationRepository.initialize();
 
-      // Escuchar mensajes en primer plano
       _messageSubscription = _notificationRepository.onMessage.listen((
         message,
       ) {
@@ -82,25 +88,21 @@ class NotificationService {
         }
       });
 
-      // Manejar aperturas desde background
       _messageOpenedAppSubscription = _notificationRepository.onMessageOpenedApp
           .listen((message) {
             _handleMessage(message, onNotificationOpened);
           });
 
-      // Manejar apertura inicial (cold start)
       final initialMessage = await _notificationRepository.getInitialMessage();
       if (initialMessage != null) {
         _handleMessage(initialMessage, onNotificationOpened);
       }
 
-      // Sincronizar dispositivo y tópicos si hay token disponible
       final currentToken = _notificationRepository.token;
       if (currentToken.isNotEmpty) {
         await syncDeviceAndTopics(currentToken);
       }
 
-      // Escuchar registro de token
       _registeredSubscription = _notificationRepository.onRegistered.listen((
         newToken,
       ) {
@@ -148,6 +150,11 @@ class NotificationService {
           topicSubscriptions.add(subscribeToTopic(AppVariables.androidTopic));
         } else {
           debugPrint('Running on emulator, not subscribing to platform topic');
+        }
+
+        final savedCollars = _localStorage?.getCollars() ?? [];
+        if (savedCollars.isNotEmpty) {
+          topicSubscriptions.add(syncCollarsTopics(savedCollars));
         }
 
         await Future.wait(topicSubscriptions);
@@ -237,6 +244,35 @@ class NotificationService {
       navigate();
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) => navigate());
+    }
+  }
+
+  void handleBackgroundMessage(String message) {
+    if (kDebugMode) {
+      debugPrint('Handling a background message: $message');
+    }
+
+    try {
+      final decoded = jsonDecode(message);
+      if (decoded is Map<String, dynamic>) {
+        final deviceId = decoded['device_id']?.toString();
+        if (deviceId != null && deviceId.isNotEmpty) {
+          _analytics?.logEvent(
+            name: 'notification_opened',
+            parameters: {'device_id': deviceId, 'source': 'fcm_background'},
+          );
+          _navigateToNotifications(deviceId);
+        }
+      }
+    } on Exception catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('Error parsing background message JSON: $e');
+      }
+      _crash?.recordError(
+        e,
+        stackTrace,
+        reason: 'handleBackgroundMessage jsonDecode error',
+      );
     }
   }
 

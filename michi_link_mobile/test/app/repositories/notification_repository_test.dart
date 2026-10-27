@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:michi_link_mobile/app/app.dart';
@@ -31,7 +29,6 @@ void main() {
       await expectLater(repo.subscribeToTopic('test'), completes);
       await expectLater(repo.unsubscribeFromTopic('test'), completes);
       await expectLater(repo.requestPermission(), completes);
-      expect(() => repo.handleBackgroundMessage('msg'), returnsNormally);
     });
 
     group('FirebaseNotificationRepository', () {
@@ -195,43 +192,6 @@ void main() {
         },
       );
 
-      test('handleBackgroundMessage processes valid device_id message', () {
-        expect(
-          () => repo.handleBackgroundMessage(
-            jsonEncode({'device_id': 'COLLAR_TEST_99'}),
-          ),
-          returnsNormally,
-        );
-      });
-
-      test('handleBackgroundMessage ignores message when '
-          'device_id is missing or empty', () {
-        expect(
-          () => repo.handleBackgroundMessage(jsonEncode({'other': 'val'})),
-          returnsNormally,
-        );
-        expect(
-          () => repo.handleBackgroundMessage(jsonEncode({'device_id': ''})),
-          returnsNormally,
-        );
-        expect(
-          () => repo.handleBackgroundMessage(jsonEncode('not-a-map')),
-          returnsNormally,
-        );
-      });
-
-      test('handleBackgroundMessage records error when json is invalid', () {
-        repo.handleBackgroundMessage('invalid-json');
-
-        verify(
-          () => mockCrash.recordError(
-            any<dynamic>(),
-            any<StackTrace?>(),
-            reason: 'handleBackgroundMessage jsonDecode error',
-          ),
-        ).called(1);
-      });
-
       test(
         'falls back to getIt for CrashService when omitted from constructor',
         () async {
@@ -239,8 +199,13 @@ void main() {
             messaging: mockMessaging,
           );
 
+          final exception = Exception('FCM Error');
+          when(
+            () => mockMessaging.subscribeToTopic('test_topic'),
+          ).thenThrow(exception);
+
           expect(
-            () => repoNoCrash.handleBackgroundMessage('invalid-json'),
+            () => repoNoCrash.subscribeToTopic('test_topic'),
             returnsNormally,
           );
 
@@ -254,12 +219,12 @@ void main() {
             }
           });
 
-          repoNoCrash.handleBackgroundMessage('invalid-json');
+          await repoNoCrash.subscribeToTopic('test_topic');
           verify(
             () => mockCrash.recordError(
-              any<dynamic>(),
-              any<StackTrace?>(),
-              reason: 'handleBackgroundMessage jsonDecode error',
+              exception,
+              any(),
+              reason: 'NotificationRepository subscribeToTopic error',
             ),
           ).called(1);
         },

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -16,7 +15,6 @@ abstract class NotificationRepository {
   Future<void> subscribeToTopic(String topic);
   Future<void> unsubscribeFromTopic(String topic);
   Future<void> requestPermission();
-  void handleBackgroundMessage(String message);
 }
 
 class MockNotificationRepository implements NotificationRepository {
@@ -49,9 +47,6 @@ class MockNotificationRepository implements NotificationRepository {
 
   @override
   Future<void> requestPermission() async {}
-
-  @override
-  void handleBackgroundMessage(String message) {}
 }
 
 class FirebaseNotificationRepository implements NotificationRepository {
@@ -132,37 +127,6 @@ class FirebaseNotificationRepository implements NotificationRepository {
         debugPrint('User has not yet made a choice');
       case AuthorizationStatus.deniedPermanently:
         debugPrint('User denied permission permanently');
-    }
-  }
-
-  @override
-  void handleBackgroundMessage(String message) {
-    if (kDebugMode) {
-      debugPrint('Handling a background message: $message');
-    }
-
-    try {
-      final decoded = jsonDecode(message);
-      if (decoded is Map<String, dynamic>) {
-        final deviceId = decoded['device_id']?.toString();
-        if (deviceId != null && deviceId.isNotEmpty) {
-          unawaited(
-            AppRoutes.router.pushNamed(
-              AppRoute.notifications.name,
-              pathParameters: {'deviceId': deviceId},
-            ),
-          );
-        }
-      }
-    } on Exception catch (e, stackTrace) {
-      if (kDebugMode) {
-        debugPrint('Error parsing background message JSON: $e');
-      }
-      _crash?.recordError(
-        e,
-        stackTrace,
-        reason: 'handleBackgroundMessage jsonDecode error',
-      );
     }
   }
 

@@ -361,7 +361,9 @@ void main() {
         test(
           'removes collar from enabledCollars when collar is already present',
           () {
-            when(() => mockDeviceDocRef.update(any())).thenAnswer((_) async {});
+            when(
+              () => mockDeviceDocRef.set(any(), any()),
+            ).thenAnswer((_) async {});
 
             repo.updateDeviceSettings(
               token: 'valid_token',
@@ -371,12 +373,31 @@ void main() {
 
             verify(() => mockFirestore.collection('devices')).called(1);
             verify(() => mockDevicesCollection.doc('valid_token')).called(1);
-            verify(() => mockDeviceDocRef.update(any())).called(1);
+            verify(
+              () => mockDeviceDocRef.set(
+                any(
+                  that: isA<Map<String, dynamic>>().having(
+                    (d) => d['enabledCollars'],
+                    'enabledCollars',
+                    isNotNull,
+                  ),
+                ),
+                any(
+                  that: isA<SetOptions>().having(
+                    (s) => s.merge,
+                    'merge',
+                    isTrue,
+                  ),
+                ),
+              ),
+            ).called(1);
           },
         );
 
         test('adds collar to enabledCollars when collar is not present', () {
-          when(() => mockDeviceDocRef.update(any())).thenAnswer((_) async {});
+          when(
+            () => mockDeviceDocRef.set(any(), any()),
+          ).thenAnswer((_) async {});
 
           repo.updateDeviceSettings(
             token: 'valid_token',
@@ -386,7 +407,20 @@ void main() {
 
           verify(() => mockFirestore.collection('devices')).called(1);
           verify(() => mockDevicesCollection.doc('valid_token')).called(1);
-          verify(() => mockDeviceDocRef.update(any())).called(1);
+          verify(
+            () => mockDeviceDocRef.set(
+              any(
+                that: isA<Map<String, dynamic>>().having(
+                  (d) => d['enabledCollars'],
+                  'enabledCollars',
+                  isNotNull,
+                ),
+              ),
+              any(
+                that: isA<SetOptions>().having((s) => s.merge, 'merge', isTrue),
+              ),
+            ),
+          ).called(1);
         });
 
         test('does not update enabledCollars when '
@@ -400,7 +434,18 @@ void main() {
             deviceInfo: const AppDeviceInfo(id: 'device-123'),
           );
 
-          verifyNever(() => mockDeviceDocRef.update(any()));
+          verify(
+            () => mockDeviceDocRef.set(
+              any(
+                that: isA<Map<String, dynamic>>().having(
+                  (d) => d.containsKey('enabledCollars'),
+                  'contains enabledCollars',
+                  isFalse,
+                ),
+              ),
+              any(),
+            ),
+          ).called(1);
         });
       });
     });

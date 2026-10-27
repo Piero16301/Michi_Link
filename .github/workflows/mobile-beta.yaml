@@ -138,6 +138,8 @@ jobs:
           echo "value=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
 
       - name: 🛠️ Build the application (AAB)
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           flutter build appbundle --flavor production -t lib/main.dart --build-name="${{ steps.build_name.outputs.value }}" --build-number="${{ github.run_number }}"
 

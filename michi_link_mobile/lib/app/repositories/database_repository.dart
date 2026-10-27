@@ -253,6 +253,10 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
         'lastOpenAt': FieldValue.serverTimestamp(),
         'androidInfo': deviceInfo.toJson(),
       },
+      if (collarToModify != null && enabledCollars != null)
+        'enabledCollars': enabledCollars.contains(collarToModify)
+            ? FieldValue.arrayRemove([collarToModify])
+            : FieldValue.arrayUnion([collarToModify]),
     };
 
     if (data.isNotEmpty) {
@@ -260,24 +264,8 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
         _firestore
             .collection('devices')
             .doc(token)
-            .set(data, SetOptions(mergeFields: data.keys.toList())),
+            .set(data, SetOptions(merge: true)),
       );
-    }
-
-    if (collarToModify != null && enabledCollars != null) {
-      if (enabledCollars.contains(collarToModify)) {
-        unawaited(
-          _firestore.collection('devices').doc(token).update({
-            'enabledCollars': FieldValue.arrayRemove([collarToModify]),
-          }),
-        );
-      } else {
-        unawaited(
-          _firestore.collection('devices').doc(token).update({
-            'enabledCollars': FieldValue.arrayUnion([collarToModify]),
-          }),
-        );
-      }
     }
   }
 }

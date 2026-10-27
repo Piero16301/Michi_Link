@@ -80,6 +80,7 @@ void main() {
       when(
         () => mockDeviceInfo.deviceInfo,
       ).thenReturn(const AppDeviceInfo(id: 'mock-id', isPhysicalDevice: true));
+      when(() => mockStorage.getCollars()).thenReturn([]);
       when(
         () => mockDb.updateDeviceSettings(
           token: any(named: 'token'),
@@ -503,5 +504,64 @@ void main() {
         ),
       ).called(1);
     });
+
+    group('handleBackgroundMessage', () {
+      test('processes valid device_id message and navigates', () {
+        expect(
+          () => service.handleBackgroundMessage(
+            '{"device_id": "COLLAR_TEST_99"}',
+          ),
+          returnsNormally,
+        );
+
+        verify(
+          () => mockAnalytics.logEvent(
+            name: 'notification_opened',
+            parameters: {
+              'device_id': 'COLLAR_TEST_99',
+              'source': 'fcm_background',
+            },
+          ),
+        ).called(1);
+      });
+
+      test('ignores message when device_id is missing or empty', () {
+        service
+          ..handleBackgroundMessage('{"other": "val"}')
+          ..handleBackgroundMessage('{"device_id": ""}')
+          ..handleBackgroundMessage('"not-a-map"');
+
+        verifyNever(
+          () => mockAnalytics.logEvent(
+            name: any(named: 'name'),
+            parameters: any(named: 'parameters'),
+          ),
+        );
+      });
+
+      test('records error when json is invalid', () {
+        service.handleBackgroundMessage('invalid-json');
+
+        verify(
+          () => mockCrash.recordError(
+            any<dynamic>(),
+            any<StackTrace?>(),
+            reason: 'handleBackgroundMessage jsonDecode error',
+          ),
+        ).called(1);
+      });
+    });
+
+    test(
+      'syncDeviceAndTopics subscribes to saved collars in storage',
+      () async {
+        when(() => mockStorage.getCollars()).thenReturn(['col_1', 'col_2']);
+
+        await service.syncDeviceAndTopics('token-123');
+
+        verify(() => mockRepo.subscribeToTopic('col_1')).called(1);
+        verify(() => mockRepo.subscribeToTopic('col_2')).called(1);
+      },
+    );
   });
 }
