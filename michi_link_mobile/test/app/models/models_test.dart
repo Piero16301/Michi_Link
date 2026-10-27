@@ -26,6 +26,26 @@ void main() {
       expect(coords.toJson(), json);
     });
 
+    test('CollarCoords clamps out-of-range and non-finite values', () {
+      final outOfBounds = CollarCoords.fromJson(const <String, dynamic>{
+        'alt_m': double.nan,
+        'lat': 120.0,
+        'lon': -200.0,
+      });
+      expect(outOfBounds.lat, 90.0);
+      expect(outOfBounds.lon, -180.0);
+      expect(outOfBounds.altM, 0.0);
+
+      final infiniteCoords = CollarCoords.fromJson(const <String, dynamic>{
+        'alt_m': double.infinity,
+        'lat': double.nan,
+        'lon': double.infinity,
+      });
+      expect(infiniteCoords.lat, 0.0);
+      expect(infiniteCoords.lon, 0.0);
+      expect(infiniteCoords.altM, 0.0);
+    });
+
     test('CollarStatus parses and converts correctly', () {
       final json = <String, dynamic>{
         'battery_pct': 91,
@@ -40,6 +60,27 @@ void main() {
       expect(status.gpsFix, isTrue);
       expect(status.sats, 13);
       expect(status.toJson(), json);
+    });
+
+    test('CollarStatus clamps battery percentage and sats to valid bounds', () {
+      final statusOver = CollarStatus.fromJson(const <String, dynamic>{
+        'battery_pct': 150,
+        'battery_v': double.nan,
+        'gps_fix': true,
+        'sats': 150,
+      });
+      expect(statusOver.batteryPct, 100);
+      expect(statusOver.batteryV, 0.0);
+      expect(statusOver.sats, 100);
+
+      final statusUnder = CollarStatus.fromJson(const <String, dynamic>{
+        'battery_pct': -20,
+        'battery_v': 3.8,
+        'gps_fix': false,
+        'sats': -5,
+      });
+      expect(statusUnder.batteryPct, 0);
+      expect(statusUnder.sats, 0);
     });
 
     test('CollarRadio parses and converts correctly', () {

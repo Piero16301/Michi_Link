@@ -11,18 +11,22 @@ class CollarsCubit extends Cubit<CollarsState> {
     LocalStorageService? localStorage,
     DatabaseService? databaseService,
     NotificationService? notificationService,
-  }) : _localStorage = localStorage ?? getIt<LocalStorageService>(),
-       _databaseService = databaseService ?? getIt<DatabaseService>(),
-       _notificationService =
-           notificationService ??
-           (getIt.isRegistered<NotificationService>()
-               ? getIt<NotificationService>()
-               : null),
-       super(
-         CollarsState(
-           collars: (localStorage ?? getIt<LocalStorageService>()).getCollars(),
-         ),
-       ) {
+  }) : this._(
+         localStorage: localStorage ?? getIt<LocalStorageService>(),
+         databaseService: databaseService ?? getIt<DatabaseService>(),
+         notificationService:
+             notificationService ??
+             (getIt.isRegistered<NotificationService>()
+                 ? getIt<NotificationService>()
+                 : null),
+       );
+
+  CollarsCubit._({
+    required LocalStorageService localStorage,
+    required this._databaseService,
+    required this._notificationService,
+  }) : _localStorage = localStorage,
+       super(CollarsState(collars: localStorage.getCollars())) {
     _collarsSubscription = _localStorage.getCollarsStream().listen(
       _onCollarsChanged,
     );
@@ -55,14 +59,7 @@ class CollarsCubit extends Cubit<CollarsState> {
       ),
     );
 
-    final token = _notificationService?.token;
-    if (token != null && token.isNotEmpty) {
-      _databaseService.updateDeviceSettings(
-        token: token,
-        collarToModify: deviceId,
-        enabledCollars: currentCollars,
-      );
-    }
+    _syncDeviceSettings(deviceId, currentCollars);
   }
 
   void updateCollar({
@@ -95,12 +92,16 @@ class CollarsCubit extends Cubit<CollarsState> {
       ),
     );
 
+    _syncDeviceSettings(deviceId, currentCollars);
+  }
+
+  void _syncDeviceSettings(String deviceId, List<String> enabledCollars) {
     final token = _notificationService?.token;
     if (token != null && token.isNotEmpty) {
       _databaseService.updateDeviceSettings(
         token: token,
         collarToModify: deviceId,
-        enabledCollars: currentCollars,
+        enabledCollars: enabledCollars,
       );
     }
   }

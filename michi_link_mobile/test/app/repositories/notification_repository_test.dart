@@ -1,3 +1,6 @@
+// Test suite verifies compatibility with deprecated FCM token APIs.
+// ignore_for_file: deprecated_member_use
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:michi_link_mobile/app/app.dart';
@@ -50,6 +53,12 @@ void main() {
           () => mockMessaging.onRegistered,
         ).thenAnswer((_) => const Stream.empty());
         when(
+          () => mockMessaging.onTokenRefresh,
+        ).thenAnswer((_) => const Stream.empty());
+        when(
+          () => mockMessaging.getToken(),
+        ).thenAnswer((_) async => 'fcm-token-123');
+        when(
           () => mockMessaging.requestPermission(),
         ).thenAnswer((_) async => mockSettings);
         when(
@@ -75,16 +84,28 @@ void main() {
         'initialize listens to token and calls requestPermission and register',
         () async {
           when(
-            () => mockMessaging.onRegistered,
-          ).thenAnswer((_) => Stream.value('fcm-token-123'));
+            () => mockMessaging.getToken(),
+          ).thenAnswer((_) async => 'fcm-token-123');
 
           await repo.initialize();
 
           expect(repo.token, 'fcm-token-123');
           verify(() => mockMessaging.requestPermission()).called(1);
+          verify(() => mockMessaging.getToken()).called(1);
           verify(() => mockMessaging.register()).called(1);
         },
       );
+
+      test('initialize updates token when onTokenRefresh emits', () async {
+        when(() => mockMessaging.getToken()).thenAnswer((_) async => null);
+        when(
+          () => mockMessaging.onTokenRefresh,
+        ).thenAnswer((_) => Stream.value('refreshed-token'));
+
+        await repo.initialize();
+
+        expect(repo.token, 'refreshed-token');
+      });
 
       test('initialize records error to crash service on failure', () async {
         final exception = Exception('Init failed');

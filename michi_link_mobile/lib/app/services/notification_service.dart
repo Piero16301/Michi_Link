@@ -137,9 +137,12 @@ class NotificationService {
           getIt.isRegistered<LocalStorageService>();
 
       if (isDbAvailable && isDeviceAvailable && isStorageAvailable) {
+        final savedCollars = _localStorage?.getCollars() ?? [];
+
         _db.updateDeviceSettings(
           token: token,
           deviceInfo: _deviceInfo.deviceInfo,
+          enabledCollars: savedCollars.isNotEmpty ? savedCollars : null,
         );
 
         final topicSubscriptions = <Future<void>>[
@@ -152,7 +155,6 @@ class NotificationService {
           debugPrint('Running on emulator, not subscribing to platform topic');
         }
 
-        final savedCollars = _localStorage?.getCollars() ?? [];
         if (savedCollars.isNotEmpty) {
           topicSubscriptions.add(syncCollarsTopics(savedCollars));
         }

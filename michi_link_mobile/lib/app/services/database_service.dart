@@ -17,7 +17,7 @@ class DatabaseService {
     required String name,
     required CatBreed breed,
   }) {
-    return _databaseRepository.updateCollar(
+    _databaseRepository.updateCollar(
       deviceId: deviceId,
       name: name,
       breed: breed,
@@ -53,7 +53,7 @@ class DatabaseService {
     String? collarToModify,
     List<String>? enabledCollars,
   }) {
-    return _databaseRepository.updateDeviceSettings(
+    _databaseRepository.updateDeviceSettings(
       token: token,
       deviceInfo: deviceInfo,
       collarToModify: collarToModify,

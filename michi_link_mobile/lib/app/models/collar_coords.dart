@@ -13,11 +13,15 @@ class CollarCoords extends Equatable {
 
   /// Creates an instance of [CollarCoords] from a [Map]
   factory CollarCoords.fromJson(Map<String, dynamic> json) {
-    return CollarCoords(
-      altM: (json['alt_m'] as num?)?.toDouble() ?? 0.0,
-      lat: (json['lat'] as num?)?.toDouble() ?? 0.0,
-      lon: (json['lon'] as num?)?.toDouble() ?? 0.0,
-    );
+    final rawLat = (json['lat'] as num?)?.toDouble() ?? 0.0;
+    final rawLon = (json['lon'] as num?)?.toDouble() ?? 0.0;
+    final rawAlt = (json['alt_m'] as num?)?.toDouble() ?? 0.0;
+
+    final lat = rawLat.isFinite ? rawLat.clamp(-90.0, 90.0) : 0.0;
+    final lon = rawLon.isFinite ? rawLon.clamp(-180.0, 180.0) : 0.0;
+    final altM = rawAlt.isFinite ? rawAlt : 0.0;
+
+    return CollarCoords(altM: altM, lat: lat, lon: lon);
   }
 
   /// Creates a [Map] from an instance of [CollarCoords]

@@ -224,6 +224,46 @@ void main() {
         ).called(1);
       });
 
+      test('ignores updateCollar when deviceId is empty or whitespace', () {
+        repo.updateCollar(
+          deviceId: '   ',
+          name: 'Michi',
+          breed: CatBreed.siamese,
+        );
+
+        verifyNever(() => mockDocRef.update(any()));
+      });
+
+      test(
+        'ignores updateCollarConfig when deviceId is empty or whitespace',
+        () {
+          repo.updateCollarConfig(
+            deviceId: '',
+            config: const CollarConfig(
+              maxDistanceM: 50,
+              minBatteryPct: 15,
+              requireGpsFix: true,
+              notifLanguage: 'es',
+            ),
+          );
+
+          verifyNever(() => mockDocRef.update(any()));
+        },
+      );
+
+      test('returns empty stream when deviceId is empty', () {
+        expect(repo.getCollarStream(deviceId: '   '), emitsDone);
+        expect(repo.getAlertRecordsStream(deviceId: ''), emits(isEmpty));
+        expect(
+          repo.getHistoryRecordsStream(
+            deviceId: '  ',
+            start: DateTime.now(),
+            end: DateTime.now(),
+          ),
+          emits(isEmpty),
+        );
+      });
+
       test(
         'getAlertRecordsStream maps alert documents to AlertRecord list',
         () {
@@ -423,8 +463,37 @@ void main() {
           ).called(1);
         });
 
+        test('unions enabledCollars when collarToModify is null '
+            'but enabledCollars is provided', () {
+          when(
+            () => mockDeviceDocRef.set(any(), any()),
+          ).thenAnswer((_) async {});
+
+          repo.updateDeviceSettings(
+            token: 'valid_token',
+            enabledCollars: ['COLLAR_1', 'COLLAR_2'],
+          );
+
+          verify(() => mockFirestore.collection('devices')).called(1);
+          verify(() => mockDevicesCollection.doc('valid_token')).called(1);
+          verify(
+            () => mockDeviceDocRef.set(
+              any(
+                that: isA<Map<String, dynamic>>().having(
+                  (d) => d['enabledCollars'],
+                  'enabledCollars',
+                  isNotNull,
+                ),
+              ),
+              any(
+                that: isA<SetOptions>().having((s) => s.merge, 'merge', isTrue),
+              ),
+            ),
+          ).called(1);
+        });
+
         test('does not update enabledCollars when '
-            'collarToModify or enabledCollars is null', () {
+            'collarToModify and enabledCollars are null', () {
           when(
             () => mockDeviceDocRef.set(any(), any()),
           ).thenAnswer((_) async {});

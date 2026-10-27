@@ -23,17 +23,13 @@ class CatBreedSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              l10n.collarsChooseCatBreed,
-              style: textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.6,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+        Text(
+          l10n.collarsChooseCatBreed,
+          style: textTheme.labelSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.6,
+            color: colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(

@@ -165,11 +165,14 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
 
   final FirebaseFirestore _firestore;
 
+  DocumentReference<Map<String, dynamic>> _collarDoc(String deviceId) =>
+      _firestore.collection('collars').doc(deviceId.trim());
+
   @override
   Stream<CollarModel> getCollarStream({required String deviceId}) {
-    return _firestore
-        .collection('collars')
-        .doc(deviceId)
+    final trimmedId = deviceId.trim();
+    if (trimmedId.isEmpty) return const Stream.empty();
+    return _collarDoc(trimmedId)
         .snapshots()
         .where((snapshot) => snapshot.exists && snapshot.data() != null)
         .map((snapshot) => CollarModel.fromJson(snapshot.data()!));
@@ -181,11 +184,10 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
     required String name,
     required CatBreed breed,
   }) {
+    final trimmedId = deviceId.trim();
+    if (trimmedId.isEmpty) return;
     unawaited(
-      _firestore.collection('collars').doc(deviceId).update({
-        'name': name,
-        'breed': breed.name,
-      }),
+      _collarDoc(trimmedId).update({'name': name.trim(), 'breed': breed.name}),
     );
   }
 
@@ -194,18 +196,16 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
     required String deviceId,
     required CollarConfig config,
   }) {
-    unawaited(
-      _firestore.collection('collars').doc(deviceId).update({
-        'config': config.toJson(),
-      }),
-    );
+    final trimmedId = deviceId.trim();
+    if (trimmedId.isEmpty) return;
+    unawaited(_collarDoc(trimmedId).update({'config': config.toJson()}));
   }
 
   @override
   Stream<List<AlertRecord>> getAlertRecordsStream({required String deviceId}) {
-    return _firestore
-        .collection('collars')
-        .doc(deviceId)
+    final trimmedId = deviceId.trim();
+    if (trimmedId.isEmpty) return Stream.value(const []);
+    return _collarDoc(trimmedId)
         .collection('alerts')
         .orderBy('timestamp', descending: true)
         .snapshots()
@@ -222,9 +222,9 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
     required DateTime start,
     required DateTime end,
   }) {
-    return _firestore
-        .collection('collars')
-        .doc(deviceId)
+    final trimmedId = deviceId.trim();
+    if (trimmedId.isEmpty) return Stream.value(const []);
+    return _collarDoc(trimmedId)
         .collection('history')
         .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
@@ -244,26 +244,34 @@ class FirestoreDatabaseRepository implements DatabaseRepository {
     String? collarToModify,
     List<String>? enabledCollars,
   }) {
-    if (token.isEmpty) return;
+    final trimmedToken = token.trim();
+    if (trimmedToken.isEmpty) return;
 
+    final trimmedCollar = collarToModify?.trim();
     final data = <String, dynamic>{
       if (deviceInfo != null) ...{
         'platform': AppVariables.appOS,
-        'token': token,
+        'token': trimmedToken,
         'lastOpenAt': FieldValue.serverTimestamp(),
         'androidInfo': deviceInfo.toJson(),
       },
-      if (collarToModify != null && enabledCollars != null)
-        'enabledCollars': enabledCollars.contains(collarToModify)
-            ? FieldValue.arrayRemove([collarToModify])
-            : FieldValue.arrayUnion([collarToModify]),
+      if (trimmedCollar != null &&
+          trimmedCollar.isNotEmpty &&
+          enabledCollars != null)
+        'enabledCollars': enabledCollars.contains(trimmedCollar)
+            ? FieldValue.arrayRemove([trimmedCollar])
+            : FieldValue.arrayUnion([trimmedCollar])
+      else if (collarToModify == null &&
+          enabledCollars != null &&
+          enabledCollars.isNotEmpty)
+        'enabledCollars': FieldValue.arrayUnion(enabledCollars),
     };
 
     if (data.isNotEmpty) {
       unawaited(
         _firestore
             .collection('devices')
-            .doc(token)
+            .doc(trimmedToken)
             .set(data, SetOptions(merge: true)),
       );
     }

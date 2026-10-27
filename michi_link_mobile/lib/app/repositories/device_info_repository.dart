@@ -36,12 +36,12 @@ class PlusDeviceInfoRepository implements DeviceInfoRepository {
 
   @override
   Future<void> initialize() async {
-    final results = await Future.wait([
+    final (androidInfo, packageInfo) = await (
       _deviceInfoPlugin.androidInfo,
       PackageInfo.fromPlatform(),
-    ]);
-    _androidInfo = results[0] as AndroidDeviceInfo;
-    _packageInfo = results[1] as PackageInfo;
+    ).wait;
+    _androidInfo = androidInfo;
+    _packageInfo = packageInfo;
   }
 
   @override

@@ -14,11 +14,15 @@ class CollarStatus extends Equatable {
 
   /// Creates an instance of [CollarStatus] from a [Map]
   factory CollarStatus.fromJson(Map<String, dynamic> json) {
+    final rawBattery = (json['battery_pct'] as num?)?.toInt() ?? 0;
+    final rawSats = (json['sats'] as num?)?.toInt() ?? 0;
+    final rawV = (json['battery_v'] as num?)?.toDouble() ?? 0.0;
+
     return CollarStatus(
-      batteryPct: (json['battery_pct'] as num?)?.toInt() ?? 0,
-      batteryV: (json['battery_v'] as num?)?.toDouble() ?? 0.0,
+      batteryPct: rawBattery.clamp(0, 100),
+      batteryV: rawV.isFinite ? rawV : 0.0,
       gpsFix: json['gps_fix'] as bool? ?? false,
-      sats: (json['sats'] as num?)?.toInt() ?? 0,
+      sats: rawSats.clamp(0, 100),
     );
   }
 

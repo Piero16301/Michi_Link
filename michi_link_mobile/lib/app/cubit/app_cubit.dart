@@ -27,23 +27,25 @@ class AppCubit extends Cubit<AppState> {
 
   void initialLoad() {
     // Setting the language to the device language if it's not set
-    final language = _localStorage.getLanguage();
+    var language = _localStorage.getLanguage();
     if (language == null) {
       final deviceLocale = PlatformDispatcher.instance.locale.languageCode;
-      final deviceLanguage = ExpressiveLanguages.fromLanguageCode(deviceLocale);
-      _localStorage.saveLanguage(language: deviceLanguage);
+      language = ExpressiveLanguages.fromLanguageCode(deviceLocale);
+      _localStorage.saveLanguage(language: language);
     }
 
     // Setting the theme to the device theme if it's not set
-    final theme = _localStorage.getTheme();
+    var theme = _localStorage.getTheme();
     if (theme == null) {
-      _localStorage.saveTheme(theme: ExpressiveTheme.defaultTheme);
+      theme = ExpressiveTheme.defaultTheme;
+      _localStorage.saveTheme(theme: theme);
     }
 
     // Setting the base color to default if it's not set
-    final baseColor = _localStorage.getBaseColor();
+    var baseColor = _localStorage.getBaseColor();
     if (baseColor == null) {
-      _localStorage.saveBaseColor(baseColor: ExpressiveColors.defaultColor);
+      baseColor = ExpressiveColors.defaultColor;
+      _localStorage.saveBaseColor(baseColor: baseColor);
     }
 
     // Setting the font family to default if it's not set
@@ -53,17 +55,16 @@ class AppCubit extends Cubit<AppState> {
         ExpressiveFonts.availableFonts.containsValue(fontFamily);
 
     if (!isFontSupported) {
-      const defaultFont = ExpressiveFonts.defaultFont;
-      _localStorage.saveFontFamily(fontFamily: defaultFont);
-      fontFamily = defaultFont;
+      fontFamily = ExpressiveFonts.defaultFont;
+      _localStorage.saveFontFamily(fontFamily: fontFamily);
     }
 
     emit(
       state.copyWith(
-        language: _localStorage.getLanguage(),
-        theme: _localStorage.getTheme(),
-        baseColor: _localStorage.getBaseColor(),
-        fontFamily: _localStorage.getFontFamily(),
+        language: language,
+        theme: theme,
+        baseColor: baseColor,
+        fontFamily: fontFamily,
         selectedCollarId: _localStorage.getSelectedCollarId(),
       ),
     );

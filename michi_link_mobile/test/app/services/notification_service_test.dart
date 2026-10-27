@@ -552,16 +552,21 @@ void main() {
       });
     });
 
-    test(
-      'syncDeviceAndTopics subscribes to saved collars in storage',
-      () async {
-        when(() => mockStorage.getCollars()).thenReturn(['col_1', 'col_2']);
+    test('syncDeviceAndTopics subscribes to saved collars in storage '
+        'and passes enabledCollars', () async {
+      when(() => mockStorage.getCollars()).thenReturn(['col_1', 'col_2']);
 
-        await service.syncDeviceAndTopics('token-123');
+      await service.syncDeviceAndTopics('token-123');
 
-        verify(() => mockRepo.subscribeToTopic('col_1')).called(1);
-        verify(() => mockRepo.subscribeToTopic('col_2')).called(1);
-      },
-    );
+      verify(() => mockRepo.subscribeToTopic('col_1')).called(1);
+      verify(() => mockRepo.subscribeToTopic('col_2')).called(1);
+      verify(
+        () => mockDb.updateDeviceSettings(
+          token: 'token-123',
+          deviceInfo: any(named: 'deviceInfo'),
+          enabledCollars: ['col_1', 'col_2'],
+        ),
+      ).called(1);
+    });
   });
 }

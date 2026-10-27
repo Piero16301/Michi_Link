@@ -41,8 +41,9 @@ class _HomeMapViewState extends State<HomeMapView> {
   double? _lastPixelRatio;
 
   _SelectedMarkerType _selectedMarker = _SelectedMarkerType.none;
-  double _infoWindowX = 0;
-  double _infoWindowY = 0;
+  final ValueNotifier<Offset> _infoWindowNotifier = ValueNotifier<Offset>(
+    Offset.zero,
+  );
 
   @override
   void initState() {
@@ -53,6 +54,7 @@ class _HomeMapViewState extends State<HomeMapView> {
   @override
   void dispose() {
     _bearingNotifier.dispose();
+    _infoWindowNotifier.dispose();
     super.dispose();
   }
 
@@ -151,10 +153,10 @@ class _HomeMapViewState extends State<HomeMapView> {
       final dpr = defaultTargetPlatform == TargetPlatform.android
           ? MediaQuery.devicePixelRatioOf(context)
           : 1.0;
-      setState(() {
-        _infoWindowX = screenCoord.x / dpr;
-        _infoWindowY = screenCoord.y / dpr;
-      });
+      _infoWindowNotifier.value = Offset(
+        screenCoord.x / dpr,
+        screenCoord.y / dpr,
+      );
     } on Exception catch (_) {}
   }
 
@@ -176,9 +178,11 @@ class _HomeMapViewState extends State<HomeMapView> {
         final dpr = defaultTargetPlatform == TargetPlatform.android
             ? MediaQuery.devicePixelRatioOf(context)
             : 1.0;
+        _infoWindowNotifier.value = Offset(
+          screenCoord.x / dpr,
+          screenCoord.y / dpr,
+        );
         setState(() {
-          _infoWindowX = screenCoord.x / dpr;
-          _infoWindowY = screenCoord.y / dpr;
           _selectedMarker = type;
         });
       } on Exception catch (_) {
@@ -607,11 +611,17 @@ class _HomeMapViewState extends State<HomeMapView> {
           ),
 
         if (_selectedMarker != _SelectedMarkerType.none)
-          Positioned(
-            left: _infoWindowX,
-            top:
-                _infoWindowY -
-                (_selectedMarker == _SelectedMarkerType.cat ? 28.0 : 35.0),
+          ValueListenableBuilder<Offset>(
+            valueListenable: _infoWindowNotifier,
+            builder: (context, pos, child) {
+              return Positioned(
+                left: pos.dx,
+                top:
+                    pos.dy -
+                    (_selectedMarker == _SelectedMarkerType.cat ? 28.0 : 35.0),
+                child: child!,
+              );
+            },
             child: FractionalTranslation(
               translation: const Offset(-0.5, -1),
               child: GestureDetector(

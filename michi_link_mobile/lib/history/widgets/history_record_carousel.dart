@@ -86,18 +86,6 @@ class _HistoryRecordCarouselState extends State<HistoryRecordCarousel> {
             index: index,
             totalCount: widget.records.length,
             onClose: widget.onClose,
-            onPrevious: index > 0
-                ? () => _pageController.previousPage(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                  )
-                : null,
-            onNext: index < widget.records.length - 1
-                ? () => _pageController.nextPage(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOutCubic,
-                  )
-                : null,
           );
         },
       ),
@@ -111,16 +99,12 @@ class _RecordCarouselCardItem extends StatelessWidget {
     required this.index,
     required this.totalCount,
     required this.onClose,
-    this.onPrevious,
-    this.onNext,
   });
 
   final HistoryRecord record;
   final int index;
   final int totalCount;
   final VoidCallback onClose;
-  final VoidCallback? onPrevious;
-  final VoidCallback? onNext;
 
   @override
   Widget build(BuildContext context) {
@@ -328,7 +312,6 @@ class _RecordCarouselCardItem extends StatelessWidget {
                     record.status.batteryPct,
                     record.status.batteryV.toStringAsFixed(1),
                   ),
-                  colorScheme: colorScheme,
                 ),
               ),
               const SizedBox(width: 6),
@@ -338,7 +321,6 @@ class _RecordCarouselCardItem extends StatelessWidget {
                   text: l10n.historyValueDistance(
                     record.radio.distanceHomeM.toStringAsFixed(1),
                   ),
-                  colorScheme: colorScheme,
                 ),
               ),
               const SizedBox(width: 6),
@@ -346,7 +328,6 @@ class _RecordCarouselCardItem extends StatelessWidget {
                 child: _AttributePill(
                   icon: HugeIcons.strokeRoundedSignalLow01,
                   text: l10n.historyValueSignal(record.radio.rssi),
-                  colorScheme: colorScheme,
                 ),
               ),
             ],
@@ -358,19 +339,15 @@ class _RecordCarouselCardItem extends StatelessWidget {
 }
 
 class _AttributePill extends StatelessWidget {
-  const _AttributePill({
-    required this.icon,
-    required this.text,
-    required this.colorScheme,
-  });
+  const _AttributePill({required this.icon, required this.text});
 
   final List<List<dynamic>> icon;
   final String text;
-  final ColorScheme colorScheme;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final fg = colorScheme.onSurface;
     final bg = colorScheme.surfaceContainerHighest.withValues(alpha: 0.65);
 

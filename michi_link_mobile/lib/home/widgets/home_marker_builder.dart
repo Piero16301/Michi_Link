@@ -109,11 +109,10 @@ class HomeMarkerBuilder {
 
     final picture = recorder.endRecording();
     final targetSize = (markerSize * pixelRatio).round();
-    final img = await picture.toImage(targetSize, targetSize);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    final descriptor = BitmapDescriptor.bytes(
-      byteData!.buffer.asUint8List(),
-      imagePixelRatio: pixelRatio,
+    final descriptor = await _pictureToDescriptor(
+      picture,
+      targetSize,
+      pixelRatio,
     );
     if (key != null) {
       _markerCache[key] = descriptor;
@@ -164,15 +163,29 @@ class HomeMarkerBuilder {
 
     final picture = recorder.endRecording();
     final targetSize = (canvasSize * pixelRatio).round();
-    final img = await picture.toImage(targetSize, targetSize);
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    final descriptor = BitmapDescriptor.bytes(
-      byteData!.buffer.asUint8List(),
-      imagePixelRatio: pixelRatio,
+    final descriptor = await _pictureToDescriptor(
+      picture,
+      targetSize,
+      pixelRatio,
     );
     if (key != null) {
       _markerCache[key] = descriptor;
     }
     return descriptor;
+  }
+
+  static Future<BitmapDescriptor> _pictureToDescriptor(
+    ui.Picture picture,
+    int size,
+    double pixelRatio,
+  ) async {
+    final img = await picture.toImage(size, size);
+    picture.dispose();
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    img.dispose();
+    return BitmapDescriptor.bytes(
+      byteData!.buffer.asUint8List(),
+      imagePixelRatio: pixelRatio,
+    );
   }
 }

@@ -88,106 +88,168 @@ class HistoryView extends StatelessWidget {
           final today = DateTime(now.year, now.month, now.day);
           final isNextEnabled = state.effectiveDate.isBefore(today);
 
-          return StreamBuilder<List<HistoryRecord>>(
-            stream: getIt<DatabaseService>().getHistoryRecordsStream(
-              deviceId: effectiveDeviceId,
-              start: state.startDateTime,
-              end: state.endDateTime,
-            ),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedAlert02,
-                        size: 48,
-                        color: colorScheme.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.collarsStatusDisconnected,
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              final isLoading = !snapshot.hasData;
-              final records = snapshot.data ?? [];
-              final validRecords = records
-                  .where((r) => r.coords.lat != 0 || r.coords.lon != 0)
-                  .toList();
-              final chronologicalRecords = validRecords.reversed.toList();
-
-              return Stack(
-                children: [
-                  // Fullscreen map or loading shimmer
-                  Positioned.fill(
-                    child: RepaintBoundary(
-                      child: isLoading
-                          ? _buildLoadingState(context)
-                          : HistoryMapView(
-                              records: records,
-                              selectedRecord: state.selectedRecord,
-                              onRecordSelected: cubit.selectRecord,
-                            ),
-                    ),
-                  ),
-
-                  // Floating bottom panel with date selector and time range
-                  // slider
-                  Positioned(
-                    left: 16,
-                    right: 16,
-                    bottom: 28,
-                    child: RepaintBoundary(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (state.selectedRecord != null) ...[
-                            HistoryRecordCarousel(
-                              records: validRecords,
-                              selectedRecord: state.selectedRecord,
-                              onRecordSelected: cubit.selectRecord,
-                              onClose: () => cubit.selectRecord(null),
-                            ),
-                            const SizedBox(height: 8),
-                          ] else if (validRecords.isNotEmpty) ...[
-                            RouteSummaryFloatingBadge(
-                              count: validRecords.length,
-                              startTime: chronologicalRecords.first.timestamp,
-                              endTime: chronologicalRecords.last.timestamp,
-                              onTap: () =>
-                                  cubit.selectRecord(validRecords.first),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          HistoryFilterCard(
-                            selectedDate: state.effectiveDate,
-                            isNextEnabled: isNextEnabled,
-                            onPreviousDate: cubit.previousDay,
-                            onNextDate: cubit.nextDay,
-                            onDateSelected: cubit.selectDate,
-                            startHour: state.startHour,
-                            endHour: state.endHour,
-                            onTimeRangeChanged: cubit.changeTimeRange,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
+          return _HistoryStreamContent(
+            deviceId: effectiveDeviceId,
+            startDateTime: state.startDateTime,
+            endDateTime: state.endDateTime,
+            state: state,
+            cubit: cubit,
+            isNextEnabled: isNextEnabled,
           );
         },
       ),
+    );
+  }
+}
+
+class _HistoryStreamContent extends StatefulWidget {
+  const _HistoryStreamContent({
+    required this.deviceId,
+    required this.startDateTime,
+    required this.endDateTime,
+    required this.state,
+    required this.cubit,
+    required this.isNextEnabled,
+  });
+
+  final String deviceId;
+  final DateTime startDateTime;
+  final DateTime endDateTime;
+  final HistoryState state;
+  final HistoryCubit cubit;
+  final bool isNextEnabled;
+
+  @override
+  State<_HistoryStreamContent> createState() => _HistoryStreamContentState();
+}
+
+class _HistoryStreamContentState extends State<_HistoryStreamContent> {
+  late Stream<List<HistoryRecord>> _stream;
+
+  @override
+  void initState() {
+    super.initState();
+    _stream = _createStream();
+  }
+
+  @override
+  void didUpdateWidget(_HistoryStreamContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.deviceId != widget.deviceId ||
+        oldWidget.startDateTime != widget.startDateTime ||
+        oldWidget.endDateTime != widget.endDateTime) {
+      _stream = _createStream();
+    }
+  }
+
+  Stream<List<HistoryRecord>> _createStream() {
+    return getIt<DatabaseService>().getHistoryRecordsStream(
+      deviceId: widget.deviceId,
+      start: widget.startDateTime,
+      end: widget.endDateTime,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final l10n = AppLocalizations.of(context);
+
+    return StreamBuilder<List<HistoryRecord>>(
+      stream: _stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlert02,
+                  size: 48,
+                  color: colorScheme.error,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.collarsStatusDisconnected,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final isLoading = !snapshot.hasData;
+        final records = snapshot.data ?? [];
+        final validRecords = records
+            .where((r) => r.coords.lat != 0 || r.coords.lon != 0)
+            .toList();
+        final chronologicalRecords = validRecords.reversed.toList();
+
+        return Stack(
+          children: [
+            // Fullscreen map or loading shimmer
+            Positioned.fill(
+              child: RepaintBoundary(
+                child: isLoading
+                    ? _buildLoadingState(context)
+                    : HistoryMapView(
+                        records: records,
+                        selectedRecord: widget.state.selectedRecord,
+                        onRecordSelected: widget.cubit.selectRecord,
+                      ),
+              ),
+            ),
+
+            // Floating bottom panel with date selector and time range
+            // slider
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 28,
+              child: RepaintBoundary(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (widget.state.selectedRecord != null) ...[
+                      HistoryRecordCarousel(
+                        records: validRecords,
+                        selectedRecord: widget.state.selectedRecord,
+                        onRecordSelected: widget.cubit.selectRecord,
+                        onClose: () => widget.cubit.selectRecord(null),
+                      ),
+                      const SizedBox(height: 8),
+                    ] else if (validRecords.isNotEmpty) ...[
+                      RouteSummaryFloatingBadge(
+                        count: validRecords.length,
+                        startTime: chronologicalRecords.first.timestamp,
+                        endTime: chronologicalRecords.last.timestamp,
+                        onTap: () =>
+                            widget.cubit.selectRecord(validRecords.first),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    HistoryFilterCard(
+                      selectedDate: widget.state.effectiveDate,
+                      isNextEnabled: widget.isNextEnabled,
+                      onPreviousDate: widget.cubit.previousDay,
+                      onNextDate: widget.cubit.nextDay,
+                      onDateSelected: widget.cubit.selectDate,
+                      startHour: widget.state.startHour,
+                      endHour: widget.state.endHour,
+                      onTimeRangeChanged: widget.cubit.changeTimeRange,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
