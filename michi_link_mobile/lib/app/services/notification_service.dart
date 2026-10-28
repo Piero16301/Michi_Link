@@ -1,21 +1,37 @@
+// Service constructor retains public parameter names for dependency injection.
+// ignore_for_file: prefer_initializing_formals
+
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:michi_link_mobile/app/app.dart';
 
 class NotificationService {
   NotificationService({
-    required this._notificationRepository,
-    this._databaseService,
-    this._deviceInfoService,
-    this._localStorageService,
-    this._performanceService,
-    this._crashService,
-    this._analyticsService,
-  });
+    required NotificationRepository notificationRepository,
+    DatabaseService? databaseService,
+    DeviceInfoService? deviceInfoService,
+    LocalStorageService? localStorageService,
+    PerformanceService? performanceService,
+    CrashService? crashService,
+    AnalyticsService? analyticsService,
+    FlutterLocalNotificationsPlugin? localNotifications,
+  }) : _notificationRepository = notificationRepository,
+       _databaseService = databaseService,
+       _deviceInfoService = deviceInfoService,
+       _localStorageService = localStorageService,
+       _performanceService = performanceService,
+       _crashService = crashService,
+       _analyticsService = analyticsService,
+       _localNotifications =
+           localNotifications ??
+           (getIt.isRegistered<FlutterLocalNotificationsPlugin>()
+               ? getIt<FlutterLocalNotificationsPlugin>()
+               : FlutterLocalNotificationsPlugin());
 
   final NotificationRepository _notificationRepository;
   final DatabaseService? _databaseService;
@@ -24,6 +40,7 @@ class NotificationService {
   final PerformanceService? _performanceService;
   final CrashService? _crashService;
   final AnalyticsService? _analyticsService;
+  final FlutterLocalNotificationsPlugin _localNotifications;
 
   Future<void>? _initializeFuture;
   StreamSubscription<String>? _registeredSubscription;
@@ -78,6 +95,51 @@ class NotificationService {
     final trace = _perf?.startTrace('notification_service_initialization');
 
     try {
+      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const darwinInit = DarwinInitializationSettings();
+      const initSettings = InitializationSettings(
+        android: androidInit,
+        iOS: darwinInit,
+        macOS: darwinInit,
+      );
+
+      await _localNotifications.initialize(
+        settings: initSettings,
+        onDidReceiveNotificationResponse: (response) {
+          final payload = response.payload;
+          if (payload != null && payload.isNotEmpty) {
+            _analytics?.logEvent(
+              name: 'notification_opened',
+              parameters: {'device_id': payload, 'source': 'local_foreground'},
+            );
+            if (onNotificationOpened != null) {
+              onNotificationOpened(payload);
+            } else {
+              _navigateToNotifications(payload);
+            }
+          }
+        },
+      );
+
+      final launchDetails = await _localNotifications
+          .getNotificationAppLaunchDetails();
+      if (launchDetails != null &&
+          launchDetails.didNotificationLaunchApp &&
+          launchDetails.notificationResponse?.payload != null) {
+        final payload = launchDetails.notificationResponse!.payload!;
+        if (payload.isNotEmpty) {
+          _analytics?.logEvent(
+            name: 'notification_opened',
+            parameters: {'device_id': payload, 'source': 'local_launch'},
+          );
+          if (onNotificationOpened != null) {
+            onNotificationOpened(payload);
+          } else {
+            _navigateToNotifications(payload);
+          }
+        }
+      }
+
       await _notificationRepository.initialize();
 
       _messageSubscription = _notificationRepository.onMessage.listen((
@@ -86,6 +148,7 @@ class NotificationService {
         if (kDebugMode) {
           debugPrint('Foreground FCM message: ${message.data}');
         }
+        unawaited(_showForegroundNotification(message));
       });
 
       _messageOpenedAppSubscription = _notificationRepository.onMessageOpenedApp
@@ -234,12 +297,23 @@ class NotificationService {
     if (deviceId.isEmpty) return;
 
     void navigate() {
-      unawaited(
-        AppRoutes.router.pushNamed(
-          AppRoute.notifications.name,
-          pathParameters: {'deviceId': deviceId},
-        ),
-      );
+      try {
+        if (kDebugMode) {
+          debugPrint('Navigating to notifications for device: $deviceId');
+        }
+        unawaited(
+          AppRoutes.router.pushNamed(
+            AppRoute.notifications.name,
+            pathParameters: {'deviceId': deviceId},
+          ),
+        );
+      } on Exception catch (e, stackTrace) {
+        _crash?.recordError(
+          e,
+          stackTrace,
+          reason: 'NotificationService _navigateToNotifications error',
+        );
+      }
     }
 
     if (AppRoutes.rootNavigatorKey.currentState != null) {
@@ -288,6 +362,84 @@ class NotificationService {
 
   Future<void> unsubscribeFromTopic(String topic) async {
     await _notificationRepository.unsubscribeFromTopic(topic);
+  }
+
+  Future<void> _showForegroundNotification(RemoteMessage message) async {
+    try {
+      final title = message.notification?.title ?? 'Michi Link';
+      final body = message.notification?.body ?? '';
+      final deviceId = message.data['device_id']?.toString() ?? '';
+
+      if (title.isEmpty && body.isEmpty) return;
+
+      final incomingChannel = message.notification?.android?.channelId;
+
+      String channelId;
+      String channelName;
+      String channelDescription;
+      Importance importance;
+      Priority priority;
+
+      if (incomingChannel == 'michi_critical_channel') {
+        channelId = 'michi_critical_channel';
+        channelName = 'Alertas Críticas de Collares';
+        channelDescription = 'Notificaciones de geocerca y batería crítica';
+        importance = Importance.max;
+        priority = Priority.high;
+      } else if (incomingChannel == 'michi_warning_channel') {
+        channelId = 'michi_warning_channel';
+        channelName = 'Advertencias de Collares';
+        channelDescription =
+            'Advertencias de batería baja, señal débil y pérdida de GPS';
+        importance = Importance.high;
+        priority = Priority.high;
+      } else {
+        channelId = 'michi_info_channel';
+        channelName = 'Información de Collares';
+        channelDescription =
+            'Notificaciones informativas de estado y reconexión';
+        importance = Importance.defaultImportance;
+        priority = Priority.defaultPriority;
+      }
+
+      final androidDetails = AndroidNotificationDetails(
+        channelId,
+        channelName,
+        channelDescription: channelDescription,
+        importance: importance,
+        priority: priority,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      const darwinDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      final details = NotificationDetails(
+        android: androidDetails,
+        iOS: darwinDetails,
+      );
+
+      final notificationId = DateTime.now().millisecondsSinceEpoch.remainder(
+        100000,
+      );
+
+      await _localNotifications.show(
+        id: notificationId,
+        title: title,
+        body: body,
+        notificationDetails: details,
+        payload: deviceId,
+      );
+    } on Exception catch (e, stackTrace) {
+      _crash?.recordError(
+        e,
+        stackTrace,
+        reason: 'NotificationService _showForegroundNotification error',
+      );
+    }
   }
 
   Future<void> dispose() async {

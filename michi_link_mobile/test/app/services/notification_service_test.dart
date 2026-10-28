@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:expressive_kit/expressive_kit.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_performance/firebase_performance.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:michi_link_mobile/app/app.dart';
 import 'package:mocktail/mocktail.dart';
@@ -22,15 +23,25 @@ class MockAnalyticsService extends Mock implements AnalyticsService {}
 
 class MockPerformanceService extends Mock implements PerformanceService {}
 
+class MockFlutterLocalNotificationsPlugin extends Mock
+    implements FlutterLocalNotificationsPlugin {}
+
 class MockTrace extends Mock implements Trace {}
 
 class FakeTrace extends Fake implements Trace {}
+
+class FakeInitializationSettings extends Fake
+    implements InitializationSettings {}
+
+class FakeNotificationDetails extends Fake implements NotificationDetails {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
     registerFallbackValue(FakeTrace());
+    registerFallbackValue(FakeInitializationSettings());
+    registerFallbackValue(FakeNotificationDetails());
   });
 
   group('NotificationService', () {
@@ -41,6 +52,7 @@ void main() {
     late MockCrashService mockCrash;
     late MockAnalyticsService mockAnalytics;
     late MockPerformanceService mockPerf;
+    late MockFlutterLocalNotificationsPlugin mockLocalNotifications;
     late MockTrace mockTrace;
     late NotificationService service;
 
@@ -56,6 +68,7 @@ void main() {
       mockCrash = MockCrashService();
       mockAnalytics = MockAnalyticsService();
       mockPerf = MockPerformanceService();
+      mockLocalNotifications = MockFlutterLocalNotificationsPlugin();
       mockTrace = MockTrace();
 
       registeredController = StreamController<String>.broadcast();
@@ -103,6 +116,27 @@ void main() {
         ),
       ).thenAnswer((_) async {});
 
+      when(
+        () => mockLocalNotifications.initialize(
+          settings: any(named: 'settings'),
+          onDidReceiveNotificationResponse: any(
+            named: 'onDidReceiveNotificationResponse',
+          ),
+        ),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockLocalNotifications.getNotificationAppLaunchDetails(),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockLocalNotifications.show(
+          id: any(named: 'id'),
+          title: any(named: 'title'),
+          body: any(named: 'body'),
+          notificationDetails: any(named: 'notificationDetails'),
+          payload: any(named: 'payload'),
+        ),
+      ).thenAnswer((_) async {});
+
       when(() => mockPerf.startTrace(any())).thenReturn(mockTrace);
       when(() => mockPerf.stopTrace(any())).thenReturn(null);
 
@@ -114,6 +148,7 @@ void main() {
         performanceService: mockPerf,
         crashService: mockCrash,
         analyticsService: mockAnalytics,
+        localNotifications: mockLocalNotifications,
       );
     });
 
@@ -459,6 +494,7 @@ void main() {
 
       final getItService = NotificationService(
         notificationRepository: mockRepo,
+        localNotifications: mockLocalNotifications,
       );
 
       await getItService.syncDeviceAndTopics('token-getit');
@@ -565,6 +601,111 @@ void main() {
           token: 'token-123',
           deviceInfo: any(named: 'deviceInfo'),
           enabledCollars: ['col_1', 'col_2'],
+        ),
+      ).called(1);
+    });
+
+    test('shows local notification when foreground message arrives', () async {
+      await service.initialize();
+
+      const message = RemoteMessage(
+        notification: RemoteNotification(
+          title: 'Alerta Michi',
+          body: 'Michi ha salido de la zona segura',
+          android: AndroidNotification(channelId: 'michi_critical_channel'),
+        ),
+        data: <String, dynamic>{'device_id': 'COLLAR_01'},
+      );
+
+      messageController.add(message);
+      await pumpEventQueue();
+
+      verify(
+        () => mockLocalNotifications.show(
+          id: any(named: 'id'),
+          title: 'Alerta Michi',
+          body: 'Michi ha salido de la zona segura',
+          notificationDetails: any(
+            named: 'notificationDetails',
+            that: isA<NotificationDetails>().having(
+              (d) => d.android?.channelId,
+              'channelId',
+              'michi_critical_channel',
+            ),
+          ),
+          payload: 'COLLAR_01',
+        ),
+      ).called(1);
+    });
+
+    test('shows warning channel notification for warning severity', () async {
+      await service.initialize();
+
+      const message = RemoteMessage(
+        notification: RemoteNotification(
+          title: 'Batería Baja',
+          body: 'Batería al 15%',
+          android: AndroidNotification(channelId: 'michi_warning_channel'),
+        ),
+        data: <String, dynamic>{'device_id': 'COLLAR_02'},
+      );
+
+      messageController.add(message);
+      await pumpEventQueue();
+
+      verify(
+        () => mockLocalNotifications.show(
+          id: any(named: 'id'),
+          title: 'Batería Baja',
+          body: 'Batería al 15%',
+          notificationDetails: any(
+            named: 'notificationDetails',
+            that: isA<NotificationDetails>().having(
+              (d) => d.android?.channelId,
+              'channelId',
+              'michi_warning_channel',
+            ),
+          ),
+          payload: 'COLLAR_02',
+        ),
+      ).called(1);
+    });
+
+    test('invokes onNotificationOpened callback on local response', () async {
+      String? openedId;
+      void Function(NotificationResponse)? capturedCallback;
+
+      when(
+        () => mockLocalNotifications.initialize(
+          settings: any(named: 'settings'),
+          onDidReceiveNotificationResponse: any(
+            named: 'onDidReceiveNotificationResponse',
+            that: isA<void Function(NotificationResponse)?>(),
+          ),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedCallback =
+            invocation.namedArguments[#onDidReceiveNotificationResponse]
+                as void Function(NotificationResponse)?;
+        return true;
+      });
+
+      await service.initialize(onNotificationOpened: (id) => openedId = id);
+
+      expect(capturedCallback, isNotNull);
+      capturedCallback!(
+        const NotificationResponse(
+          notificationResponseType:
+              NotificationResponseType.selectedNotification,
+          payload: 'COLLAR_99',
+        ),
+      );
+
+      expect(openedId, 'COLLAR_99');
+      verify(
+        () => mockAnalytics.logEvent(
+          name: 'notification_opened',
+          parameters: {'device_id': 'COLLAR_99', 'source': 'local_foreground'},
         ),
       ).called(1);
     });

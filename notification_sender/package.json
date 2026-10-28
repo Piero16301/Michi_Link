@@ -1,0 +1,16 @@
+{
+  "name": "notification-sender",
+  "version": "1.0.0",
+  "description": "Herramienta CLI para enviar notificaciones push de prueba a MichiLink (Topics o Tokens)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["firebase", "fcm", "notifications", "michilink"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "firebase-admin": "^13.1.0"
+  }
+}
