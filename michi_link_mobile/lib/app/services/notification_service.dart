@@ -95,7 +95,8 @@ class NotificationService {
     final trace = _perf?.startTrace('notification_service_initialization');
 
     try {
-      const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const androidInit =
+          AndroidInitializationSettings('@drawable/ic_notification');
       const darwinInit = DarwinInitializationSettings();
       const initSettings = InitializationSettings(
         android: androidInit,
@@ -408,7 +409,8 @@ class NotificationService {
         channelDescription: channelDescription,
         importance: importance,
         priority: priority,
-        icon: '@mipmap/ic_launcher',
+        icon: '@drawable/ic_notification',
+        color: const Color(0xFF06224E),
       );
 
       const darwinDetails = DarwinNotificationDetails(
