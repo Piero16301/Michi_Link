@@ -8,338 +8,405 @@
 [![Firebase](https://img.shields.io/badge/Cloud-Firebase_&_Firestore-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Michi Link** es un ecosistema IoT integral diseñado para la localización satelital continua, monitoreo de telemetría y seguridad de mascotas (específicamente gatos) en entornos suburbanos y urbanos. El sistema combina radioenlace de largo alcance **LoRa P2P (915 MHz)** de ultra bajo consumo en el collar del animal, una estación base retransmisora **ESP32-S3** conectada vía WiFi, un broker de mensajería **MQTT con cifrado TLS**, un servicio de ingesta concurrente en **Go** alojado en Google Cloud Platform (GCP) con motor geodésico WGS-84 y disparador de notificaciones push (**FCM**), y una aplicación cliente multiplataforma desarrollada en **Flutter** con arquitectura Feature-First.
+**Michi Link** is a comprehensive IoT ecosystem designed for continuous satellite tracking, telemetry monitoring, and safety of domestic pets (specifically cats) in suburban and urban environments. The system combines an ultra-low-power long-range **LoRa P2P (915 MHz)** radio link on the pet's collar, an **ESP32-S3** relay base station connected via WiFi, a **TLS-encrypted MQTT** messaging broker, a high-throughput concurrent **Go** ingestion microservice hosted on Google Cloud Platform (GCP) with a WGS-84 geodesic engine and push notification dispatcher (**FCM**), and a cross-platform mobile client developed in **Flutter** following a Feature-First architecture.
 
 ---
 
-## 📑 Tabla de Contenidos
+## 📑 Table of Contents
 
-1. [Arquitectura Global del Sistema](#-arquitectura-global-del-sistema)
-2. [Inicio Rápido (Quick Start)](#-inicio-rápido-quick-start)
-3. [Tabla Unificada de Comandos](#-tabla-unificada-de-comandos)
-4. [Componentes del Ecosistema](#-componentes-del-ecosistema)
-   - [Collar IoT (Heltec T114 - nRF52840 + SX1262 + L76K)](#1-collar-iot-heltec-t114)
-   - [Estación Base (Heltec WiFi LoRa 32 V3 - ESP32-S3)](#2-estación-base-heltec-wifi-lora-32-v3)
-   - [Protocolo de Comunicación y Radioenlace](#3-protocolo-de-comunicación-y-radioenlace)
-   - [Backend de Ingesta y Procesamiento en Go](#4-backend-de-ingesta-y-procesamiento-en-go)
-   - [Persistencia y Modelo de Datos en Cloud Firestore](#5-persistencia-y-modelo-de-datos-en-cloud-firestore)
-   - [Aplicación Móvil en Flutter](#6-aplicación-móvil-en-flutter)
+1. [Global System Architecture](#-global-system-architecture)
+   - [Interactive Architecture Diagram](#interactive-architecture-diagram)
+   - [Detailed Layer Breakdown](#detailed-layer-breakdown)
+   - [End-to-End System Flow](#end-to-end-system-flow)
+2. [Quick Start](#-quick-start)
+   - [Prerequisites](#1-prerequisites)
+   - [Setup by Component](#2-setup-by-component)
+3. [Unified Command Table](#-unified-command-table)
+4. [Ecosystem Components](#-ecosystem-components)
+   - [1. IoT Collar (Heltec T114 - nRF52840 + SX1262 + L76K)](#1-iot-collar-heltec-t114)
+   - [2. Base Station (Heltec WiFi LoRa 32 V3 - ESP32-S3)](#2-base-station-heltec-wifi-lora-32-v3)
+   - [3. Communication Protocol and RF Link](#3-communication-protocol-and-rf-link)
+   - [4. Ingestion and Processing Backend in Go](#4-ingestion-and-processing-backend-in-go)
+   - [5. Persistence and Data Model in Cloud Firestore](#5-persistence-and-data-model-in-cloud-firestore)
+   - [6. Mobile Application in Flutter](#6-mobile-application-in-flutter)
 5. [Architecture Decision Records (ADRs)](#-architecture-decision-records-adrs)
-   - [ADR-001: Radioenlace LoRa P2P vs. Red LoRaWAN](#adr-001-radioenlace-lora-p2p-vs-red-lorawan)
-   - [ADR-002: Formato de Paquete Binario Compacto en el Aire (23 Bytes)](#adr-002-formato-de-paquete-binario-compacto-en-el-aire-23-bytes)
-   - [ADR-003: Backend Ingestor y Motor de Eventos en Go sobre GCP e2-micro](#adr-003-backend-ingestor-y-motor-de-eventos-en-go-sobre-gcp-e2-micro)
-   - [ADR-004: Modelo Híbrido de Persistencia en Firestore con TTL de 15 Días](#adr-004-modelo-híbrido-de-persistencia-en-firestore-con-ttl-de-15-días)
-   - [ADR-005: Arquitectura Feature-First con BLoC/Cubit y GetIt en Flutter](#adr-005-arquitectura-feature-first-con-bloccubit-y-getit-en-flutter)
-   - [ADR-006: Geodesia WGS-84 en Servidor y Notificaciones Push Multilingües con FCM](#adr-006-geodesia-wgs-84-en-servidor-y-notificaciones-push-multilingües-con-fcm)
-6. [Estructura del Directorio del Proyecto](#-estructura-del-directorio-del-proyecto)
-7. [Pruebas y Calidad de Código](#-pruebas-y-calidad-de-código)
-8. [Licencia](#-licencia)
+   - [ADR-001: LoRa P2P Radio Link vs. LoRaWAN Network](#adr-001-lora-p2p-radio-link-vs-lorawan-network)
+   - [ADR-002: Compact Over-the-Air Binary Packet Format (23 Bytes)](#adr-002-compact-over-the-air-binary-packet-format-23-bytes)
+   - [ADR-003: Go Ingestion Backend and Event Engine on GCP e2-micro](#adr-003-go-ingestion-backend-and-event-engine-on-gcp-e2-micro)
+   - [ADR-004: Hybrid Persistence Model in Firestore with 15-Day TTL](#adr-004-hybrid-persistence-model-in-firestore-with-15-day-ttl)
+   - [ADR-005: Feature-First Architecture with BLoC/Cubit and GetIt in Flutter](#adr-005-feature-first-architecture-with-bloccubit-and-getit-in-flutter)
+   - [ADR-006: Server-Side WGS-84 Geodesy and Multilingual Push Notifications with FCM](#adr-006-server-side-wgs-84-geodesy-and-multilingual-push-notifications-with-fcm)
+6. [Project Directory Structure](#-project-directory-structure)
+7. [Testing and Code Quality](#-testing-and-code-quality)
+8. [License](#-license)
 
 ---
 
-## 🏛️ Arquitectura Global del Sistema
+## 🏛️ Global System Architecture
+
+### Interactive Architecture Diagram
+
+<p align="center">
+  <a href="https://stacks.caru.moe/s/QTocIhHVgN" target="_blank" rel="noopener noreferrer">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/architecture/michi-link-architecture-dark.png">
+      <img alt="Michi Link Architecture Diagram" src="docs/architecture/michi-link-architecture.png" width="100%">
+    </picture>
+  </a>
+</p>
+
+> [!NOTE]
+> An interactive version of this architecture diagram with vector brand logos, hover interactions, and full topology inspection is published at [**stacks.caru.moe/s/QTocIhHVgN**](https://stacks.caru.moe/s/QTocIhHVgN).
+
+### Detailed Layer Breakdown
+
+#### 1. 📡 Physical IoT & Field Hardware Layer
+- **Collar IoT Node (`Heltec T114`)**:
+  - **Quectel L76K GNSS Receiver**: Periodic reading of NMEA sentences (latitude, longitude, altitude, and active satellites).
+  - **Nordic nRF52840 MCU (ARM Cortex-M4F)**: Ultra-low-power management, 23-byte compact binary packing ([ADR-002](#adr-002-compact-over-the-air-binary-packet-format-23-bytes)), hardware-level UART sleep, and exponential backoff during indoor satellite loss.
+  - **Semtech SX1262 LoRa TX**: 915 MHz Point-to-Point (P2P) transmission (`SF7`, `BW 125 kHz`, `CR 4/5`, `+22 dBm`) achieving 200 m to 1 km in urban terrain with ~60 ms Time-on-Air (ToA).
+- **Home Base Station (`Heltec WiFi LoRa 32 V3`)**:
+  - **ESP32-S3 Dual Core MCU**: Unpacks raw binary frames, verifies CRC integrity, enriches telemetry with NTP timestamps, link metrics (RSSI, SNR), and sequence loss calculations.
+  - **SSD1306 0.96" OLED Display**: Real-time visual diagnostic of WiFi status, MQTT broker connection, distance to home, and packet counts.
+  - **WiFi 802.11 b/g/n Stack**: Secure TLS-encrypted MQTT client publishing structured JSON payloads.
+
+#### 2. ☁️ Cloud Messaging Layer
+- **HiveMQ Cloud**:
+  - Fully-managed MQTT broker with TLS/SSL encryption on port `8883`.
+  - Topics: `mascotas/+/telemetria` (periodic telemetry stream) and `mascotas/+/status` (LWT-backed connection presence).
+
+#### 3. ⚙️ Ingestion & Processing Layer (GCP)
+- **Go Ingestion Microservice (`backend_suscriptor`)**:
+  - Deployed as a continuous systemd daemon (`michi-link.service`) on a **Google Cloud Platform (Compute Engine `e2-micro`)** VM instance.
+  - **WGS-84 Geodesic Engine**: Calculates exact distance between the collar and the home base coordinates using ellipsoidal geodesy (`a = 6378137.0 m`, `f = 1/298.257223563`).
+  - **Atomic Transition Engine**: Compares incoming states against persisted Firestore documents in atomic transactions to guarantee push alerts trigger only on genuine state changes (preventing alert spam).
+  - **Inactivity Watchdog**: Goroutine monitoring `last_seen` timestamps and flagging lost connectivity when frames exceed thresholds.
+
+#### 4. 🔥 Persistence & Notifications Layer (Firebase / GCP)
+- **Cloud Firestore**:
+  - Optimized for the Firebase Spark Plan (~720 daily writes per collar, well below the 20,000 free daily limit).
+  - Primary collection `collars/{id}` storing live state, battery curve percentage, active geofence radius, and configuration.
+  - Subcollections with **15-Day Time-To-Live (TTL)** policies (`expire_at`): `history/` (breadcrumb trajectory samples) and `alerts/` (chronological security incident logs).
+- **Firebase Cloud Messaging (FCM)**:
+  - Severity-based notification channels on Android and iOS: `michi_critical_channel`, `michi_warning_channel`, and `michi_info_channel`.
+  - Automatic bilingual message dispatching (Spanish / English) tailored to the collar's stored language preference.
+
+#### 5. 📱 Cross-Platform Mobile Client (Flutter)
+- **Michi Link Mobile (`michi_link_mobile`)**:
+  - Structured using **Feature-First Clean Architecture** with **BLoC / Cubit** for predictable unidirectional state management and **GetIt** for service location.
+  - Styled with **Material 3 Expressive** design system (`expressive_kit`) with user-configurable dynamic seed colors.
+  - Direct reactive Firestore streams (`snapshots()`) for live telemetry and map updates without polling overhead.
+  - **Google Maps SDK**: Custom in-memory canvas rendering dynamic SVG cat avatars across 10 breeds, bounded by interactive geofence radius circles.
+
+#### 6. 🚀 CI/CD & Automation
+- **GitHub Actions**:
+  - Automated continuous integration and deployment pipelines (`mobile-beta.yaml`, `mobile-prod.yaml`) executing static analysis, testing, and automated release packaging.
+
+---
+
+### End-to-End System Flow
 
 ```mermaid
 flowchart TB
-    %% CAPA FÍSICA / IOT
-    subgraph IOT ["📡 1. CAPA IOT / HARDWARE"]
+    %% IOT / HARDWARE LAYER
+    subgraph IOT ["📡 1. IOT / HARDWARE LAYER"]
         direction LR
-        subgraph COLLAR ["COLLAR T114 (Gato)"]
+        subgraph COLLAR ["COLLAR T114 (Pet)"]
             direction TB
-            C1["GNSS Quectel L76K\n(Lectura NMEA: Lat, Lon, Alt)"]
-            C2["MCU Nordic nRF52840\n• Empaqueta Struct 23B\n• Gestión de energía y backoff"]
+            C1["Quectel L76K GNSS\n(NMEA readings: Lat, Lon, Alt)"]
+            C2["Nordic nRF52840 MCU\n• Packs 23B Binary Struct\n• Power management & backoff"]
             C3["Semtech SX1262 LoRa\n(TX 915 MHz, SF7, +22 dBm)"]
             C1 --> C2 --> C3
         end
 
-        subgraph BASE ["ESTACIÓN BASE (Hogar)"]
+        subgraph BASE ["BASE STATION (Home)"]
             direction TB
-            B1["Semtech SX1262 LoRa\n(RX 915 MHz, Interrupción DIO1)"]
-            B2["ESP32-S3 Dual Core\n• Desempaquetado binario\n• Enriquecimiento (NTP, RSSI, SNR)\n• Pantalla OLED SSD1306 128x64"]
-            B3["Stack WiFi 802.11 b/g/n\n(Cliente TLS Seguro)"]
+            B1["Semtech SX1262 LoRa\n(RX 915 MHz, DIO1 Interrupt)"]
+            B2["ESP32-S3 Dual Core\n• Binary unpacking\n• Telemetry enrichment (NTP, RSSI, SNR)\n• SSD1306 128x64 OLED display"]
+            B3["WiFi 802.11 b/g/n Stack\n(Secure TLS Client)"]
             B1 --> B2 --> B3
         end
 
-        C3 -->|"Radioenlace LoRa P2P\n(~200 m - 1 km urbano)"| B1
+        C3 -->|"LoRa P2P Radio Link\n(~200 m - 1 km urban)"| B1
     end
 
-    %% BROKER MQTT
-    subgraph BROKER_ZONE ["☁️ 2. MENSAJERÍA CLOUD"]
-        BROKER["HiveMQ Cloud (Broker MQTT)\n• Puerto: 8883 (TLS/SSL)\n• Tópico Telemetría: mascotas/+/telemetria\n• Tópico Estado: mascotas/+/status"]
+    %% CLOUD MESSAGING
+    subgraph BROKER_ZONE ["☁️ 2. CLOUD MESSAGING"]
+        BROKER["HiveMQ Cloud (MQTT Broker)\n• Port: 8883 (TLS/SSL)\n• Telemetry Topic: mascotas/+/telemetria\n• Status Topic: mascotas/+/status"]
     end
 
-    %% BACKEND GCP
-    subgraph BACKEND ["⚙️ 3. INGESTA & PROCESAMIENTO (GCP e2-micro)"]
+    %% GCP BACKEND
+    subgraph BACKEND ["⚙️ 3. INGESTION & PROCESSING (GCP e2-micro)"]
         direction TB
-        BE_GO["Servicio Ingestor Continuo (Go)\n• Suscriptor concurrente Paho MQTT\n• Motor Geodésico WGS-84 (Vincenty/Haversine)\n• Geocercas dinámicas y detección de anomalías\n• Watchdog de desconexión / presencia"]
+        BE_GO["Go Ingestion Service\n• Concurrent Paho MQTT subscriber\n• WGS-84 Geodesic Engine (Vincenty/Haversine)\n• Dynamic geofencing & anomaly detection\n• Inactivity & disconnection watchdog"]
     end
 
-    %% PERSISTENCIA Y NOTIFICACIONES
-    subgraph GOOGLE_SERVICES ["🔥 4. PERSISTENCIA & NOTIFICACIONES"]
+    %% PERSISTENCE AND NOTIFICATIONS
+    subgraph GOOGLE_SERVICES ["🔥 4. PERSISTENCE & NOTIFICATIONS"]
         direction LR
-        DB[("Cloud Firestore\n• Doc en vivo: collars/{id}\n• Subcolección: history (TTL 15d)\n• Subcolección: alerts (TTL 15d)")]
-        FCM["Firebase Cloud Messaging (FCM)\nNotificaciones Push en Español/Inglés"]
+        DB[("Cloud Firestore\n• Live doc: collars/{id}\n• Subcollection: history (15d TTL)\n• Subcollection: alerts (15d TTL)")]
+        FCM["Firebase Cloud Messaging (FCM)\nPush notifications in Spanish & English"]
     end
 
-    %% CLIENTES FINALES
-    subgraph CLIENTES ["👥 5. CLIENTES FINALES (Flutter Mobile)"]
+    %% MOBILE CLIENTS
+    subgraph CLIENTES ["👥 5. END USERS (Flutter Mobile)"]
         direction LR
-        CLI_APP["📱 App Móvil Flutter\n• Google Maps & Avatares por Raza\n• Transmisión reactiva vía Firestore Streams\n• Telemetría de enlace, geocerca y batería\n• Centro de alertas y rutas históricas"]
+        CLI_APP["📱 Flutter Mobile App\n• Google Maps with Breed Avatars\n• Reactive streaming via Firestore snapshots\n• Link quality, geofence & battery telemetry\n• Incident history & breadcrumb paths"]
     end
 
-    %% CONEXIONES ENTRE CAPAS
-    B3 -->|"Publica JSON vía MQTT sobre TLS"| BROKER
-    BROKER -->|"Consumo continuo de eventos"| BE_GO
+    %% LAYER CONNECTIONS
+    B3 -->|"Publishes JSON via MQTT over TLS"| BROKER
+    BROKER -->|"Continuous event subscription"| BE_GO
 
-    BE_GO -->|"Transacciones atómicas y TTL"| DB
-    BE_GO -->|"Despacho de alertas críticas"| FCM
+    BE_GO -->|"Atomic transactions with TTL"| DB
+    BE_GO -->|"Dispatches critical push alerts"| FCM
 
-    DB -.->|"Stream reactivo en tiempo real"| CLI_APP
-    FCM -->|"Push Notifications al dispositivo"| CLI_APP
+    DB -.->|"Reactive real-time stream"| CLI_APP
+    FCM -->|"Push notifications to device"| CLI_APP
 ```
 
 ---
 
-## 🚀 Inicio Rápido (Quick Start)
+## 🚀 Quick Start
 
-### 1. Requisitos Previos
+### 1. Prerequisites
 
-- **Firmware**: [Arduino IDE 2.x](https://www.arduino.cc/en/software) o [PlatformIO](https://platformio.org/).
-  - Soporte de placas Heltec ESP32 (`v3.0.0+`) y Nordic nRF52 (`Adafruit nRF52 Board Support`).
-  - Librerías: `RadioLib` (v6.6+), `TinyGPSPlus`, `PubSubClient`, `ArduinoJson` (v7+), `Adafruit_SSD1306`, `Adafruit_GFX`.
-- **Backend**: [Go SDK](https://go.dev/dl/) versión `>= 1.22.0`.
-  - Google Cloud CLI (`gcloud`) autenticado con Application Default Credentials (ADC).
-- **Móvil**: [Flutter SDK](https://flutter.dev/docs/get-started/install) `>= 3.47.0` y [Dart SDK](https://dart.dev/get-dart) `>= 3.12.0 < 4.0.0`.
-  - Android Studio o Xcode configurado.
-  - Llaves válidas para Google Maps SDK y archivo `google-services.json` (Android) / `GoogleService-Info.plist` (iOS).
+- **Firmware**: [Arduino IDE 2.x](https://www.arduino.cc/en/software) or [PlatformIO](https://platformio.org/).
+  - Board support for Heltec ESP32 (`v3.0.0+`) and Nordic nRF52 (`Adafruit nRF52 Board Support`).
+  - Libraries: `RadioLib` (v6.6+), `TinyGPSPlus`, `PubSubClient`, `ArduinoJson` (v7+), `Adafruit_SSD1306`, `Adafruit_GFX`.
+- **Backend**: [Go SDK](https://go.dev/dl/) version `>= 1.22.0`.
+  - Google Cloud CLI (`gcloud`) authenticated with Application Default Credentials (ADC).
+- **Mobile**: [Flutter SDK](https://flutter.dev/docs/get-started/install) `>= 3.47.0` and [Dart SDK](https://dart.dev/get-dart) `>= 3.12.0 < 4.0.0`.
+  - Configured Android Studio or Xcode environment.
+  - Valid API keys for Google Maps SDK and downloaded `google-services.json` (Android) / `GoogleService-Info.plist` (iOS).
 
 ---
 
-### 2. Puesta en Marcha por Componente
+### 2. Setup by Component
 
-#### A. Firmware del Collar (Heltec T114)
-1. Conectar la placa Heltec T114 vía USB-C.
-2. Abrir el sketch [`firmware/collar_t114/collar_t114.ino`](file:///Users/piero.morales/Documents/StudioProjects/Michi_Link/firmware/collar_t114/collar_t114.ino).
-3. Verificar la configuración del nodo en [`firmware/collar_t114/config.h`](file:///Users/piero.morales/Documents/StudioProjects/Michi_Link/firmware/collar_t114/config.h) (`COLLAR_ID`, frecuencia 915 MHz).
-4. Seleccionar la placa objetivo y compilar/subir el binario.
+#### A. Collar Firmware (Heltec T114)
+1. Connect the Heltec T114 board via USB-C.
+2. Open sketch [`firmware/collar_t114/collar_t114.ino`](firmware/collar_t114/collar_t114.ino).
+3. Review node settings in [`firmware/collar_t114/config.h`](firmware/collar_t114/config.h) (`COLLAR_ID`, 915 MHz frequency parameters).
+4. Select the target board and compile/flash the firmware.
 
-#### B. Firmware de la Estación Base (ESP32-S3)
-1. Conectar la placa Heltec WiFi LoRa 32 V3 vía USB-C.
-2. Abrir [`firmware/base_esp32/base_esp32.ino`](file:///Users/piero.morales/Documents/StudioProjects/Michi_Link/firmware/base_esp32/base_esp32.ino).
-3. Configurar las credenciales de red WiFi y del broker HiveMQ Cloud (`WIFI_SSID`, `WIFI_PASSWORD`, `MQTT_BROKER`, `MQTT_USER`, `MQTT_PASS`).
-4. Flashear el firmware. La pantalla OLED indicará el estado de conexión WiFi, MQTT y la recepción de paquetes LoRa.
+#### B. Base Station Firmware (ESP32-S3)
+1. Connect the Heltec WiFi LoRa 32 V3 board via USB-C.
+2. Open [`firmware/base_esp32/base_esp32.ino`](firmware/base_esp32/base_esp32.ino).
+3. Configure WiFi network credentials and HiveMQ Cloud broker settings (`WIFI_SSID`, `WIFI_PASSWORD`, `MQTT_BROKER`, `MQTT_USER`, `MQTT_PASS`).
+4. Flash the firmware. The OLED display will report WiFi and MQTT connectivity status, as well as incoming LoRa packets.
 
-#### C. Backend Suscriptor (Go)
-1. Navegar al directorio del backend:
+#### C. Ingestion Backend (Go)
+1. Navigate to the backend directory:
    ```bash
    cd backend_suscriptor
    ```
-2. Crear y configurar el archivo de variables de entorno `.env`:
+2. Create and configure your environment variables in `.env`:
    ```ini
-   GCP_PROJECT_ID=tu-proyecto-firebase
-   HIVEMQ_BROKER=ssl://tu-broker.s1.eu.hivemq.cloud:8883
-   HIVEMQ_USER=tu-usuario-mqtt
-   HIVEMQ_PASS=tu-password-mqtt
+   GCP_PROJECT_ID=your-firebase-project-id
+   HIVEMQ_BROKER=ssl://your-broker.s1.eu.hivemq.cloud:8883
+   HIVEMQ_USER=your-mqtt-username
+   HIVEMQ_PASS=your-mqtt-password
    COLLAR_INTERVAL_SEC=120
    ```
-3. Descargar dependencias y ejecutar en modo local:
+3. Fetch dependencies and run in local mode:
    ```bash
    go mod tidy
    go run ./cmd/ingester
    ```
-4. Para ejecutar el simulador de telemetría (pruebas locales sin hardware):
+4. To run the telemetry simulator (local testing without physical hardware):
    ```bash
    go run ./cmd/simulator
    ```
 
-#### D. Aplicación Móvil (Flutter)
-1. Navegar al directorio de la aplicación:
+#### D. Mobile Application (Flutter)
+1. Navigate to the mobile app directory:
    ```bash
    cd michi_link_mobile
    ```
-2. Descargar paquetes y regenerar internacionalización:
+2. Install dependencies and generate localization code:
    ```bash
    flutter pub get
    flutter gen-l10n
    ```
-3. Ejecutar en emulador o dispositivo físico:
+3. Run on an emulator or physical device:
    ```bash
    flutter run
    ```
 
 ---
 
-## 🛠️ Tabla Unificada de Comandos
+## 🛠️ Unified Command Table
 
-| Entorno / Módulo | Comando | Descripción |
+| Environment / Module | Command | Description |
 | :--- | :--- | :--- |
-| **Backend (Go)** | `go test ./... -v` | Ejecuta la suite completa de pruebas unitarias del backend. |
-| **Backend (Go)** | `go test ./cmd/ingester -cover` | Mide la cobertura de código del servicio de ingesta y geocercas. |
-| **Backend (Go)** | `go build -ldflags="-s -w" -o backend_suscriptor ./cmd/ingester` | Compila el binario de producción optimizado para Linux/GCP. |
-| **Backend (Go)** | `./deploy.sh` | Despliegue automatizado con systemd en la instancia GCP Compute Engine. |
-| **Backend (Go)** | `go run ./cmd/simulator` | Inicia el generador sintético de telemetría y pruebas de carga MQTT. |
-| **Mobile (Flutter)** | `flutter pub get` | Resuelve y descarga las dependencias del proyecto móvil. |
-| **Mobile (Flutter)** | `flutter gen-l10n` | Regenera las clases tipadas de localización desde archivos `.arb`. |
-| **Mobile (Flutter)** | `flutter test` | Ejecuta la suite de pruebas unitarias y de widgets en Flutter. |
-| **Mobile (Flutter)** | `flutter test --coverage` | Ejecuta las pruebas y genera el reporte LCOV en `coverage/lcov.info`. |
-| **Mobile (Flutter)** | `flutter analyze` | Ejecuta el análisis estático de código (`very_good_analysis` y `bloc_lint`). |
-| **Mobile (Flutter)** | `dart fix --apply` | Aplica correcciones automáticas de formato y linter recomendadas. |
-| **Mobile (Flutter)** | `flutter run -d chrome` | Inicia la app en modo navegador web con fines de inspección de UI. |
-| **Mobile (Flutter)** | `flutter build apk --release` | Genera el instalador APK optimizado para dispositivos Android. |
-| **Mobile (Flutter)** | `flutter build appbundle --release` | Compila el paquete AAB para publicación en Google Play Store. |
+| **Backend (Go)** | `go test ./... -v` | Executes the complete backend unit test suite. |
+| **Backend (Go)** | `go test ./cmd/ingester -cover` | Measures code coverage for the ingestion service and geofencing engine. |
+| **Backend (Go)** | `go build -ldflags="-s -w" -o backend_suscriptor ./cmd/ingester` | Compiles optimized production binary for Linux/GCP. |
+| **Backend (Go)** | `./deploy.sh` | Automated systemd deployment script on GCP Compute Engine VM. |
+| **Backend (Go)** | `go run ./cmd/simulator` | Launches synthetic telemetry generator for MQTT load and integration testing. |
+| **Mobile (Flutter)** | `flutter pub get` | Resolves and downloads Flutter package dependencies. |
+| **Mobile (Flutter)** | `flutter gen-l10n` | Regenerates typed localization classes from `.arb` translation files. |
+| **Mobile (Flutter)** | `flutter test` | Runs unit and widget test suites in Flutter. |
+| **Mobile (Flutter)** | `flutter test --coverage` | Executes tests and generates LCOV coverage report at `coverage/lcov.info`. |
+| **Mobile (Flutter)** | `flutter analyze` | Runs static code analysis (`very_good_analysis` and `bloc_lint`). |
+| **Mobile (Flutter)** | `dart fix --apply` | Automatically applies recommended linter and formatting fixes. |
+| **Mobile (Flutter)** | `flutter run -d chrome` | Launches app in web browser for rapid UI and layout inspection. |
+| **Mobile (Flutter)** | `flutter build apk --release` | Builds optimized APK installer for Android devices. |
+| **Mobile (Flutter)** | `flutter build appbundle --release` | Compiles release Android App Bundle (AAB) for Google Play Store. |
 
 ---
 
-## 🧩 Componentes del Ecosistema
+## 🧩 Ecosystem Components
 
-### 1. Collar IoT (Heltec T114)
+### 1. IoT Collar (Heltec T114)
 
-El nodo collar está basado en el microcontrolador **Nordic nRF52840** (ARM Cortex-M4 con FPU) acoplado a un transceptor **Semtech SX1262** y un receptor GNSS **Quectel L76K**.
+The collar node is built on the **Nordic nRF52840** microcontroller (ARM Cortex-M4 with FPU) paired with a **Semtech SX1262** transceiver and a **Quectel L76K** GNSS receiver.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> StandbySleep: Inicio / Ciclo anterior completado
+    [*] --> StandbySleep: Startup / Previous cycle complete
     
-    StandbySleep --> DespertarGNSS: Timer RTC expira (120 s)
-    DespertarGNSS --> BusquedaFix: Activa pin STANDBY (P1.02) y reanuda UART
+    StandbySleep --> WakeGNSS: RTC Timer expires (120 s)
+    WakeGNSS --> SearchFix: Asserts STANDBY pin (P1.02) and resumes UART
     
-    BusquedaFix --> FixObtenido: Fix GPS Válido en ventana activa
-    BusquedaFix --> TimeoutSinFix: Expira ventana (35s) / Backoff
+    SearchFix --> FixAcquired: Valid GPS Fix within active window
+    SearchFix --> TimeoutNoFix: Window expires (35 s) / Backoff
     
-    TimeoutSinFix --> ModoBaliza: Incrementa contador de fallos seguidos
-    FixObtenido --> TransmisionLoRa: Empaqueta coordenadas, altitud y satélites
-    ModoBaliza --> TransmisionLoRa: Empaqueta bandera fix=0 y última posición
+    TimeoutNoFix --> BeaconMode: Increments consecutive failure counter
+    FixAcquired --> TransmitLoRa: Packs coordinates, altitude & satellites
+    BeaconMode --> TransmitLoRa: Packs fix=0 flag & last known position
     
-    TransmisionLoRa --> MantenimientoEfemérides: ¿Ciclo de efemérides (cada ~3h)?
-    MantenimientoEfemérides --> SuspenderHardware: Extiende escucha NMEA 45s
-    TransmisionLoRa --> SuspenderHardware: Ciclo estándar completado
+    TransmitLoRa --> EphemerisMaintenance: Ephemeris cycle due (~every 3h)?
+    EphemerisMaintenance --> SuspendHardware: Extends NMEA listening by 45 s
+    TransmitLoRa --> SuspendHardware: Standard cycle complete
     
-    SuspenderHardware --> StandbySleep: Duerme radio SX1262 y pone L76K en Standby (~0.4 mA)
+    SuspendHardware --> StandbySleep: Sleeps SX1262 radio & sets L76K to Standby (~0.4 mA)
 ```
 
-- **Gestión Avanzada de Energía**:
-  - El módulo GNSS L76K se conmuta a modo standby mediante hardware en el pin `STANDBY` (P1.02) y no por comandos NMEA que pueden ser ignorados por el chip.
-  - Suspensión limpia de la UART (`gpsUartSuspend`) precargando el latch GPIO en nivel `HIGH` antes de apagar el periférico para evitar el flanco de bajada que causaría el despertar involuntario del receptor.
-  - **Algoritmo de Backoff en Interiores**: Si el gato ingresa a un recinto cerrado sin cobertura satelital, el firmware detecta los fallos consecutivos y amplía el tiempo de espera hasta 60 minutos entre intentos prolongados de adquisición, evitando el agotamiento prematuro de la batería.
-- **Protección de Celda LiPo**:
-  - Lectura ADC calibrada en el pin `PIN_BAT_ADC` con divisor resistivo controlado por transistor (`PIN_BAT_ADC_CTL`).
-  - Umbral crítico en `3350 mV`: tras 3 lecturas consecutivas por debajo de este voltaje, el collar se suspende indefinidamente para evitar daños irreversibles a la celda LiPo.
+- **Advanced Power Management**:
+  - The L76K GNSS module is switched into standby mode via hardware using the physical `STANDBY` pin (P1.02), eliminating vulnerabilities where chips ignore software NMEA commands.
+  - Clean UART suspension (`gpsUartSuspend`) precharges the GPIO latch `HIGH` before powering down the peripheral, preventing the spurious falling edge that would accidentally wake the receiver.
+  - **Indoor Backoff Algorithm**: When the pet enters an indoor enclosure with no satellite coverage, the firmware detects consecutive acquisition timeouts and extends backoff intervals up to 60 minutes between prolonged search attempts, protecting battery life.
+- **LiPo Cell Protection**:
+  - Calibrated ADC reading on pin `PIN_BAT_ADC` via a transistor-controlled resistive divider (`PIN_BAT_ADC_CTL`).
+  - Critical voltage threshold at `3350 mV`: after 3 consecutive readings below this level, the collar enters indefinite sleep to prevent irreversible damage to the LiPo cell.
 
 ---
 
-### 2. Estación Base (Heltec WiFi LoRa 32 V3)
+### 2. Base Station (Heltec WiFi LoRa 32 V3)
 
-La estación base se ubica fija en el hogar del usuario y está basada en el **ESP32-S3** con pantalla OLED monocromática de 0.96 pulgadas (SSD1306).
+The base station is stationary inside the owner's home and is powered by an **ESP32-S3** with a 0.96-inch monochrome OLED display (SSD1306).
 
 ```mermaid
 flowchart TD
-    RX_INT(["⚡ Interrupción LoRa DIO1\n(Paquete recibido SX1262)"])
+    RX_INT(["⚡ LoRa DIO1 Interrupt\n(Packet received on SX1262)"])
     
-    subgraph S1 ["1. EXTRACCIÓN Y VALIDACIÓN DE RADIO"]
-        READ_PKT["Lectura de buffer SPI (23 Bytes)\nCálculo de RSSI y SNR"]
-        CRC_CHECK{"¿Longitud y CRC válidos?"}
+    subgraph S1 ["1. EXTRACTION & RF VALIDATION"]
+        READ_PKT["Read SPI buffer (23 Bytes)\nCalculate RSSI and SNR"]
+        CRC_CHECK{"Valid Length and CRC?"}
     end
 
-    subgraph S2 ["2. DESEMPAQUETADO & TELEMETRÍA"]
-        UNPACK["Desempaqueta MinimalCollarPacket:\n• collar_id (Hex)\n• Coordenadas reescaladas (÷1e7)\n• Estado de batería (Curva no lineal mV a %)\n• Flags GPS y Satélites"]
-        GAP_CHECK["Detección de paquetes perdidos\n(gap = seq_actual - seq_anterior - 1)"]
+    subgraph S2 ["2. UNPACKING & TELEMETRY"]
+        UNPACK["Unpack MinimalCollarPacket:\n• collar_id (Hex)\n• Scaled coordinates (÷1e7)\n• Battery state (Non-linear mV to % curve)\n• GPS flags and Satellites"]
+        GAP_CHECK["Packet loss detection\n(gap = seq_current - seq_previous - 1)"]
     end
 
-    subgraph S3 ["3. PROCESAMIENTO LOCAL Y FEEDBACK"]
-        OLED["Actualización de pantalla OLED:\n• Estado WiFi y MQTT\n• Distancia estimada a casa\n• Coordenadas y RSSI"]
-        LED["Parpadeo de LED de diagnóstico (Pin 35)"]
+    subgraph S3 ["3. LOCAL PROCESSING & FEEDBACK"]
+        OLED["Update OLED display:\n• WiFi and MQTT status\n• Estimated distance to home\n• Coordinates and RSSI"]
+        LED["Diagnostic LED blink (Pin 35)"]
     end
 
-    subgraph S4 ["4. PUBLICACIÓN CLOUD"]
-        BUILD_JSON["Serialización de Payload JSON enriquecido"]
-        MQTT_PUB["Publicación en HiveMQ Cloud\nTópico: mascotas/{device_id}/telemetria\nQoS: 1"]
+    subgraph S4 ["4. CLOUD PUBLISHING"]
+        BUILD_JSON["Serialize enriched JSON payload"]
+        MQTT_PUB["Publish to HiveMQ Cloud\nTopic: mascotas/{device_id}/telemetria\nQoS: 1"]
     end
 
     RX_INT --> READ_PKT --> CRC_CHECK
-    CRC_CHECK -->|"Válido"| UNPACK --> GAP_CHECK
-    CRC_CHECK -->|"Corrupto"| DROP(["Descartar paquete"])
+    CRC_CHECK -->|"Valid"| UNPACK --> GAP_CHECK
+    CRC_CHECK -->|"Corrupted"| DROP(["Discard packet"])
     GAP_CHECK --> OLED
     GAP_CHECK --> LED
     GAP_CHECK --> BUILD_JSON --> MQTT_PUB
 ```
 
-- **Curva No Lineal de Batería**: Convierte milivoltios a porcentaje empleando un algoritmo por tramos que respeta la química de descarga de las baterías de iones de litio (desde 4160 mV para el 100% hasta 3000 mV para corte).
-- **Enriquecimiento de Métricas**: Calcula la brecha de paquetes perdidos (`packets_lost_gap`) protegiendo el desbordamiento de enteros de 16 bits (`seq`).
+- **Non-Linear Battery Curve**: Translates millivolts into percentage using a piecewise linear algorithm calibrated to lithium-ion discharge chemistry (from 4160 mV for 100% down to 3000 mV for cutoff).
+- **Packet Gap Metrics**: Tracks missing sequences (`packets_lost_gap`) while handling 16-bit integer rollover safely.
 
 ---
 
-### 3. Protocolo de Comunicación y Radioenlace
+### 3. Communication Protocol and RF Link
 
-#### A. Paquete Binario en el Aire (23 Bytes)
+#### A. Compact Over-the-Air Binary Packet (23 Bytes)
 
-Para maximizar el alcance de radio y minimizar el tiempo en el aire (*Time on Air - ToA*), el collar utiliza una estructura C++ empaquetada a nivel de byte:
+To minimize Time-on-Air (ToA) and maximize RF link margin, the collar transmits a packed C++ binary structure:
 
 ```cpp
 struct __attribute__((packed)) MinimalCollarPacket {
-  uint64_t collar_id;  // 8 bytes: Identificador único de 16 caracteres hexadecimales
-  uint16_t seq;        // 2 bytes: Contador secuencial incremental
-  int32_t lat_scaled;  // 4 bytes: Latitud con 7 decimales (lat * 10,000,000)
-  int32_t lon_scaled;  // 4 bytes: Longitud con 7 decimales (lon * 10,000,000)
-  int16_t alt_m;       // 2 bytes: Altitud sobre el nivel del mar en metros (-32768 a 32767)
-  uint16_t battery_mv; // 2 bytes: Voltaje de batería en milivoltios (ej. 3980 = 3.98V)
-  uint8_t gps_flags;   // 1 byte:  Bit 7: Fix válido (1/0) | Bits 0..6: Conteo de satélites
+  uint64_t collar_id;  // 8 bytes: Unique 16-character hexadecimal ID
+  uint16_t seq;        // 2 bytes: Incremental sequence counter
+  int32_t lat_scaled;  // 4 bytes: Latitude scaled to 7 decimals (lat * 10,000,000)
+  int32_t lon_scaled;  // 4 bytes: Longitude scaled to 7 decimals (lon * 10,000,000)
+  int16_t alt_m;       // 2 bytes: Altitude above sea level in meters (-32768 to 32767)
+  uint16_t battery_mv; // 2 bytes: Battery voltage in millivolts (e.g. 3980 = 3.98V)
+  uint8_t gps_flags;   // 1 byte:  Bit 7: Valid Fix (1/0) | Bits 0..6: Satellite count
 };
 ```
 
-#### B. Parámetros de Radiofrecuencia (SX1262)
+#### B. Radio Frequency Parameters (SX1262)
 
-| Parámetro | Valor Configurado | Justificación Técnica |
+| Parameter | Configured Value | Technical Rationale |
 | :--- | :--- | :--- |
-| **Frecuencia Central** | `915.0 MHz` | Banda ISM libre en la región sin requerimiento de licencias comerciales. |
-| **Ancho de Banda (BW)** | `125.0 kHz` | Excelente compromiso entre sensibilidad del receptor y velocidad de modulación. |
-| **Spreading Factor (SF)** | `SF7` | Tiempo en el aire ultra corto (~60 ms por ráfaga), minimizando el consumo de energía. |
-| **Coding Rate (CR)** | `4/5` | Código de corrección de errores hacia adelante con baja sobrecarga (overhead). |
-| **Potencia de Transmisión** | `+22 dBm` | Potencia máxima de salida del amplificador SX1262 para sortear obstáculos urbanos. |
-| **Voltaje TCXO** | `1.8 V` | Alimentación del oscilador con compensación de temperatura en Heltec T114 (DIO3). |
+| **Center Frequency** | `915.0 MHz` | License-free ISM band for Region 2 (Americas). |
+| **Bandwidth (BW)** | `125.0 kHz` | Optimal balance between receiver sensitivity and modulation throughput. |
+| **Spreading Factor (SF)** | `SF7` | Ultra-short Time-on-Air (~60 ms per burst), minimizing RF energy drain. |
+| **Coding Rate (CR)** | `4/5` | Forward Error Correction (FEC) with low packet overhead. |
+| **Transmission Power** | `+22 dBm` | Maximum amplifier output on the SX1262 to penetrate urban obstructions. |
+| **TCXO Voltage** | `1.8 V` | Powers the temperature-compensated crystal oscillator on Heltec T114 (DIO3). |
 
-#### C. Jerarquía de Tópicos MQTT (Broker HiveMQ Cloud)
+#### C. MQTT Topic Hierarchy (HiveMQ Cloud Broker)
 
-| Tópico | Dirección | Tipo de Evento | Contenido Principal |
+| Topic | Direction | Event Type | Primary Content |
 | :--- | :--- | :--- | :--- |
-| `mascotas/{pet_id}/telemetria` | Base → Cloud | Periódico (120 s) | JSON completo con coordenadas, batería, RSSI, SNR, distancia y pérdida de paquetes. |
-| `mascotas/{pet_id}/status` | Base → Cloud | Estado de Enlace | Evento de presencia: `"online"` al iniciar la base y `"offline"` mediante Last Will and Testament (LWT). |
-| `mascotas/{pet_id}/alertas` | Base/Servidor → Cloud | Inmediato | Alertas críticas en tiempo real (geocerca rota, batería baja, modo baliza). |
-| `mascotas/{pet_id}/comandos` | App → Base | Bajo Demanda | Instrucciones bidireccionales remotas (ej. activar modo búsqueda con intervalo de 15 s). |
+| `mascotas/{pet_id}/telemetria` | Base → Cloud | Periodic (120 s) | Comprehensive JSON payload with coordinates, battery, RSSI, SNR, distance, and loss gap. |
+| `mascotas/{pet_id}/status` | Base → Cloud | Link Presence | Connection status: `"online"` at base startup and `"offline"` via Last Will and Testament (LWT). |
+| `mascotas/{pet_id}/alertas` | Server → Cloud | Immediate | Real-time critical security events (geofence breach, critical battery, beacon mode). |
+| `mascotas/{pet_id}/comandos` | App → Base | On Demand | Remote downlink commands (e.g., enable rapid tracking mode with 15 s intervals). |
 
 ---
 
-### 4. Backend de Ingesta y Procesamiento en Go
+### 4. Ingestion and Processing Backend in Go
 
-El servicio [`backend_suscriptor`](file:///Users/piero.morales/Documents/StudioProjects/Michi_Link/backend_suscriptor) corre como un demonio concurrente en Go sobre una máquina virtual `e2-micro` de Google Cloud Compute Engine.
+The [`backend_suscriptor`](backend_suscriptor) service runs as a concurrent daemon in Go on a Google Cloud Compute Engine `e2-micro` virtual machine.
 
 ```mermaid
 flowchart TD
-    SUB["Suscriptor Concurrente MQTT (Paho Go)"]
+    SUB["Concurrent MQTT Subscriber (Paho Go)"]
     
-    subgraph INGEST_ENGINE ["MOTOR DE INGESTA & REGLAS"]
+    subgraph INGEST_ENGINE ["INGESTION & RULES ENGINE"]
         direction TB
-        PARSE["Validación y Deserialización de JSON"]
-        GEO["Cálculo Geodésico WGS-84 (Vincenty / Haversine)"]
-        DIFF["Cálculo de Paquetes Perdidos y Ratio de Pérdida"]
+        PARSE["JSON Validation & Deserialization"]
+        GEO["WGS-84 Geodesic Distance Engine"]
+        DIFF["Packet Loss & Reliability Metrics"]
         
-        TX["Transacción Atómica en Firestore:
-        • Actualiza documento vivo 'collars/{id}'
-        • Lee configuración ('max_distance_m', 'notif_language')
-        • Evalúa transiciones de estado de alerta"]
+        TX["Atomic Firestore Transaction:
+        • Updates live document 'collars/{id}'
+        • Reads configuration ('max_distance_m', 'notif_language')
+        • Evaluates state transitions for alerts"]
         
         PARSE --> GEO --> DIFF --> TX
     end
 
-    subgraph ACTIONS ["ACCIONES DISPARADAS"]
+    subgraph ACTIONS ["TRIGGERED ACTIONS"]
         direction LR
-        HIST["Escritura en Subcolección 'history'\n(TTL: 15 días con campo 'expire_at')"]
-        ALERTS["Escritura en Subcolección 'alerts'\n(Registro de evento con severidad)"]
-        PUSH["Despacho FCM Push Notifications\n(Mensajes bilingües ES / EN)"]
+        HIST["Write to 'history' Subcollection\n(15-day TTL with 'expire_at')"]
+        ALERTS["Write to 'alerts' Subcollection\n(Event log with severity level)"]
+        PUSH["Dispatch FCM Push Notifications\n(Bilingual ES / EN messages)"]
     end
 
-    subgraph WATCHDOG ["SUPERVISOR DE INACTIVIDAD (Goroutine)"]
-        WD_CHECK["Revisión periódica de 'last_seen'\n(Si tiempo > intervalo * 2)"]
-        WD_OFF["Actualiza 'is_online = false' en Firestore"]
+    subgraph WATCHDOG ["INACTIVITY WATCHDOG (Goroutine)"]
+        WD_CHECK["Periodic review of 'last_seen'\n(If elapsed > interval * 2)"]
+        WD_OFF["Updates 'is_online = false' in Firestore"]
         WD_CHECK --> WD_OFF
     end
 
@@ -349,27 +416,27 @@ flowchart TD
     TX --> PUSH
 ```
 
-- **Motor Geodésico WGS-84**: Implementa la distancia geodésica sobre el elipsoide de referencia estándar WGS-84 (`a = 6378137.0 m`, `f = 1/298.257223563`), calculando con precisión métrica la separación entre el collar y las coordenadas del hogar.
-- **Transición de Alertas sin Falsos Positivos**: El ingestor compara el estado entrante contra el documento persistido en Firestore dentro de una transacción atómica. Solo dispara notificaciones push cuando ocurre una transición genuina (ej. de estado dentro de la geocerca a estado fuera de la geocerca, o de batería normal a crítica), evitando el bombardeo de notificaciones repetitivas en cada paquete.
-- **Tipos de Alerta y Severidades**:
-  - `GEOFENCE_BREACH` (`CRITICAL`): Mascota superó la distancia configurada (`max_distance_m`).
-  - `GEOFENCE_RECOVERY` (`INFO`): Mascota retornó a la zona segura.
-  - `BATTERY_CRITICAL` (`CRITICAL`): Nivel de batería inferior al 10%.
-  - `BATTERY_LOW` (`WARNING`): Nivel de batería inferior al umbral configurado (ej. 20%).
-  - `BATTERY_RECOVERY` (`INFO`): Batería recuperada tras recarga.
-  - `LORA_WEAK_SIGNAL` (`WARNING`): Señal de radio inferior a `-115 dBm`.
-  - `GPS_FIX_LOST` (`WARNING`): Collar perdió fijación satelital y opera en modo radiobaliza.
-  - `GPS_FIX_RECOVERED` (`INFO`): Fijación satelital restablecida.
+- **WGS-84 Geodesic Engine**: Calculates exact surface distance along the standard WGS-84 reference ellipsoid (`a = 6378137.0 m`, `f = 1/298.257223563`), providing sub-meter accuracy between the pet's collar and home coordinates.
+- **Spam-Free State Transitions**: Ingested telemetry is compared against the persisted Firestore document inside an atomic transaction. Push notifications are dispatched only during genuine state transitions (e.g., transition from inside to outside geofence, or normal to critical battery), preventing repeated notifications on every periodic frame.
+- **Alert Types and Severity Levels**:
+  - `GEOFENCE_BREACH` (`CRITICAL`): Pet exceeded the configured safe distance (`max_distance_m`).
+  - `GEOFENCE_RECOVERY` (`INFO`): Pet returned inside the safe perimeter.
+  - `BATTERY_CRITICAL` (`CRITICAL`): Battery percentage dropped below 10%.
+  - `BATTERY_LOW` (`WARNING`): Battery percentage dropped below configured warning threshold (e.g., 20%).
+  - `BATTERY_RECOVERY` (`INFO`): Battery level recovered following recharge.
+  - `LORA_WEAK_SIGNAL` (`WARNING`): RF link signal dropped below `-115 dBm`.
+  - `GPS_FIX_LOST` (`WARNING`): Collar lost GNSS satellite fix and transitioned to radio beacon mode.
+  - `GPS_FIX_RECOVERED` (`INFO`): Satellite lock restored.
 
 ---
 
-### 5. Persistencia y Modelo de Datos en Cloud Firestore
+### 5. Persistence and Data Model in Cloud Firestore
 
-El modelo de datos está optimizado para operar **100% dentro de la capa gratuita (Spark Plan)** de Firebase:
+The data schema is optimized to operate **100% within Firebase Spark Plan (Free Tier)** limits:
 
 ```text
-collars/ (Colección Principal)
-  └── {collar_id} (Documento: Último estado en vivo y configuración)
+collars/ (Primary Collection)
+  └── {collar_id} (Document: Live State & Configuration)
         ├── device_id: "COLLAR_01"
         ├── name: "Michi"
         ├── is_online: true
@@ -387,321 +454,330 @@ collars/ (Colección Principal)
         │     ├── max_distance_m: 150.0
         │     ├── min_battery_pct: 10
         │     ├── require_gps_fix: true
-        │     └── notif_language: "es"
+        │     └── notif_language: "en"
         ├── last_alert: { type: "GEOFENCE_BREACH", severity: "CRITICAL", timestamp: Timestamp }
         │
-        ├── history/ (Subcolección: Muestras históricas de telemetría)
+        ├── history/ (Subcollection: Historical Telemetry Samples)
         │     └── {auto_id}
         │           ├── timestamp: Timestamp
-        │           ├── expire_at: Timestamp  <-- [TTL de 15 días activo en Firestore]
+        │           ├── expire_at: Timestamp  <-- [15-day TTL active in Firestore]
         │           ├── seq: 142
         │           ├── coords: { lat: -8.0666, lon: -79.0628, alt_m: 25.0 }
         │           ├── status: { battery_v: 3.98, battery_pct: 88, gps_fix: true, sats: 8 }
         │           └── radio: { rssi: -68, snr: 9.5, distance_home_m: 48.2, packets_lost_gap: 0 }
         │
-        └── alerts/ (Subcolección: Histórico de incidentes y alarmas)
+        └── alerts/ (Subcollection: Security Incident History)
               └── {auto_id}
                     ├── timestamp: Timestamp
-                    ├── expire_at: Timestamp  <-- [TTL de 15 días activo en Firestore]
+                    ├── expire_at: Timestamp  <-- [15-day TTL active in Firestore]
                     ├── type: "GEOFENCE_BREACH"
                     ├── severity: "CRITICAL"
                     └── value: 168.5
 ```
 
-- **Consumo Spark Plan**: Con un paquete cada 120 segundos, un collar genera 720 escrituras diarias (~3.6% de la cuota diaria de 20,000 escrituras gratuitas de Firestore).
-- **Políticas de TTL**: El campo `expire_at` (`now + 15 días`) permite que Firestore elimine automáticamente los registros históricos obsoletos sin costo de lecturas o escrituras manuales.
+- **Spark Plan Budget**: At one packet every 120 seconds, a collar produces ~720 daily writes (~3.6% of Firestore's 20,000 free daily writes).
+- **TTL Policies**: The `expire_at` field (`now + 15 days`) allows Firestore to automatically purge expired records with zero additional read or write costs.
 
 ---
 
-### 6. Aplicación Móvil en Flutter
+### 6. Mobile Application in Flutter
 
-La aplicación móvil [`michi_link_mobile`](file:///Users/piero.morales/Documents/StudioProjects/Michi_Link/michi_link_mobile) está estructurada siguiendo el patrón **Feature-First** con arquitectura limpia y separación estricta en tres capas:
+The mobile application [`michi_link_mobile`](michi_link_mobile) is structured following the **Feature-First** pattern with clean architecture across three distinct layers:
 
-```
+```text
 lib/
-├── app/                  # Núcleo y configuración global
-│   ├── cubit/            # Estado global de la app (idioma, tema claro/oscuro, color semilla)
-│   ├── global/           # Rutas GoRouter, GetIt service locator, constantes y estilos
-│   ├── models/           # Entidades de dominio inmutables (CollarModel, AlertRecord, etc.)
-│   ├── repositories/     # Contratos e implementaciones de repositorios (Firestore, Hive, Mocks)
-│   ├── services/         # Servicios de infraestructura (Crashlytics, Performance, Analytics)
-│   └── view/             # Vistas base (AppPage, AppView)
-├── collars/              # Módulo de emparejamiento y gestión de collares
-├── history/              # Módulo de reproducción de rutas y migajas de pan (breadcrumbs)
-├── home/                 # Pantalla principal (Google Maps, panel de telemetría, geocerca)
-├── l10n/                 # Plantillas de internacionalización ARB y generador bilingüe
-├── notifications/        # Centro de alertas y notificaciones push recibidas
-├── settings/             # Ajustes de usuario, personalización de temas e idioma
-├── bootstrap.dart        # Configuración de observador BLoC y límites de captura de errores
-├── firebase_options.dart # Configuración auto-generada de Firebase
-└── main.dart             # Punto de entrada de la aplicación móvil
+├── app/                  # Core and global configuration
+│   ├── cubit/            # Global application state (language, light/dark theme, seed color)
+│   ├── global/           # GoRouter routes, GetIt service locator, constants & themes
+│   ├── models/           # Immutable domain entities (CollarModel, AlertRecord, etc.)
+│   ├── repositories/     # Repository contracts and implementations (Firestore, Hive, Mocks)
+│   ├── services/         # Infrastructure services (Crashlytics, Performance, Analytics)
+│   └── view/             # Base UI wrappers (AppPage, AppView)
+├── collars/              # Feature: Collar pairing, editing, and configuration
+├── history/              # Feature: Breadcrumb tracking, polyline rendering & timeline playback
+├── home/                 # Feature: Main dashboard (Google Maps, telemetry panel, geofence ring)
+├── l10n/                 # Feature: ARB translation templates and bilingual generator
+├── notifications/        # Feature: Notification center and incident event log
+├── settings/             # Feature: User preferences, language selection, dynamic color schemes
+├── bootstrap.dart        # Global BLoC observer setup and error boundary initialization
+├── firebase_options.dart # Auto-generated Firebase client credentials
+└── main.dart             # Application entrypoint
 ```
 
-#### Características Principales de la UI/UX
-- **Marcadores Dinámicos en Google Maps**: Generador canvas en memoria que renderiza avatares SVG de 10 razas de gatos distintas sobre el mapa, rodeados por el indicador de radio de geocerca en tiempo real.
-- **Soporte de Doble Entorno**: Mediante `Environment.mock` (simulación local sin dependencias cloud) y `Environment.prod` (flujo en vivo con Firebase y Cloud Firestore).
-- **Diseño con Material 3 Expressive**: Integración del paquete `expressive_kit` que calcula dinámicamente esquemas de color armónicos a partir de un color semilla configurable por el usuario.
+#### Key UI/UX Highlights
+- **Dynamic Google Maps Markers**: In-memory canvas generator rendering custom SVG cat avatars for 10 distinct breeds, surrounded by live geofence radius indicators.
+- **Dual Environment Architecture**: Seamless switching between `Environment.mock` (isolated offline demo mode with synthetic data) and `Environment.prod` (live Firebase & Firestore connectivity).
+- **Material 3 Expressive System**: Powered by `expressive_kit`, dynamically computing harmonic color schemes from a user-selected seed color.
 
 ---
 
 ## 📐 Architecture Decision Records (ADRs)
 
-Los Architecture Decision Records documentan el contexto, restricciones, alternativas analizadas y las consecuencias técnicas de las decisiones arquitectónicas fundamentales adoptadas en Michi Link.
+Architecture Decision Records document the context, technical constraints, evaluated alternatives, and consequences of key architectural choices in Michi Link.
 
 ---
 
-### ADR-001: Radioenlace LoRa P2P vs. Red LoRaWAN
+### ADR-001: LoRa P2P Radio Link vs. LoRaWAN Network
 
-- **Estado**: Aceptado
-- **Fecha**: 2026-10-24
+- **Status**: Accepted
+- **Date**: 2026-10-24
 
-#### Contexto
-Para el monitoreo de gatos domésticos que deambulan en un radio de 200 metros a 1 kilómetro del hogar, se requería un enlace de radiofrecuencia de largo alcance, bajo consumo de batería y sin costo recurrente de suscripción de datos celulares. Se evaluó implementar una red LoRaWAN tradicional (mediante gateways públicos o privados con The Things Network - TTN) frente a un radioenlace LoRa Punto a Punto (P2P) entre el collar y una base receptora hogareña.
+#### Context
+Tracking domestic cats wandering within 200 meters to 1 kilometer of their home requires a long-range, battery-efficient RF link with zero recurring cellular subscription costs. We evaluated standard LoRaWAN (public or private gateways via The Things Network - TTN) against a Point-to-Point (P2P) LoRa link connecting the collar directly to a dedicated home base station.
 
-#### Decisión
-Adoptar una arquitectura **LoRa P2P a 915 MHz** con modulación directa SX1262 empleando parámetros optimizados (`SF7`, `BW 125 kHz`, `CR 4/5`, potencia `+22 dBm`).
+#### Decision
+Adopt a **915 MHz LoRa P2P architecture** using direct SX1262 modulation with tuned parameters (`SF7`, `BW 125 kHz`, `CR 4/5`, `+22 dBm` output power).
 
-#### Alternativas Consideradas
-1. **Red LoRaWAN (The Things Network / Helium)**:
-   - *Pros*: Ecosistema estándar, gestión de llaves de sesión (OTAA).
-   - *Contras*: Cobertura comunitaria inconsistente en áreas residenciales suburbanas, sobrecarga de cabecera de protocolo LoRaWAN (mínimo 13 bytes adicionales por paquete), ventanas de recepción obligatorias que consumen energía del microcontrolador.
-   - *Razón de rechazo*: El gato se desplaza en las inmediaciones del hogar donde el usuario tiene su propia base. LoRaWAN introducía complejidad innecesaria y mayor tiempo en el aire (*ToA*).
-2. **Conectividad Celular NB-IoT / LTE-M**:
-   - *Pros*: Alcance geográfico teóricamente ilimitado.
-   - *Contras*: Módems voluminosos y pesados para el cuello de un gato, consumo pico de corriente elevado (>150 mA) que requiere baterías más grandes, cuota mensual de tarjeta SIM.
-   - *Razón de rechazo*: Inviable para el factor de forma y peso requerido en mascotas pequeñas.
+#### Alternatives Evaluated
+1. **LoRaWAN (The Things Network / Helium)**:
+   - *Pros*: Standardized ecosystem, OTAA session keys.
+   - *Cons*: Sparse, unreliable public gateway coverage in residential suburban zones; mandatory LoRaWAN frame headers (adding ≥13 bytes overhead per packet); required RX windows that drain battery on the micro-node.
+   - *Reason for Rejection*: The pet stays near the owner's home where the owner maintains a base station. LoRaWAN introduced unnecessary complexity and increased Time-on-Air (ToA).
+2. **Cellular NB-IoT / LTE-M**:
+   - *Pros*: Theoretically unlimited geographic range.
+   - *Cons*: Modems are too bulky and heavy for a cat's collar; peak current draws (>150 mA) demand heavy batteries; requires monthly SIM data subscriptions.
+   - *Reason for Rejection*: Impractical for small domestic pets due to weight and size constraints.
 
-#### Consecuencias
-- **Positivas**: Autonomía total sin depender de terceros ni operadoras; tiempo en el aire ultra reducido (~60 ms); hardware de bajo costo.
-- **Mitigaciones**: El alcance está delimitado a la cobertura de la base propia (~1 km en línea de vista). Se diseñó el modo baliza para mitigar la salida eventual de zona.
-
----
-
-### ADR-002: Formato de Paquete Binario Compacto en el Aire (23 Bytes)
-
-- **Estado**: Aceptado
-- **Fecha**: 2026-10-24
-
-#### Contexto
-En modulaciones de radioenlace LoRa, cada byte transmitido incrementa directamente el tiempo de transmisión (*Time on Air*), elevando el consumo de energía en miliamperios-segundo y aumentando la probabilidad de colisiones de radio. Se requería transmitir identificación del collar, número de secuencia, latitud, longitud, altitud, voltaje de batería y estado de los satélites GNSS.
-
-#### Decisión
-Implementar una estructura de C++ empaquetada binaria (`__attribute__((packed))`) de exactamente **23 bytes** denominada `MinimalCollarPacket`.
-
-#### Alternativas Consideradas
-1. **Payload en formato JSON en el aire**:
-   - *Pros*: Fácil lectura y depuración directa con analizadores lógicos o logs serie.
-   - *Contras*: Un JSON equivalente con los mismos campos ocupa entre 110 y 160 bytes. Multiplica por 5 el tiempo en el aire, reduciendo la duración de la batería de 7 días a menos de 48 horas.
-   - *Razón de rechazo*: Ineficiente para enlaces LoRa con batería limitada.
-2. **Google Protocol Buffers (Protobuf) / CBOR**:
-   - *Pros*: Binario estandarizado y tipado.
-   - *Contras*: Overhead de tags de campo e inclusión de librerías adicionales en el microcontrolador de recursos limitados.
-   - *Razón de rechazo*: Para un esquema estático fijo, un struct C empaquetado no tiene sobrecarga y requiere cero bibliotecas de serialización externa.
-
-#### Consecuencias
-- **Positivas**: Paquete comprimido al límite físico; transmisión completada en menos de 65 ms; consumo de corriente mínimo por ciclo.
-- **Mitigaciones**: El empaquetado binario requiere que collar y base compartan exactamente la misma definición de estructura y ordenamiento de bytes (*endianness* little-endian estándar en ARM Cortex-M y ESP32).
+#### Consequences
+- **Positive**: Total operational independence with zero monthly subscription fees; minimal Time-on-Air (~60 ms); low-cost hardware.
+- **Trade-offs**: Range is bounded by home base station RF coverage (~1 km line-of-sight). The beacon mode mitigation was designed to handle temporary out-of-range events.
 
 ---
 
-### ADR-003: Backend Ingestor y Motor de Eventos en Go sobre GCP e2-micro
+### ADR-002: Compact Over-the-Air Binary Packet Format (23 Bytes)
 
-- **Estado**: Aceptado
-- **Fecha**: 2026-10-24
+- **Status**: Accepted
+- **Date**: 2026-10-24
 
-#### Contexto
-Los mensajes MQTT provenientes de la base deben recibirse sin pérdida, procesarse inmediatamente, evaluar reglas de seguridad geodésica, actualizar Firestore y despachar notificaciones push a los dispositivos móviles. Se necesitaba una plataforma de cómputo backend que permaneciera siempre activa a costo cero.
+#### Context
+In LoRa modulations, every additional transmitted byte increases Time-on-Air (ToA), amplifying energy consumption and the probability of on-air packet collisions. The radio packet needed to convey collar identity, sequence numbers, latitude, longitude, altitude, battery voltage, and satellite fix metadata.
 
-#### Decisión
-Desarrollar el servicio de ingesta en **Go** utilizando la librería `paho.mqtt.golang` y desplegarlo como un servicio systemd continuo en una instancia de máquina virtual **GCP Compute Engine e2-micro** (dentro del Free Tier de Google Cloud en regiones `us-central1`, `us-east1` o `us-west1`).
+#### Decision
+Define an aligned, packed C++ binary structure (`__attribute__((packed))`) of exactly **23 bytes** named `MinimalCollarPacket`.
 
-#### Alternativas Consideradas
-1. **Cloud Functions / Cloud Run (Serverless por evento)**:
-   - *Pros*: Auto-escalado automático y sin administración de infraestructura.
-   - *Contras*: HiveMQ Cloud requiere un cliente MQTT persistente suscrito a los tópicos con KeepAlive continuo. Invocar Cloud Functions por cada mensaje vía Webhooks añade latencia de arranque en frío (*cold start*) y costos por peticiones HTTP.
-   - *Razón de rechazo*: Un broker MQTT necesita un demonio de conexión permanente.
-2. **Backend en Node.js / Python**:
-   - *Pros*: Rápido prototipado inicial.
-   - *Contras*: Mayor consumo de memoria RAM residual (120-250 MB). La instancia `e2-micro` solo dispone de 1 GB de memoria RAM compartida.
-   - *Razón de rechazo*: Go compila a un binario nativo que consume menos de 18 MB de RAM en estado estacionario y ofrece concurrencia ligera mediante goroutines.
+#### Alternatives Evaluated
+1. **JSON Over-the-Air**:
+   - *Pros*: Human-readable, trivial debugging in serial monitors.
+   - *Cons*: Equivalent JSON requires 110 to 160 bytes. This multiplies ToA by ~5x, reducing battery lifespan from 7 days down to under 48 hours.
+   - *Reason for Rejection*: Grossly inefficient for battery-constrained LoRa transmitters.
+2. **Protocol Buffers (Protobuf) / CBOR**:
+   - *Pros*: Standardized binary serialization.
+   - *Cons*: Tag overhead per field and additional library footprint on the resource-constrained microcontroller.
+   - *Reason for Rejection*: For a fixed, immutable schema, a packed C struct has zero wire overhead and requires no third-party serialization libraries.
 
-#### Consecuencias
-- **Positivas**: Consumo de CPU prácticamente nulo (<1%); uso de RAM inferior a 25 MB; costo mensual cero dentro del Free Tier de GCP; tiempo de respuesta sub-segundo en la ingesta.
-- **Mitigaciones**: Se implementó el script automatizado [`backend_suscriptor/deploy.sh`](file:///Users/piero.morales/Documents/StudioProjects/Michi_Link/backend_suscriptor/deploy.sh) y reinicio supervisado por systemd para simplificar el mantenimiento y despliegue continuo.
-
----
-
-### ADR-004: Modelo Híbrido de Persistencia en Firestore con TTL de 15 Días
-
-- **Estado**: Aceptado
-- **Fecha**: 2026-10-24
-
-#### Contexto
-La aplicación móvil necesita sincronización reactiva en tiempo real del último estado de la mascota, pero también acceso al historial de rutas para dibujar las migajas de pan de los últimos días y un registro cronológico de incidentes. Si todas las posiciones se guardaran indefinidamente en la base de datos, el límite de 1 GB de almacenamiento gratuito de Firestore se superaría con el tiempo.
-
-#### Decisión
-Implementar un modelo híbrido en **Cloud Firestore**:
-1. Un documento raíz en la colección `collars/{id}` con el estado vivo actual (sobrescrito atómicamente en cada ciclo).
-2. Dos subcolecciones: `history/` (posiciones históricas) y `alerts/` (incidentes registrados), ambas con la propiedad `expire_at` configurada a `Timestamp.now() + 15 días` y políticas de TTL automáticas en Firebase.
-
-#### Alternativas Consideradas
-1. **Almacenar historial en un arreglo dentro del documento único del collar**:
-   - *Pros*: Una sola lectura para obtener todo.
-   - *Contras*: Firestore impone un límite estricto de 1 MB por documento. Un arreglo continuo rompería este límite en pocas semanas.
-   - *Razón de rechazo*: Violación del diseño de escalabilidad de Firestore.
-2. **Base de Datos Relacional Externa (PostgreSQL / Supabase)**:
-   - *Pros*: Consultas SQL analíticas flexibles.
-   - *Contras*: Requiere gestionar infraestructura adicional y pierde la integración nativa y reactiva de los SDK de Firestore con Flutter (`snapshots()`).
-   - *Razón de rechazo*: Firestore ofrece sincronización en vivo lista para usar en la app móvil.
-
-#### Consecuencias
-- **Positivas**: La app móvil solo escucha el documento vivo para la pantalla principal (ahorro drástico de lecturas); las consultas de historial se descargan bajo demanda al abrir la vista de rutas; la limpieza de datos por TTL no consume cuotas de borrado.
-- **Mitigaciones**: La retención histórica está acotada a 15 días móviles, suficiente para el análisis de comportamiento de la mascota.
+#### Consequences
+- **Positive**: Maximum compression ratio; transmissions complete in under 65 ms; minimal current consumption per wake cycle.
+- **Trade-offs**: Requires identical struct definitions and matching little-endian byte ordering on both the transmitter (nRF52840) and receiver (ESP32-S3).
 
 ---
 
-### ADR-005: Arquitectura Feature-First con BLoC/Cubit y GetIt en Flutter
+### ADR-003: Go Ingestion Backend and Event Engine on GCP e2-micro
 
-- **Estado**: Aceptado
-- **Fecha**: 2026-10-24
+- **Status**: Accepted
+- **Date**: 2026-10-24
 
-#### Contexto
-El cliente móvil interactúa con sensores, servicios de cartografía interactiva, transmisiones reactivas de Firestore, almacenamiento local offline en Hive y múltiples estados de UI (geocercas, alertas, telemetría, ajustes). Se requería una arquitectura limpia, desacoplada y altamente testeable que permitiera alternar entre entornos reales y simulados.
+#### Context
+MQTT messages from the base station must be consumed without loss, parsed immediately, evaluated against geofencing rules, written to Firestore, and dispatched as push notifications. A backend compute platform was needed that remains continuously active 24/7 at zero infrastructure cost.
 
-#### Decisión
-Adoptar una arquitectura **Feature-First** combinando **BLoC/Cubit** para la gestión reactiva de estado unidireccional y el patrón **Service Locator con GetIt** junto a una factoría abstracta (`ServiceFactory`) para inyección de dependencias y entornos (`Environment.mock` vs `Environment.prod`).
+#### Decision
+Develop the ingestion backend in **Go** using `paho.mqtt.golang` and run it as a systemd service on a **Google Cloud Compute Engine `e2-micro` VM** (covered under the GCP Always Free Tier in `us-central1`, `us-east1`, or `us-west1`).
 
-#### Alternativas Consideradas
-1. **Arquitectura por Capas Global (Layer-First / data-domain-presentation)**:
-   - *Pros*: Familiar en proyectos pequeños.
-   - *Contras*: Dificulta la navegación del código a medida que crecen las funcionalidades; cambios en una pantalla requieren saltar entre carpetas distantes.
-   - *Razón de rechazo*: Feature-First agrupa código relacionado por dominio, mejorando la mantenibilidad.
-2. **State Management con Riverpod o Provider**:
-   - *Pros*: Menos boilerplate inicial.
-   - *Contras*: BLoC ofrece predictibilidad total en flujos de eventos complejos, trazabilidad integrada mediante `BlocObserver` y excelente soporte de pruebas unitarias con `bloc_test`.
-   - *Razón de rechazo*: Estándar corporativo alineado con Very Good Ventures.
+#### Alternatives Evaluated
+1. **Serverless (Cloud Functions / Cloud Run)**:
+   - *Pros*: Managed auto-scaling without server administration.
+   - *Cons*: HiveMQ Cloud requires a persistent MQTT client connection with continuous KeepAlive pings. Triggering Cloud Functions via HTTP webhooks introduces cold start latency and per-invocation request charges.
+   - *Reason for Rejection*: MQTT ingestion requires a persistent connection daemon.
+2. **Node.js / Python Backend**:
+   - *Pros*: Fast initial prototyping.
+   - *Cons*: Higher baseline memory usage (120-250 MB). The `e2-micro` instance only offers 1 GB of shared RAM.
+   - *Reason for Rejection*: Go compiles to a native binary using less than 18 MB of RAM in steady state with lightweight goroutine concurrency.
 
-#### Consecuencias
-- **Positivas**: Pruebas unitarias directas sin necesidad de montar widgets; alternancia inmediata a entorno simulado para pruebas de interfaz; código modular y desacoplado.
-- **Mitigaciones**: Requiere escribir contratos abstractos de repositorio para cada servicio de infraestructura.
-
----
-
-### ADR-006: Geodesia WGS-84 en Servidor y Notificaciones Push Multilingües con FCM
-
-- **Estado**: Aceptado
-- **Fecha**: 2026-10-24
-
-#### Contexto
-Cuando la mascota traspasa el perímetro seguro o su batería cae a niveles críticos, el usuario debe enterarse de inmediato mediante una notificación push nativa en su teléfono móvil, incluso si la aplicación está cerrada o en segundo plano. La distancia no podía calcularse en el teléfono (que puede estar suspendido) ni de forma simplificada plana en la base (sujeta a distorsiones por curvatura terrestre).
-
-#### Decisión
-Delegar el cálculo de distancia geodésica al backend en Go mediante la fórmula sobre el **elipsoide WGS-84** y el despacho de notificaciones push de alta prioridad a través del SDK de **Firebase Cloud Messaging (FCM)** con internacionalización en servidor (español e inglés) según la configuración del collar.
-
-#### Alternativas Consideradas
-1. **Cálculo de geocerca en la Estación Base ESP32**:
-   - *Pros*: Alerta inmediata sin depender del backend.
-   - *Contras*: La base no tiene acceso a las credenciales de servicio de FCM para despachar push directas a teléfonos móviles, y no conoce las preferencias de idioma de los usuarios.
-   - *Razón de rechazo*: La base debe ser un gateway agnóstico y ligero.
-2. **Cálculo en la aplicación móvil del cliente**:
-   - *Pros*: Muy fácil de programar con plugins de geolocalización.
-   - *Contras*: Si el sistema operativo suspende la app en segundo plano, la alerta de escape nunca se dispararía al usuario.
-   - *Razón de rechazo*: Inadmisible para un sistema de seguridad de mascotas.
-
-#### Consecuencias
-- **Positivas**: Precisión submétrica en la detección de salida de geocerca; confiabilidad absoluta de notificación push independiente del estado del teléfono; soporte multilingüe centralizado.
-- **Mitigaciones**: Requiere que la instancia de Go en GCP tenga conectividad permanente con internet para alcanzar los endpoints de FCM.
+#### Consequences
+- **Positive**: Near-zero CPU utilization (<1%); RAM consumption under 25 MB; zero monthly GCP cost within the Free Tier; sub-second ingestion response times.
+- **Trade-offs**: Requires deployment script automation ([`backend_suscriptor/deploy.sh`](backend_suscriptor/deploy.sh)) and systemd service supervision.
 
 ---
 
-## 📂 Estructura del Directorio del Proyecto
+### ADR-004: Hybrid Persistence Model in Firestore with 15-Day TTL
+
+- **Status**: Accepted
+- **Date**: 2026-10-24
+
+#### Context
+The mobile app requires real-time reactive synchronization of the pet's latest status, as well as access to historical breadcrumb paths for the past several days and an incident log. Retaining all raw points indefinitely would eventually breach Firestore's 1 GB free storage tier.
+
+#### Decision
+Implement a hybrid data model in **Cloud Firestore**:
+1. A root document in `collars/{id}` storing the current live state (overwritten atomically on every cycle).
+2. Two subcollections: `history/` (breadcrumb samples) and `alerts/` (security events), both stamped with `expire_at = Timestamp.now() + 15 days` and managed by automatic Firebase TTL policies.
+
+#### Alternatives Evaluated
+1. **Historical Array inside the Primary Collar Document**:
+   - *Pros*: Single read operation retrieves everything.
+   - *Cons*: Firestore enforces a strict 1 MB maximum document size limit. An incremental array would violate this limit within weeks.
+   - *Reason for Rejection*: Violates Firestore scalability guidelines.
+2. **External Relational Database (PostgreSQL / Supabase)**:
+   - *Pros*: Advanced relational querying.
+   - *Cons*: Requires separate infrastructure management and loses native reactive Flutter snapshot streams (`snapshots()`).
+   - *Reason for Rejection*: Firestore delivers out-of-the-box live synchronization with Flutter.
+
+#### Consequences
+- **Positive**: Mobile app listens only to the live root document for the primary dashboard (minimizing read operations); historical samples are loaded on-demand; automatic TTL cleanup incurs zero delete charges.
+- **Trade-offs**: Historical route retention is bounded to a 15-day rolling window.
+
+---
+
+### ADR-005: Feature-First Architecture with BLoC/Cubit and GetIt in Flutter
+
+- **Status**: Accepted
+- **Date**: 2026-10-24
+
+#### Context
+The mobile client coordinates GPS hardware, mapping SDKs, Firestore reactive streams, local offline Hive caching, and multiple UI states (geofences, telemetry, alerts, settings). A clean, decoupled, and highly testable architecture was required, with frictionless switching between production and offline demo environments.
+
+#### Decision
+Adopt a **Feature-First Architecture** combining **BLoC / Cubit** for unidirectional reactive state management and **GetIt (Service Locator)** with an abstract service factory (`ServiceFactory`) for dependency injection across environments (`Environment.mock` vs `Environment.prod`).
+
+#### Alternatives Evaluated
+1. **Layer-First Architecture (data-domain-presentation)**:
+   - *Pros*: Familiar in small applications.
+   - *Cons*: Impairs codebase navigation as features expand; modifications to a single screen require jumping across distant directories.
+   - *Reason for Rejection*: Feature-First encapsulates related code by domain, maximizing maintainability.
+2. **State Management via Riverpod or Provider**:
+   - *Pros*: Less initial boilerplate.
+   - *Cons*: BLoC delivers total predictability for complex event streams, integrated tracing via `BlocObserver`, and first-class testing ergonomics via `bloc_test`.
+   - *Reason for Rejection*: Industry standard aligned with Very Good Ventures architecture principles.
+
+#### Consequences
+- **Positive**: Streamlined unit testing without widget mounting; instantaneous switching to mock mode for UI tests; modular code organization.
+- **Trade-offs**: Requires declaring abstract repository contracts for every infrastructure service.
+
+---
+
+### ADR-006: Server-Side WGS-84 Geodesy and Multilingual Push Notifications with FCM
+
+- **Status**: Accepted
+- **Date**: 2026-10-24
+
+#### Context
+When a pet escapes the safe perimeter or battery drops to critical levels, the owner must receive an immediate push notification on their phone, even if the application is killed or in the background. Distance calculations could not be delegated to the phone (which might be suspended) nor computed as a flat Euclidean approximation on the base station (prone to distortion).
+
+#### Decision
+Perform geodesic distance calculations on the Go backend using the **WGS-84 reference ellipsoid** formula and dispatch high-priority push notifications through **Firebase Cloud Messaging (FCM)** with server-side bilingual support (Spanish and English) based on the collar's configuration.
+
+#### Alternatives Evaluated
+1. **Geofencing on the ESP32 Base Station**:
+   - *Pros*: Immediate trigger without cloud backend dependency.
+   - *Cons*: The ESP32 does not hold FCM service account credentials for push dispatch and lacks user language preferences.
+   - *Reason for Rejection*: Base stations must remain lightweight, agnostic hardware relays.
+2. **Geofencing on the Client Mobile Phone**:
+   - *Pros*: Simple to implement using device location plugins.
+   - *Cons*: If the OS terminates or throttles the app in the background, escape alerts will fail to reach the user.
+   - *Reason for Rejection*: Unacceptable reliability hazard for a pet safety system.
+
+#### Consequences
+- **Positive**: Sub-meter geofence breach detection accuracy; absolute push notification delivery independent of device state; centralized internationalization.
+- **Trade-offs**: Requires reliable outbound internet connectivity from the Go VM on GCP to FCM endpoints.
+
+---
+
+## 📂 Project Directory Structure
 
 ```text
 Michi_Link/
-├── .github/                      # Workflows de CI/CD (GitHub Actions) y reglas de cspell
+├── .github/                      # CI/CD workflows (GitHub Actions) & cspell rules
 │   └── workflows/
-│         ├── mobile-beta.yaml    # Pipeline de pruebas, lint y despliegue a Play Store Beta
-│         └── mobile-prod.yaml    # Pipeline de despliegue a producción
-├── backend_suscriptor/           # Microservicio de ingesta en Go (GCP e2-micro)
+│         ├── mobile-beta.yaml    # Test, lint, and Google Play Store Beta release pipeline
+│         └── mobile-prod.yaml    # Production release pipeline
+├── backend_suscriptor/           # Go Ingestion Microservice (GCP e2-micro VM)
 │   ├── cmd/
-│   │   ├── ingester/             # Servicio principal: suscriptor MQTT, WGS-84, Firestore y FCM
+│   │   ├── ingester/             # Main daemon: MQTT subscriber, WGS-84, Firestore & FCM
 │   │   │   ├── main.go
-│   │   │   └── main_test.go      # Suite de pruebas de integración y geocercas
-│   │   └── simulator/            # Herramienta de pruebas de carga y simulación de telemetría
+│   │   │   └── main_test.go      # Integration and geofence test suite
+│   │   └── simulator/            # Synthetic telemetry and load testing tool
 │   │       ├── main.go
 │   │       └── main_test.go
 │   ├── internal/
-│   │   └── models/               # Modelos de datos compartidos, payloads JSON y tipos Firestore
-│   ├── deploy.sh                 # Script bash de compilación y despliegue con systemd
-│   ├── go.mod                    # Módulo Go y dependencias
+│   │   └── models/               # Shared models, JSON payloads, and Firestore schema types
+│   ├── deploy.sh                 # Compilation and systemd automated deployment script
+│   ├── go.mod                    # Go module and dependencies
 │   └── go.sum
-├── firmware/                     # Código fuente embebido en C++ / Arduino
-│   ├── base_esp32/               # Firmware para Heltec WiFi LoRa 32 V3 (ESP32-S3)
-│   │   ├── base_esp32.ino        # Lógica de recepción LoRa, OLED, WiFi y publicación MQTT
-│   │   └── packet.h              # Definición de la estructura binaria del paquete (23B)
-│   └── collar_t114/              # Firmware para Heltec T114 (Nordic nRF52840)
-│         ├── collar_t114.ino     # Gestión de energía, adquisición GNSS y transmisión LoRa
-│         ├── config.h            # Parámetros RF, pines de hardware y ventanas de temporización
-│         └── packet.h            # Definición binaria idéntica de MinimalCollarPacket
-├── michi_link_mobile/            # Aplicación móvil multiplataforma en Flutter
-│   ├── android/                  # Configuración nativa Android y manifiestos
-│   ├── ios/                      # Configuración nativa iOS y Runner
-│   ├── assets/                   # Recursos visuales (iconos, avatares SVG de razas de gatos)
-│   ├── lib/                      # Código fuente en Dart con arquitectura Feature-First
-│   │   ├── app/                  # Núcleo: BLoC global, temas, rutas, repositorios, servicios
-│   │   ├── collars/              # Feature: Emparejamiento y edición de collares
-│   │   ├── history/              # Feature: Mapa con historial de rutas y polilíneas
-│   │   ├── home/                 # Feature: Dashboard principal con Google Maps y telemetría
-│   │   ├── l10n/                 # Feature: Plantillas de localización (.arb) en español e inglés
-│   │   ├── notifications/        # Feature: Centro de notificaciones y registro de eventos
-│   │   ├── settings/             # Feature: Preferencias de interfaz, unidades y temas
-│   │   ├── bootstrap.dart        # Inicialización de crash handlers y observadores
-│   │   └── main.dart             # Punto de entrada de la aplicación
-│   ├── test/                     # Pruebas unitarias y de widgets con mocktail y bloc_test
-│   ├── pubspec.yaml              # Dependencias y configuración de Flutter
-│   └── l10n.yaml                 # Configuración del generador de internacionalización
-├── LICENSE                       # Licencia de código abierto MIT
-└── README.md                     # Documentación técnica maestra del proyecto
+├── docs/                         # System documentation and architecture assets
+│   └── architecture/             # Architecture diagrams generated with stack-diagram
+│         ├── michi-link-architecture.png
+│         ├── michi-link-architecture-dark.png
+│         └── michi-link-architecture.html
+├── firmware/                     # Embedded C++ / Arduino source code
+│   ├── base_esp32/               # Firmware for Heltec WiFi LoRa 32 V3 (ESP32-S3)
+│   │   ├── base_esp32.ino        # LoRa reception, OLED display, WiFi and MQTT publication
+│   │   └── packet.h              # 23-byte binary packet structure definition
+│   └── collar_t114/              # Firmware for Heltec T114 (Nordic nRF52840)
+│         ├── collar_t114.ino     # Power management, GNSS reading, and LoRa transmission
+│         ├── config.h            # RF parameters, pin mappings, and timing windows
+│         └── packet.h              # Identical MinimalCollarPacket binary layout
+├── michi_link_mobile/            # Cross-platform Flutter mobile client
+│   ├── android/                  # Native Android configuration, Gradle & manifests
+│   ├── ios/                      # Native iOS configuration & Runner workspace
+│   ├── assets/                   # Visual assets (icons, SVG breed avatars)
+│   ├── lib/                      # Dart source code with Feature-First architecture
+│   │   ├── app/                  # Core: global BLoC, themes, routes, repositories, services
+│   │   ├── collars/              # Feature: Collar pairing, editing, and configuration
+│   │   ├── history/              # Feature: Polyline breadcrumb mapping and route playback
+│   │   ├── home/                 # Feature: Main dashboard with Google Maps and telemetry
+│   │   ├── l10n/                 # Feature: ARB localization templates (English and Spanish)
+│   │   ├── notifications/        # Feature: Notification center and incident event logs
+│   │   ├── settings/             # Feature: User preferences, units, and dynamic themes
+│   │   ├── bootstrap.dart        # Error boundary and BLoC observer initialization
+│   │   └── main.dart             # Mobile app entrypoint
+│   ├── test/                     # Unit and widget test suites with mocktail and bloc_test
+│   ├── pubspec.yaml              # Flutter dependencies and metadata
+│   └── l10n.yaml                 # Localization generator configuration
+├── notification_sender/          # Local Node.js CLI tool for testing FCM push alerts
+│   ├── index.js                  # Interactive and manual CLI for FCM topics and device tokens
+│   ├── package.json
+│   └── README.md
+├── LICENSE                       # Open-source MIT License
+└── README.md                     # Master project technical documentation
 ```
 
 ---
 
-## 🧪 Pruebas y Calidad de Código
+## 🧪 Testing and Code Quality
 
-### 1. Backend en Go
+### 1. Backend in Go
 
-El backend incluye pruebas unitarias y de integración que validan el cálculo geodésico WGS-84, la detección de transiciones de geocerca, la serialización de paquetes y el manejo de desconexiones:
+The Go backend includes comprehensive unit and integration tests covering WGS-84 geodesic calculations, geofence state transitions, payload serialization, and disconnection watchdog routines:
 
 ```bash
 cd backend_suscriptor
 go test -v ./...
 ```
 
-Para verificar la cobertura de código:
+To measure code coverage:
 ```bash
 go test -coverprofile=coverage.out ./cmd/ingester
 go tool cover -func=coverage.out
 ```
 
-### 2. Aplicación Móvil en Flutter
+### 2. Mobile Application in Flutter
 
-El proyecto móvil impone reglas estrictas de calidad mediante **Very Good Analysis** y **bloc_lint**:
+The mobile application enforces strict code health standards using **Very Good Analysis** and **bloc_lint**:
 
 ```bash
 cd michi_link_mobile
 
-# 1. Análisis estático
+# 1. Static code analysis
 flutter analyze
 
-# 2. Ejecución de pruebas unitarias y de widgets
+# 2. Execute unit and widget test suites
 flutter test
 
-# 3. Generación de reporte de cobertura
+# 3. Generate LCOV test coverage report
 flutter test --coverage
 ```
 
 ---
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto está distribuido bajo los términos de la licencia **MIT**. Consulte el archivo [LICENSE](LICENSE) para más detalles.
+This project is licensed under the terms of the **MIT License**. See the [LICENSE](LICENSE) file for complete details.
