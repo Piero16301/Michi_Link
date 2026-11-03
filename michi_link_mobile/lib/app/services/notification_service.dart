@@ -95,8 +95,9 @@ class NotificationService {
     final trace = _perf?.startTrace('notification_service_initialization');
 
     try {
-      const androidInit =
-          AndroidInitializationSettings('@drawable/ic_notification');
+      const androidInit = AndroidInitializationSettings(
+        '@drawable/ic_notification',
+      );
       const darwinInit = DarwinInitializationSettings();
       const initSettings = InitializationSettings(
         android: androidInit,
