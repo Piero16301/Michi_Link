@@ -105,7 +105,7 @@ func main() {
 	opts.SetClientID(fmt.Sprintf("gcp-ingest-%d", time.Now().Unix()))
 	opts.SetUsername(hivemqUser)
 	opts.SetPassword(hivemqPass)
-	opts.SetTLSConfig(&tls.Config{InsecureSkipVerify: false})
+	opts.SetTLSConfig(&tls.Config{InsecureSkipVerify: true})
 	opts.SetAutoReconnect(true)
 	opts.SetMaxReconnectInterval(10 * time.Second)
 	opts.SetKeepAlive(60 * time.Second)

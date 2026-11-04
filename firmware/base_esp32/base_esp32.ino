@@ -18,7 +18,7 @@
 const char *WIFI_SSID = "ENGOMOHE-2.4G";
 const char *WIFI_PASSWORD = "0178691930";
 
-const char *MQTT_BROKER = "4a3d7cdffc0943709189065b2b48eece.s1.eu.hivemq.cloud";
+const char *MQTT_BROKER = "35.223.64.54";
 const int MQTT_PORT = 8883;
 const char *MQTT_USER = "michi-link";
 const char *MQTT_PASS = "Aj7dpWB5M!asBrz";
